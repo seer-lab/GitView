@@ -1,0 +1,121 @@
+Could use a relational model that employees a schema to relate different entities together. 
+	- Entities
+		- Project
+		- Developer
+		- Commits
+		...
+	- How they relate
+		- A Developer can own projects as well as work on projects
+		- Projects can have commits
+		- Developers make commits to projects
+
+Need to clearly understand Software Engineering practices
+Also, need to clearly identify how they will be recognized in a project or not.
+Need to identify what Software Engineering practices I'm looking for
+	- Documentation
+	- Design practices
+	...
+
+Need to identify how to identify these Software Engineering practices are being used or not. 
+
+How the data will be visualized
+Which data will be visualized
+
+Mostly dealing with Decentralized Source Code Management tools (DSCM)
+	- Git Mining Paper
+	- https://github.com/cabird/git_mining_tools
+
+Need to find other similar Projects
+	- other attempts to mine data from DSCM or Centralized SCM
+	- Research projects about this.
+
+Idea:
+	- a visualization of how connected a project is, # of users a project has, # of users certain projects share, isolated projects (projects that a user or group of users are working on it, but is not connected to another project (through collaborators), A look into the the life span of OSS projects, how long projects last on average, average commits to an OSS project, average core developer team for an OSS (contributers), average extended team for OSS (committers).
+	- Languages used for projects
+	- Languages that are used together for projects
+
+A lot of work has been done on geolocation of people developing open source projects through collaborative tools
+
+Need to identify what it is that I want to take from git api and how i want to use it
+Could:
+1. Percentage of code committed that is comments per release
+2. Do bug fixes include more documentation than feature additions?
+3. Most popular commenting style
+4. How code gets commented
+	1. Prior to writing the code (committed before)
+	2. At the same time (committed at the same time)
+	3. After the code is finished (committed at a later date)
+	4. Never, no documentation added to date (no commit till current date has created a comment for the section of code)
+	- Randomly take sections of code (more specifically a class or method)
+		- could break the amount of documentation into low, medium, high
+	- Once code is picked
+		- If there is documentation
+			- Look to previous commit for documentation
+				- if there then it was added prior to code, case 1
+				- if it is not there then it was added at the same time, case 2
+				- (could also have it was added prior but updated) case 1 and 2
+			- If there is no documentation
+				- Look forward
+					- If a commit is found where there is documentation is added case 3
+					- If a no commit is found where the documentation is added case 4
+
+Need to do by Thursday:
+Need to come up with the underlining question for my research, what I'm interested in and what I'm looking for in the information that I pull from Github.
+- Possible questions
+	1. How does code get documented
+	2. What does the evolution of code look like
+		- Documentation compared to code
+	3. How much documentation is to much
+	4. For code that has been documented does the documentation get updated along side the code or is the documentation done once and forgotten about. Does software documentation stay current?
+	5. Do the developers document better while
+		1. Creating a new feature
+			- When a new feature is implemented does the developer add documentation prior, during, after or never?
+		2. Fixing bugs
+			- Documentation is added at site of bug to help other developers understand solution and possibly help with future bugs from that site.
+		3. In between releases
+			- More or less consistent committing of documentation
+		4. Right before releases
+			- Might be for a cleaning up of the code prior to release
+		5. Right after releases
+			- Might start documenting the features that they are going to attempt to start supporting or fixing bugs that were missed prior to release
+	6. Do collaborators that have commit access to the master repo document more/less/better/worse than developers that commit to a forked branch (that has been merged)
+	7. Can "critical" sections be recognized by monitoring the documentation (or lack of documentation) traffic and the code change traffic for areas that may cause problems or require more documentation to allow for better maintenance of the code.
+	8. Do open source software projects get documented enough to allow for maintenance of these projects to take place (is there enough, is there too much?)?
+	9. Is the documentation such that anyone can understand it, people with a little general technical experience, people with a lot of general technical experience, people with a little specific experience in the necessary fields, people who have a lot of experience in the necessary fields, or no one can understand it.
+	10. Does the quality of documentation decrease as the number of programmers increases?
+	11. Does the quality of the documentation decrease over time? Is there a "decay" of quality of documentation?
+	12. How frequently is the documentation completely cycled?
+	13. Given that an original developer comments and commits their code at the same time how often does that section of code need maintenance?
+	14. Given that an original developer commits their code without documentation how often does that section of code need maintenance?
+	15.  Given that an original developer comments and commits their code at the same time how often is the documentation updated compared to the actual code? Is that documentation out of date?
+
+look at complexity of the code 
+
+	I would be cool to see the number of code lines over time (added and deleted not including documentation) along with the number of lines of documentation (added and deleted) similar to the github graph 
+
+Look for research papers that involve data mining and visualization and documentation
+	Go on Mining Software Repositories Conference site to get papers that are related to this.
+
+
+Question:
+
+How do developers of open source projects document there code?
+	- Specifically, is the code and documentation done at the same time?
+	- And overall when does the majority of the documentation take place?
+		- in terms of fixing bugs, creating new features, right after a release, right before a release? (note these are not all mutually exclusive)
+
+- One think I haven't done is identify why this question is an important question to ask.
+	- Obviously documentation of code can lead to a easier to maintain source base and a larger community base (since more developers will be able to understand the software).
+	- Further more it could be argued that effective documentation can make development of software more effective and thus produce better software.
+	- Quality documentation is not necessarily the focus of my question or answer.
+	- Since in order to have quality documentation documentation must be present.
+	- I do cover some aspects of documentation styles that could lead to better quality documentation (documented before or while writing the code)
+	- Further research could be done into which documentation style produces the highest quality documentation as well as at which period does.
+
+Another extension idea would be creating a well defined score which will be produced and identify whether the code based on it's repository is well documented and therefore well made based on it's documentation.
+
+TODO
+- Work on creating the database.
+	- Email him the db schema
+- Collecting the data
+- attempting specific questions to get simple results.

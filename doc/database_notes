@@ -1,0 +1,140 @@
+What is needed in the database
+
+- Repositorys
+	- Repository
+		- Commits
+			- Commit
+				- Committer
+					- name
+					- date
+				- Author
+					- name
+					- date
+				- Parents (could have many)
+					- Commits
+				- message
+					- Title
+					- Body
+				Files affected (could have many)
+					- File
+						- diff results
+							- additions
+							- changes
+							- deletions
+						patch
+							- lines affected
+								- start with '-' if they are deleted and '+' if they are added
+						- Raw file at commit
+				- Comments
+
+Need to decide whether I want to keep the git data raw, or if I want to parse it before it is stored
+
+I would like to know:
+	- # lines of code added
+	- # lines of code deleted
+	- # lines of documentation added
+	- # lines of documentation deleted
+
+4 types of documentation (in file) that im intrested in
+	- File documentation
+	- Class documentation (sometimes the same as the previous)
+	- Method/Function documentation
+	- In line documentation
+
+File
+	- Documentation
+	- Classes
+		- Class
+			- Documentation
+			- Inline Documentation (might group this with instance variables)
+			- Instance Variables 
+			- Methods
+				- Method
+					- Documentation
+					- Inline Documentation
+					- Code
+
+Documentation would be (and inline documentation)
+	- Additions
+	- Deletions
+
+Code would be (and instance variables)
+	- Additions
+	- Deletions
+
+* Need to handle file "inline" comments which could be just added to the file's documentation
+
+
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
+CREATE TABLE 
+(
+
+)
+/**
+ * The create table command for
+ */
