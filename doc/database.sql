@@ -22,7 +22,7 @@ CREATE TABLE users
 (
 	user_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	name VARCHAR(64),
-	date DATE
+	date DATETIME
 );
 
 
@@ -45,6 +45,7 @@ CREATE TABLE commits
 	commiter_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	author_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	body TEXT
+	sha_hash VARCHAR(64)
 );
 
 
@@ -83,7 +84,13 @@ CREATE TABLE file
 	commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	name TEXT,
 	addition INTEGER DEFAULT 0,
-	deletions INTEGER DEFAULT 0,
-	patch LONGTEXT,
-	file LONGTEXT
+	deletion INTEGER DEFAULT 0,
+	patch LONGBLOB,
+	file LONGBLOB
 );
+
+DROP TABLE file;
+DROP TABLE parent_commits;
+DROP TABLE commits;
+DROP TABLE users;
+DROP TABLE repositories;
