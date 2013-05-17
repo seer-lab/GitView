@@ -66,7 +66,7 @@ commitFile.close
 
 #response = github.repos.commits.get_request(a.body[0]["url"])
 
-#file = doc = Nokogiri::HTML(open(response.body["files"][0]["raw_url"]))
+#file = Nokogiri::HTML(open(response.body["files"][0]["raw_url"]))
 
 
 
