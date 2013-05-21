@@ -10,8 +10,9 @@ GRANT ALL ON github_data.* to 'git_miner'@'localhost';
  */
 CREATE TABLE repositories
 (
-	repo_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	repo_name VARCHAR(64)
+    repo_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    repo_name VARCHAR(64)
+    repo_owner VARCHAR(64)
 );
 
 /**
@@ -20,9 +21,9 @@ CREATE TABLE repositories
  */
 CREATE TABLE users
 (
-	user_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	name VARCHAR(64),
-	date DATETIME
+    user_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(64),
+    date DATETIME
 );
 
 
@@ -31,7 +32,7 @@ CREATE TABLE users
  */
 /*CREATE TABLE files
 (
-	files_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+    files_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
 
 )*/
 
@@ -40,12 +41,12 @@ CREATE TABLE users
  */
 CREATE TABLE commits
 (
-	commit_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	repo_reference INTEGER UNSIGNED REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	commiter_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	author_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	body TEXT
-	sha_hash VARCHAR(64)
+    commit_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    repo_reference INTEGER UNSIGNED REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    commiter_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    author_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    body TEXT,
+    sha_hash VARCHAR(64)
 );
 
 
@@ -58,10 +59,9 @@ CREATE TABLE commits
  */
 CREATE TABLE parent_commits
 (
-	node_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	children_id BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	parent_id BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
+    node_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    children_id BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    parent_sha VARCHAR(64)
 
 /**
  * The create table command for store the message that was given with the commit
@@ -70,9 +70,9 @@ CREATE TABLE parent_commits
  */
 /*CREATE TABLE commit_message
 (
-	message_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-	title TEXT
-	body TEXT
+    message_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
+    title TEXT
+    body TEXT
 )*/
 
 /**
@@ -80,15 +80,25 @@ CREATE TABLE parent_commits
  */
 CREATE TABLE file
 (
-	file_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
-	name TEXT,
-	addition INTEGER DEFAULT 0,
-	deletion INTEGER DEFAULT 0,
-	patch LONGBLOB,
-	file LONGBLOB
+    file_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    name TEXT,
+    addition INTEGER DEFAULT 0,
+    deletion INTEGER DEFAULT 0,
+    patch LONGBLOB,
+    file LONGBLOB
 );
 
+CREATE TABLE tags
+(
+    tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    tag_name TEXT,
+    tag_description TEXT,
+    tag_date DATETIME
+);
+
+DROP TABLE tags;
 DROP TABLE file;
 DROP TABLE parent_commits;
 DROP TABLE commits;

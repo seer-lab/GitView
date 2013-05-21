@@ -28,6 +28,13 @@ What is needed in the database
 						- Raw file at commit
 				- Comments
 
+Tags
+	- tag_id
+	- tag_name
+	- tag_decription
+	- commit_id
+	- date
+
 Need to decide whether I want to keep the git data raw, or if I want to parse it before it is stored
 
 I would like to know:
