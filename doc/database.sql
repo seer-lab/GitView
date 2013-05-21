@@ -11,7 +11,7 @@ GRANT ALL ON github_data.* to 'git_miner'@'localhost';
 CREATE TABLE repositories
 (
     repo_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    repo_name VARCHAR(64)
+    repo_name VARCHAR(64),
     repo_owner VARCHAR(64)
 );
 
@@ -62,7 +62,7 @@ CREATE TABLE parent_commits
     node_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     children_id BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
     parent_sha VARCHAR(64)
-
+);
 /**
  * The create table command for store the message that was given with the commit
  * Since you can have a title and body but do not have to both are stored in the

@@ -51,7 +51,6 @@ COMMIT_REFERENCE = 'commit_reference'
 ADDITION = 'addition'
 DELETION = 'deletion'
 PATCH = 'patch'
-FILE = 'file'
 
 # Tags
 TAG_ID = 'tag_id'
@@ -183,7 +182,7 @@ class Tag
     end
 
     def tag_date()
-        @tag_date
+        @tag_date        
     end
 end
 
@@ -233,7 +232,7 @@ def insertRepo(con, repo, owner)
     pick = con.prepare("INSERT INTO #{REPO} (#{REPO_NAME}, #{REPO_OWNER}) VALUES (?, ?)")
     pick.execute(repo, owner)
 
-    return pick.insert_id
+    return toInteger(pick.insert_id)
 end
 
 # Update the repository in the database
@@ -273,11 +272,13 @@ def getUserId(con, user)
 
     result = pick.fetch
 
+    #puts "result #{result}"
     if(result == nil)
         result = insertUser(con, user)
     end
+    #puts "#{user.name} id = #{result}"
 
-    return results
+    return result
 end
 
 # Insert the given user to the database
@@ -287,7 +288,7 @@ def insertUser(con, user)
     pick = con.prepare("INSERT INTO #{USERS} (#{NAME}, #{DATE}) VALUES (?, ?)")
     pick.execute(user.name, user.date)
 
-    return pick.insert_id
+    return toInteger(pick.insert_id)
 end
 
 # Update the user in the database
@@ -336,7 +337,7 @@ def insertCommits(con, commit)
     pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMITER_REFERENCE}, #{AUTHOR_REFERENCE}, #{BODY}, #{SHA}) VALUES (?, ?, ?, ?, ?)")
     pick.execute(repo_id, commiter_id, author_id, commit.body, commit.sha)
 
-    return pick.insert_id
+    return toInteger(pick.insert_id)
 end
 
 # Insert the given commits to the database, with the ids already given.
@@ -350,9 +351,14 @@ end
 def insertCommitsIds(con, commit)
 
     pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMITER_REFERENCE}, #{AUTHOR_REFERENCE}, #{BODY}, #{SHA}) VALUES (?, ?, ?, ?, ?)")
+    #puts "repoid = #{commit.repo}"
+    #puts "commiterid = #{commit.commiter}"
+    #puts "authorid = #{commit.author}"
+    #puts "body = #{commit.body}"
+    #puts "sha = #{commit.sha}"
     pick.execute(commit.repo, commit.commiter, commit.author, commit.body, commit.sha)
 
-    return pick.insert_id
+    return toInteger(pick.insert_id)
 end
 
 # Get the commit id If the commit is not found it will be added to the db
@@ -363,18 +369,14 @@ end
 #     - +author+:: the +User+ that wrote the code that is part of this commit
 #     - +body+:: the commit message
 #     - +sha+:: the uuid for the commit
-def getCommitId(con, commit)
+def getCommitId(con, sha)
 
     pick = con.prepare("SELECT #{COMMIT_ID} FROM #{COMMITS} WHERE #{SHA}=?")
-    pick.execute(commit.sha)
 
-    result = pick.fetch
+    #puts "sha = #{sha}"
+    pick.execute(sha)
 
-    if(result == nil)
-        result = insertCommits(con, commit)
-    end
-
-    return results
+    return toInteger(pick.fetch)
 end
 
 # Insert the given commits to the database
@@ -383,13 +385,14 @@ end
 # +parent_commit+:: the +Commit+ of the parent
 def insertParent(con, child_commit, parent_commit)
 
-    child_id = getCommitId(con, child_commit)
+    #child_id = getCommitSha(con, child_commit.sha)
     #parent_id = getCommitId(con, parent_commit)
 
     pick = con.prepare("INSERT INTO #{PARENT_COMMITS} (#{CHILDREN_ID}, #{PARENT_ID}) VALUES (?, ?)")
-    pick.execute(child_id, parent_commit)
 
-    return pick.insert_id
+    pick.execute(child_commit, parent_commit)
+
+    return toInteger(pick.insert_id)
 end
 
 # Get all the parents of a given child commit
@@ -421,8 +424,27 @@ def insertFile(con, file)
     pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
     pick.execute(commit_id, file.name, file.addition, file.deletion, file.patch, file.file)
 
-    return pick.insert_id
+    return toInteger(pick.insert_id)
 end
+
+# Insert the file into the database with the commit id already provided
+# +con+:: the database connection used.
+# +file+:: the +File+ to be added to the database.
+def insertFileId(con, file)
+
+    pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
+    #puts "commit #{file.commit[0]} #{file.commit[0].class.name}"
+    #puts "name #{file.name} #{file.name.class.name}"
+    #puts "addition #{file.addition} #{file.addition.class.name}"
+    #puts "deletion #{file.deletion} #{file.deletion.class.name}"
+    #puts "patch #{file.patch} #{file.patch.class.name}"
+    #puts "file #{file.file} #{file.file.class.name}"
+
+    pick.execute(file.commit, file.name, file.addition, file.deletion, file.patch, file.file)
+
+    return toInteger(pick.insert_id)
+end
+
 
 # Get all the files that are related to the given commit
 # +con+:: the database connection used. 
@@ -451,8 +473,8 @@ def insertTag(con, tag)
 
     pick = con.prepare("INSERT INTO #{TAGS} (#{COMMIT_REFERENCE}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
     pick.execute(commit_id, tag.tag_name, tag.tag_description, tag.tag_date)
-
-    return pick.insert_id
+ 
+    return toInteger(pick.insert_id)
 end
 
 # Get all the tags in the database
@@ -472,6 +494,14 @@ def getTags(con)
     return results
 end
 
+
+def toInteger(array)
+    if array.class.name == Array.to_s
+        return array[0]
+    else
+        return array
+    end
+end
 
 
 #TODO in file that is using sql queries call 'con.commit' so that information is actually stored.
