@@ -283,7 +283,7 @@ start_time = Time.now
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
 
 #medium-large
-getAllCommits(con, github, 'spotify', 'luigi')
+#getAllCommits(con, github, 'spotify', 'luigi')
 
 #huge
 #getAllCommits(con, github, 'peter-murach', 'github')
