@@ -60,7 +60,7 @@ TAG_DESC = 'tag_description'
 TAG_DATE = 'tag_date'
 
 
-con = Mysql.new(HOST, USERNAME, PASSWORD, DATABASE)
+#con = Mysql.new(HOST, USERNAME, PASSWORD, DATABASE)
 
 =begin
 begin

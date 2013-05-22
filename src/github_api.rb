@@ -22,6 +22,7 @@ class Rate
         return true
     end
 
+
     def getRateRemaining(github)
         @rateRemaining = github.ratelimit_remaining
     end
@@ -89,6 +90,7 @@ puts rate.rate()
 def getAllCommits(con, github, username, repo_name)
     
     puts "Getting all commits..."
+
     # Get the repo's commits
     allCommits = github.repos.commits.all username, repo_name
 
@@ -153,7 +155,9 @@ def getAllCommits(con, github, username, repo_name)
 
     puts 'working on tags'
     begin
-       tagList = github.git_data.references.list username, repo_name, ref:'tags'
+
+        # Get all the tags
+        tagList = github.git_data.references.list username, repo_name, ref:'tags'
 
         tagList.body.each { |tag|
 
@@ -210,7 +214,10 @@ tagList.body.each { |tag|
 =end
 
 def setFiles(con, github, commitUrl, commit_id)
+    # TODO decide on whether to ignore /doc folder or not, since the projects im looking for should have source code documentation (so /doc would be duplication or not what im looking for)
     puts 'working on files'
+
+    # Get all files
     commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
 
     commitFiles.each { |file|
@@ -229,7 +236,9 @@ def setFiles(con, github, commitUrl, commit_id)
 
         # Get the file that was updated
         url = URI::encode(file["raw_url"].force_encoding('binary'))
-        puts url
+        #puts url
+
+
         #body = nil
 
         #Added try catch since some file urls do not work. (such as file to large)
@@ -260,6 +269,7 @@ end
 
 con = createConnection()
 
+start_time = Time.now
 #really small
 #getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
 
@@ -273,10 +283,20 @@ con = createConnection()
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
 
 #medium-large
-getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
+getAllCommits(con, github, 'spotify', 'luigi')
 
 #huge
 #getAllCommits(con, github, 'peter-murach', 'github')
+
+#Huge (because of libraries commited)
+#getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
+
+finish_time = Time.now
+
+# Calculate the run time
+total_time = "Number of seconds = #{finish_time - start_time}"
+
+puts total_time
 
 rate = Rate.new(github)
 
