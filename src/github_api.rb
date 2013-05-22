@@ -102,14 +102,34 @@ def getAllCommits(con, github, username, repo_name)
 
         # Get the author's info
         # Insert the author (if not already inserted)
-        author_id = toInteger(getUserId(con, User.new(commit["author"]["login"], commit["commit"]["author"]["date"])))
+        
+        #todo check if commit["author"] == nil
+        author_name = nil
+        if commit["author"] == nil
+            author_name = commit["commit"]["author"]["name"]
+        else
+            author_name = commit["author"]["login"]
+        end
+        author_date = commit["commit"]["author"]["date"]
+
+        author_id = toInteger(getUserId(con, User.new(author_name, author_date)))
 
         
         #puts "author_id = #{author_id}"
 
         # Get the commiter's info
         # Insert the committer (if not already inserted)
-        commiter_id = toInteger(getUserId(con, User.new(commit["committer"]["login"], commit["commit"]["committer"]["date"])))
+        
+        commiter_name = nil
+        if commit["committer"] == nil
+            commiter_name = commit["commit"]["committer"]["name"]
+        else
+            commiter_name = commit["committer"]["login"]
+        end
+
+        commiter_date = commit["commit"]["committer"]["date"]
+
+        commiter_id = toInteger(getUserId(con, User.new(commiter_name, commiter_date)))
 
         #puts "commiter_id = #{commiter_id}"
 
@@ -220,9 +240,20 @@ end
 
 con = createConnection()
 
+#really small
 #getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
 
-getAllCommits(con, github, 'stormpath', 'stormpath-rails')
+#small
+#getAllCommits(con, github, 'stormpath', 'stormpath-rails')
+
+#slightly small
+getAllCommits(con, github, 'rauhryan', 'ghee')
+
+#medium
+#getAllCommits(con, github, 'gnu-user', 'free-room-website')
+
+#huge
+#getAllCommits(con, github, 'peter-murach', 'github')
 
 rate = Rate.new(github)
 
