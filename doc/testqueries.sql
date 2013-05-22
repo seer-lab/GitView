@@ -7,7 +7,22 @@ FROM repositories AS r INNER JOIN commits AS c1 ON r.repo_id = c1.repo_reference
 /*
  * Gets all the files that are python
  */
-SELECT * FROM file WHERE name LIKE '%\.py'
+SELECT file FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE name LIKE '%\.py'
 
 # Extention of your choice
-#SELECT * FROM file WHERE name LIKE '%\.#{file_extention}'
+#SELECT file FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE name LIKE '%\.#{file_extention}'
+
+SELECT c.sha_hash, f.file, com.date FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE f.name LIKE '%\.py' ORDER BY com.date
+
+
+/*
+ * Get all files from 1 commit.
+ */
+SELECT c.sha_hash, f.file, com.date FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE f.name LIKE '%\.py' AND c.sha_hash = '056055f316ae660880c8262feb29ccd4e2bc1191' ORDER BY com.date
+
+/*
+ *
+ */
+SELECT f.name, f.file, com.date FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE f.name LIKE '%\.py' AND c.sha_hash = '056055f316ae660880c8262feb29ccd4e2bc1191' ORDER BY com.date
+
+SELECT f.name, f.file, com.date FROM file AS f INNER JOIN commits AS c ON f.commit_reference = c.commit_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN repositories AS r ON c.repo_reference = r.repo_id WHERE f.name LIKE '%\.py' AND com.date < '2011-11-22 23:59:58' ORDER BY com.date DESC
