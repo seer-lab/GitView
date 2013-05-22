@@ -1,0 +1,12 @@
+Setting up to run the project:
+
+1. Install ruby1.9.1
+    1. Gems to install:
+        - sudo gem install mysql
+        - json ~> 1.7.7
+        - nokogiri
+        - open-uri
+        - github_api
+
+2. Install MySQL
+    1. Need to be able to make an account that has full privileges to the database I create.

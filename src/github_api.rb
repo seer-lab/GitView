@@ -152,31 +152,37 @@ def getAllCommits(con, github, username, repo_name)
     }
 
     puts 'working on tags'
-    tagList = github.git_data.references.list username, repo_name, ref:'tags'
+    begin
+       tagList = github.git_data.references.list username, repo_name, ref:'tags'
 
-    tagList.body.each { |tag|
+        tagList.body.each { |tag|
 
-        tagMore = (github.git_data.tags.get username, repo_name, tag["object"]["sha"]).body
+            tagMore = (github.git_data.tags.get username, repo_name, tag["object"]["sha"]).body
 
-        # Get the commit sha
-        sha = tagMore["object"]["sha"]
+            # Get the commit sha
+            sha = tagMore["object"]["sha"]
 
-        # Get the tag name
-        name = tagMore["tag"]
+            # Get the tag name
+            name = tagMore["tag"]
 
-        # Get the tag message
-        message = tagMore["message"]
+            # Get the tag message
+            # TODO remove the '\n' at the end
+            message = tagMore["message"]
 
-        # Get the date the tag was added
-        date = tagMore["tagger"]["date"]
+            # Get the date the tag was added
+            date = tagMore["tagger"]["date"]
 
-        #puts dates
+            #puts dates
 
-        #sha = tag["commit"]["sha"]
-        #test the actual command
-        #tagMore = github.git_data.tags.get username, repo_name, sha
-        insertTag(con, Tag.new(sha, name, message, date))
-    }
+            #sha = tag["commit"]["sha"]
+            #test the actual command
+            #tagMore = github.git_data.tags.get username, repo_name, sha
+            insertTag(con, Tag.new(sha, name, message, date))
+        }
+    rescue Github::Error::GithubError => e
+        puts e.message
+    end
+
 end
 
 #Tag stuff
@@ -222,10 +228,24 @@ def setFiles(con, github, commitUrl, commit_id)
         patch = file["patch"]
 
         # Get the file that was updated
-        file = Nokogiri::HTML(open(file["raw_url"]))
+        url = URI::encode(file["raw_url"].force_encoding('binary'))
+        puts url
+        #body = nil
 
-        #puts commit_id[0]
-        insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, file.children.children.children.children.text))
+        #Added try catch since some file urls do not work. (such as file to large)
+        begin
+            file = Nokogiri::HTML(open(url))
+            body = file.children.children.children.children.text
+            #puts commit_id[0]
+            
+        rescue OpenURI::HTTPError => e
+            puts e
+            # Add the error message to the url link so that when reading the
+            # database it will be easier to tell that the there was a problem
+            # getting the file.
+            body = "#{e}\n#{url}"
+        end
+        insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
     }
 end
 =begin
@@ -247,10 +267,13 @@ con = createConnection()
 #getAllCommits(con, github, 'stormpath', 'stormpath-rails')
 
 #slightly small
-getAllCommits(con, github, 'rauhryan', 'ghee')
+#getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #medium
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
+
+#medium-large
+getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
 #huge
 #getAllCommits(con, github, 'peter-murach', 'github')

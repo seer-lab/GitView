@@ -1,9 +1,16 @@
+/*
+ * Use these commands in the admin account for mysql to create the use that is
+ * used by the database_interface.
+ */
 CREATE DATABASE github_data;
 
 CREATE USER 'git_miner'@'localhost' IDENTIFIED BY 'pickaxe';
 
 GRANT ALL ON github_data.* to 'git_miner'@'localhost';
 
+/*
+ * The commands for creating all the tables.
+ */
 
 /**
  * The create table command for the repositories retrieved
@@ -98,6 +105,9 @@ CREATE TABLE tags
     tag_date DATETIME
 );
 
+/*
+ * The commands for dropping the tables.
+ */
 DROP TABLE tags;
 DROP TABLE file;
 DROP TABLE parent_commits;
