@@ -5,6 +5,39 @@ EXTENTION_EXPRESSION = '%\.'
 
 PYTHON = 'py'
 
+
+class CodeChurn
+    def initialize()
+        @codeAddition = 0
+        @codeDeletion = 0
+        @commentAddition = 0
+        @commentDeletion = 0
+    end
+
+    def codeAddition(value)
+        @codeAddition += value
+    end
+
+    def codeDeletion(value)
+        @codeDeletion += value
+    end
+
+    def commentAddition(value)
+        @commentAddition += value
+    end
+
+    def commentDeletion(value)
+        @commentDeletion += value
+    end
+
+    def totalCodes()
+        @codeAddition - @codeDeletion   
+    end
+    def totalComments()
+        @commentAddition - @commentDeletion
+    end
+end
+
 def getFiles(con, extention)
     pick = con.prepare("SELECT #{FILE} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} WHERE #{NAME} LIKE ?")
     pick.execute("#{EXTENTION_EXPRESSION}#{extention}")
@@ -33,12 +66,37 @@ def getPatches(con, commit_id, extention)
     return results
 end
 
+def getCommitIds(con, username, repo)
+    pick = con.prepare("SELECT c.#{COMMIT_ID} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
+
+    pick.execute(repo, username)
+
+    rows = pick.num_rows
+    results = Array.new(rows)
+
+    rows.times do |x|
+        results[x] = pick.fetch
+    end
+
+    return results
+end
+
 con = createConnection()
-patches = getPatches(con, 412, PYTHON)
+
+commits = getCommitIds(con, 'spotify', 'luigi')
+
+commits.each { |commit|
+    patches = getPatches(con, commits[0][1], PYTHON)
+}
+
+cd = CodeChurn.new()
+
 
 #Can be negative*
-numOfCommentsPerCommit = 0
-numOfCodesPerCommit = 0
+codeAdditions = 0
+codeDeletions = 0
+commentAddition = 0
+commentDeletion = 0
 
 patches.each { |patch|
     #The first element is the file name
@@ -56,10 +114,12 @@ patches.each { |patch|
 
         if comment[0] == '-'
             #Deletion
-            numOfCommentsPerCommit -= 1
+            cd.commentDeletion(1)
+            #commentDeletion += 1
         elsif comment[0] == '+'
             #Addition
-            numOfCommentsPerCommit += 1
+            cd.commentAddition(1)
+            #commentAddition += 1
         elsif comment[0] == '@@'
             #Ignore
         end
@@ -75,10 +135,12 @@ patches.each { |patch|
 
                 if line[0] == '-'
                     #Deletion
-                    numOfCodesPerCommit -= 1
+                    cd.codeDeletion(1)
+                    #codeDeletions += 1
                 elsif line[0] == '-' || line[0] == '+'
                     #Addition
-                    numOfCodesPerCommit += 1
+                    cd.codeAddition(1)
+                    codeAdditions += 1
                 end
             end
 
@@ -93,10 +155,16 @@ patches.each { |patch|
 #else
 #    puts "nolo"
 #end
-    
 
-puts "commits = #{numOfCommentsPerCommit}"
-puts "code = #{numOfCodesPerCommit}"
+puts "comment added = #{cd.commentAddition(0)}"
+puts "comment deleted = #{cd.commentDeletion(0)}"
+
+puts "code added = #{cd.codeAddition(0)}"
+puts "code deleted = #{cd.codeDeletion(0)}"
+
+puts "total code  = #{cd.totalCodes}"
+puts "total comments = #{cd.totalComments}"
+
 #patches[3][1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
 #patches[3][1].scan(/(\+|-|(@@))(.*?)\n/)
 
