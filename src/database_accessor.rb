@@ -1,3 +1,4 @@
+require 'gchart'
 require_relative 'database_interface'
 
 #The expression to match the given extention
@@ -38,6 +39,47 @@ class CodeChurn
     end
 end
 
+class StatArray
+    def initialize()
+        @codeAddition = Array.new
+        @codeDeletion =  Array.new 
+        @commentAddition = Array.new
+        @commentDeletion =  Array.new
+    end
+
+    def codeAdditionPush(value)
+        @codeAddition.push(value)
+    end
+
+    def codeDeletionPush(value)
+        @codeDeletion.push(value)
+    end
+
+    def commentAdditionPush(value)
+        @commentAddition.push(value)
+    end
+
+    def commentDeletionPush(value)
+        @commentDeletion.push(value)
+    end
+
+    def codeAddition()
+        @codeAddition
+    end
+
+    def codeDeletion()
+        @codeDeletion
+    end
+
+    def commentAddition()
+        @commentAddition
+    end
+
+    def commentDeletion()
+        @commentDeletion
+    end
+end
+
 def getFiles(con, extention)
     pick = con.prepare("SELECT #{FILE} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} WHERE #{NAME} LIKE ?")
     pick.execute("#{EXTENTION_EXPRESSION}#{extention}")
@@ -67,7 +109,7 @@ def getPatches(con, commit_id, extention)
 end
 
 def getCommitIds(con, username, repo)
-    pick = con.prepare("SELECT c.#{COMMIT_ID} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
+    pick = con.prepare("SELECT c.#{COMMIT_ID} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? LIMIT 290")
 
     pick.execute(repo, username)
 
@@ -81,89 +123,122 @@ def getCommitIds(con, username, repo)
     return results
 end
 
+# Take the Array of +CodeChurn+ objects and create an array for each of the 
+# different values.
+def createStateArray(codeChurns)
+
+    metricArray = StatArray.new
+    codeChurns.each { |codeChurn|
+
+        # Add the code additions to the list
+        metricArray.codeAdditionPush(codeChurn.codeAddition(0))
+
+        # Add the code deletions to the list
+        metricArray.codeDeletionPush(codeChurn.codeDeletion(0))
+
+        # Add the comment addition to the list
+        metricArray.commentAdditionPush(codeChurn.commentAddition(0))
+
+        # Add the comment deletions to the list
+        metricArray.commentDeletionPush(codeChurn.commentDeletion(0))
+    }
+    return metricArray
+end
+
+
+#have the time as part of the chart (the x axis)
 con = createConnection()
 
-commits = getCommitIds(con, 'spotify', 'luigi')
+username = 'spotify'
+repo_name = 'luigi'
+commits = getCommitIds(con, username, repo_name)
+
+stats = Array.new
 
 commits.each { |commit|
-    patches = getPatches(con, commits[0][1], PYTHON)
-}
+    patches = getPatches(con, commit[0], PYTHON)
+    cd = CodeChurn.new()
 
-cd = CodeChurn.new()
+    patches.each { |patch|
+        #The first element is the file name
+        if(patch[1] != nil)
+            patch[1] += "\n"
+            comments = patch[1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
 
+            code = patch[1].scan(/(\+|-|(@@))(.*?)\n/)
 
-#Can be negative*
-codeAdditions = 0
-codeDeletions = 0
-commentAddition = 0
-commentDeletion = 0
+            comments.each { |comment|
+                # at [0] is whether the line is an addition or deletion
+                # The whole line is at [1]
+                # Only the comment is at either [2] (if it is a # comment) or [3] if it
+                # is a multi-line comment
+                #comment[0]
 
-patches.each { |patch|
-    #The first element is the file name
-    patch[1] += "\n"
-    comments = patch[1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
-
-    code = patch[1].scan(/(\+|-|(@@))(.*?)\n/)
-
-    comments.each { |comment|
-        # at [0] is whether the line is an addition or deletion
-        # The whole line is at [1]
-        # Only the comment is at either [2] (if it is a # comment) or [3] if it
-        # is a multi-line comment
-        #comment[0]
-
-        if comment[0] == '-'
-            #Deletion
-            cd.commentDeletion(1)
-            #commentDeletion += 1
-        elsif comment[0] == '+'
-            #Addition
-            cd.commentAddition(1)
-            #commentAddition += 1
-        elsif comment[0] == '@@'
-            #Ignore
-        end
-    }
-
-    code.each { |line|
-
-        # Need to remove lines that start with spaces but 
-        # are only comments
-        if line[0] == '-' || line[0] == '+'
-
-            if !line[2].match(/^\s*#(.*)/)
-
-                if line[0] == '-'
+                if comment[0] == '-'
                     #Deletion
-                    cd.codeDeletion(1)
-                    #codeDeletions += 1
-                elsif line[0] == '-' || line[0] == '+'
+                    cd.commentDeletion(1)
+                    #commentDeletion += 1
+                elsif comment[0] == '+'
                     #Addition
-                    cd.codeAddition(1)
-                    codeAdditions += 1
+                    cd.commentAddition(1)
+                    #commentAddition += 1
+                elsif comment[0] == '@@'
+                    #Ignore
                 end
-            end
+            }
 
-        elsif line[0] == '@@'
-            #Ignore
+            code.each { |line|
+
+                # Need to remove lines that start with spaces but 
+                # are only comments
+                if line[0] == '-' || line[0] == '+'
+
+                    if !line[2].match(/^\s*#(.*)/)
+
+                        if line[0] == '-'
+                            #Deletion
+                            cd.codeDeletion(1)
+                            #codeDeletions += 1
+                        elsif line[0] == '-' || line[0] == '+'
+                            #Addition
+                            cd.codeAddition(1)
+                            #codeAdditions += 1
+                        end
+                    end
+
+                elsif line[0] == '@@'
+                    #Ignore
+                end
+            }
         end
     }
+
+    #puts "comment added = #{cd.commentAddition(0)}"
+    #puts "comment deleted = #{cd.commentDeletion(0)}"
+
+    #puts "code added = #{cd.codeAddition(0)}"
+    #puts "code deleted = #{cd.codeDeletion(0)}"
+
+    #puts "total code  = #{cd.totalCodes}"
+    #puts "total comments = #{cd.totalComments}"
+    #puts "\n"
+
+    stats.push(cd)
 }
 
-#if !code[1][2].match(/^\s*#(.*)/)
-#    puts "yolo"
-#else
-#    puts "nolo"
-#end
+commentData = createStateArray(stats)
 
-puts "comment added = #{cd.commentAddition(0)}"
-puts "comment deleted = #{cd.commentDeletion(0)}"
+#bg == background
+Gchart.line(:data => commentData.codeAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Additions', :axis => "hello" )
 
-puts "code added = #{cd.codeAddition(0)}"
-puts "code deleted = #{cd.codeDeletion(0)}"
+Gchart.line(:data => commentData.codeDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Deletions', :axis => "hello" )
 
-puts "total code  = #{cd.totalCodes}"
-puts "total comments = #{cd.totalComments}"
+Gchart.line(:data => commentData.commentAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Additions', :axis => "hello" )
+
+Gchart.line(:data => commentData.commentDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Deletion', :axis => "hello" )
+
+# :legend => ['x axis', 'y-axis']
+#puts stats
 
 #patches[3][1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
 #patches[3][1].scan(/(\+|-|(@@))(.*?)\n/)
