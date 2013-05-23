@@ -48,6 +48,7 @@ PARENT_ID = 'parent_sha'
 # File
 FILE_ID = 'file_id'
 COMMIT_REFERENCE = 'commit_reference'
+#NAME = 'name'
 ADDITION = 'addition'
 DELETION = 'deletion'
 PATCH = 'patch'

@@ -19,6 +19,93 @@ def getFiles(con, extention)
     return results
 end
 
+def getPatches(con, commit_id, extention)
+    pick = con.prepare("SELECT #{NAME}, #{PATCH} FROM #{FILE} WHERE #{COMMIT_REFERENCE} = ? AND #{NAME} LIKE ?")
+    pick.execute(commit_id, "#{EXTENTION_EXPRESSION}#{extention}")
+
+    rows = pick.num_rows
+    results = Array.new(rows)
+
+    rows.times do |x|
+        results[x] = pick.fetch
+    end
+
+    return results
+end
+
+con = createConnection()
+patches = getPatches(con, 412, PYTHON)
+
+#Can be negative*
+numOfCommentsPerCommit = 0
+numOfCodesPerCommit = 0
+
+patches.each { |patch|
+    #The first element is the file name
+    patch[1] += "\n"
+    comments = patch[1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
+
+    code = patch[1].scan(/(\+|-|(@@))(.*?)\n/)
+
+    comments.each { |comment|
+        # at [0] is whether the line is an addition or deletion
+        # The whole line is at [1]
+        # Only the comment is at either [2] (if it is a # comment) or [3] if it
+        # is a multi-line comment
+        #comment[0]
+
+        if comment[0] == '-'
+            #Deletion
+            numOfCommentsPerCommit -= 1
+        elsif comment[0] == '+'
+            #Addition
+            numOfCommentsPerCommit += 1
+        elsif comment[0] == '@@'
+            #Ignore
+        end
+    }
+
+    code.each { |line|
+
+        # Need to remove lines that start with spaces but 
+        # are only comments
+        if line[0] == '-' || line[0] == '+'
+
+            if !line[2].match(/^\s*#(.*)/)
+
+                if line[0] == '-'
+                    #Deletion
+                    numOfCodesPerCommit -= 1
+                elsif line[0] == '-' || line[0] == '+'
+                    #Addition
+                    numOfCodesPerCommit += 1
+                end
+            end
+
+        elsif line[0] == '@@'
+            #Ignore
+        end
+    }
+}
+
+#if !code[1][2].match(/^\s*#(.*)/)
+#    puts "yolo"
+#else
+#    puts "nolo"
+#end
+    
+
+puts "commits = #{numOfCommentsPerCommit}"
+puts "code = #{numOfCodesPerCommit}"
+#patches[3][1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
+#patches[3][1].scan(/(\+|-|(@@))(.*?)\n/)
+
+#patches[0][0].scan(/(#(.*)\n)|("""(.*)"""\n)/)
+
+#a = "        # Lookup in cache and return if existing..."
+#b = "        if k not in cls.__insts:"
+#c = "        pass # default impl"
+=begin
 con = createConnection()
 
 #Get the first line of documentation
@@ -50,9 +137,10 @@ totalNumberOfLinesOfSourceCode = totalNumberOfLinesOfCode - totalNumberOfLinesof
 
 (totalNumberOfLinesofDocumentation/totalNumberOfLinesOfCode.to_f)*100
 
+=end
 
 
-length = files[0][0].size
+#length = files[0][0].size
 
 def parseComments(file)
     inComment = false
