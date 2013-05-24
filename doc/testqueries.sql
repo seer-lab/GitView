@@ -45,4 +45,7 @@ SELECT file_name file FROM file WHERE commit_reference = 1
 #From the files i
 SELECT name, patch FROM file WHERE commit_reference = 413 AND name LIKE '%\.py'
 
+#Improved with the committer's date
+SELECT com.date, f.name, f.patch FROM commits AS c INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE commit_reference = 413 AND f.name LIKE '%\.py';
+
 SELECT c.commit_id FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'spotify' AND r.repo_owner LIKE 'luigi'
