@@ -286,7 +286,7 @@ start_time = Time.now
 #getAllCommits(con, github, 'spotify', 'luigi')
 
 #huge
-#getAllCommits(con, github, 'peter-murach', 'github')
+getAllCommits(con, github, 'peter-murach', 'github')
 
 #Huge (because of libraries commited)
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')

@@ -1,10 +1,25 @@
 require 'gchart'
+require 'googl'
 require_relative 'database_interface'
 
-#The expression to match the given extention
-EXTENTION_EXPRESSION = '%\.'
+#The expression to match the given extension
+EXTENSION_EXPRESSION = '%\.'
+
+#The multi-line comment regex only catches multi-line comment style done on 1 line.
+# Need to add support to go through the added lines and look for the multi-line comment start and end to identify who many lines it is.
+PYTHON_COMMENT_EXPR = /(\+|-).*?((#.*)|(""".*"""))\n/
+
+RUBY_COMMENT_EXPR = /(\+|-).*?((#.*))\n/
+
+DIFF_REGULAR_EXPR =/(\+|-|(@@))(.*?)\n/
+
+#Can break up file into lines
+# Note, last line must have a \n added to it.
+LINE_EXPR = /(.*?)\n/
 
 PYTHON = 'py'
+
+RUBY = 'rb'
 
 
 class CodeChurn
@@ -98,9 +113,9 @@ class StatArray
     end
 end
 
-def getFiles(con, extention)
+def getFiles(con, extension)
     pick = con.prepare("SELECT #{FILE} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} WHERE #{NAME} LIKE ?")
-    pick.execute("#{EXTENTION_EXPRESSION}#{extention}")
+    pick.execute("#{EXTENSION_EXPRESSION}#{extension}")
 
     rows = pick.num_rows
     results = Array.new(rows)
@@ -112,9 +127,9 @@ def getFiles(con, extention)
     return results
 end
 
-def getPatches(con, commit_id, extention)
+def getPatches(con, commit_id, extension)
     pick = con.prepare("SELECT f.#{NAME}, f.#{PATCH}, com.#{DATE} FROM #{COMMITS} AS c INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE f.#{COMMIT_REFERENCE} = ? AND f.#{NAME} LIKE ?")
-    pick.execute(commit_id, "#{EXTENTION_EXPRESSION}#{extention}")
+    pick.execute(commit_id, "#{EXTENSION_EXPRESSION}#{extension}")
 
     rows = pick.num_rows
     results = Array.new(rows)
@@ -170,8 +185,10 @@ end
 #have the time as part of the chart (the x axis)
 con = createConnection()
 
-username = 'spotify'
-repo_name = 'luigi'
+username = 'peter-murach'
+repo_name = 'github'
+#username = 'spotify'
+#repo_name = 'luigi'
 commits = getCommitIds(con, username, repo_name)
 
 stats = Array.new
@@ -183,26 +200,29 @@ stats = Array.new
 numOfNonCodeCommits = 0
 
 commits.each { |commit|
-    patches = getPatches(con, commit[0], PYTHON)
+    #patches = getPatches(con, commit[0], PYTHON)
+    patches = getPatches(con, commit[0], RUBY)
+
     cd = CodeChurn.new()
 
+    #Note that if the date is nil, then the entry patch is empty, if the patch is empty, then unrecognized code was committed. This should be ignored
     if patches[0] == nil
         numOfNonCodeCommits += 1
     else
         patches.each { |patch|
             #The first element is the file name
+            #Second is the diff for the file for this commit against it's previous version
+            #Third is the date the committer committed the files.
 
-            #Note that if the date is nil, then the entry patch is empty, if the patch is empty, then unreconized code was committed. This should be ignored
-            
-            
             #Set the date
             cd.setDate(patch[2])
             
             if(patch[1] != nil)
                 patch[1] += "\n"
-                comments = patch[1].scan(/(\+|-)(.*?(#.*)|(""".*"""))\n/)
+                comments = patch[1].scan(PYTHON_COMMENT_EXPR)
+                #comments = patch[1].scan(RUBY_COMMENT_EXPR)
 
-                code = patch[1].scan(/(\+|-|(@@))(.*?)\n/)
+                code = patch[1].scan(DIFF_REGULAR_EXPR)
 
                 comments.each { |comment|
                     # at [0] is whether the line is an addition or deletion
@@ -299,14 +319,14 @@ puts "#{commentData.date.size} commits with python code"
 puts ""
 
 #bg == background
-puts Gchart.line(:data => commentData.codeAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Additions', :axis => "hello" )
+puts Googl.shorten(Gchart.line(:data => commentData.codeAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Additions' )).short_url
 
 puts ""
-puts Gchart.line(:data => commentData.codeDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Deletions', :axis => "hello" )
+puts Googl.shorten(Gchart.line(:data => commentData.codeDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Code Deletions' )).short_url
 puts ""
-puts Gchart.line(:data => commentData.commentAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Additions', :axis => "hello" )
+puts Googl.shorten(Gchart.line(:data => commentData.commentAddition, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Additions' )).short_url
 puts ""
-puts Gchart.line(:data => commentData.commentDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Deletion', :axis => "hello" )
+puts Googl.shorten(Gchart.line(:data => commentData.commentDeletion, :title => "#{username} / #{repo_name}", :size => '700x200', :legend => 'Comment Deletion', :axis => "hello" )).short_url
 
 # :legend => ['x axis', 'y-axis']
 #puts stats
@@ -353,31 +373,3 @@ totalNumberOfLinesOfSourceCode = totalNumberOfLinesOfCode - totalNumberOfLinesof
 
 =end
 
-
-#length = files[0][0].size
-
-def parseComments(file)
-    inComment = false
-    singleLine = false
-    length = files[0][0].size
-    while i < length
-
-        if !inComment && files[0][0][i] == '#'
-            inComment = true
-            singleLine = true
-        elsif files[0][0][i] == '\n'
-            if i+1 < length 
-                if files[0][0][i+1] == '#'
-                    #Still part of comment block
-                elsif files[0][0][i+1..i+4] == '"""'
-                    #Still part of comment block
-                else
-                    inComment = false
-                    #Search for next comment
-                    #all stuff between is part of code at that level (only stop adding code to that level when a new comment is found at that level.)
-                end
-            end
-        end
-        i = i + 1
-    end
-end
