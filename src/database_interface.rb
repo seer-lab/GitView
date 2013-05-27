@@ -517,7 +517,7 @@ def toInteger(array)
 end
 
 def setFileTypes(con, repo_name, repo_owner)
-    pick = con.prepare("SELECT #{TYPE} FROM #{FILE_TYPE}")
+    pick = con.prepare("SELECT #{TYPE}, #{TYPE_ID} FROM #{FILE_TYPE}")
 
     pick.execute
 
@@ -527,9 +527,17 @@ def setFileTypes(con, repo_name, repo_owner)
     rows.times do |x|
         results[x] = pick.fetch
 
-        pick2 = con.prepare("SELECT DISTINCT 1 FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ?")
-        pick2.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{results[x]}")
+        pick2 = con.prepare("SELECT DISTINCT #{REPO_ID} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ?")
+        pick2.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{results[x][0]}")
+
+        rows2 = pick2.num_rows
+
+        if rows2 > 0 
+            putter = con.prepare("INSERT INTO #{REPO_FILE_TYPE} (#{REPO_ID}, #{FILE_TYPE_ID}) VALUES (?, ?)")
+            putter.execute(pick2.fetch[0], results[x][1])
+        end
     end
+
 end
 
 def getFileTypes(con, repo_name, repo_owner)
