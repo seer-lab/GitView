@@ -3,7 +3,6 @@ require 'googl'
 require_relative 'database_interface'
 
 #The expression to match the given extension
-EXTENSION_EXPRESSION = '%\.'
 
 #The multi-line comment regex only catches multi-line comment style done on 1 line.
 # Need to add support to go through the added lines and look for the multi-line comment start and end to identify who many lines it is.
@@ -185,10 +184,8 @@ end
 #have the time as part of the chart (the x axis)
 con = createConnection()
 
-username = 'peter-murach'
-repo_name = 'github'
-#username = 'spotify'
-#repo_name = 'luigi'
+username, repo_name = 'peter-murach', 'github'
+#username, repo_name = 'spotify', 'luigi'
 commits = getCommitIds(con, username, repo_name)
 
 stats = Array.new
@@ -210,63 +207,73 @@ commits.each { |commit|
         numOfNonCodeCommits += 1
     else
         patches.each { |patch|
+
             #The first element is the file name
             #Second is the diff for the file for this commit against it's previous version
             #Third is the date the committer committed the files.
 
             #Set the date
             cd.setDate(patch[2])
-            
-            if(patch[1] != nil)
-                patch[1] += "\n"
-                comments = patch[1].scan(PYTHON_COMMENT_EXPR)
-                #comments = patch[1].scan(RUBY_COMMENT_EXPR)
 
-                code = patch[1].scan(DIFF_REGULAR_EXPR)
+            if patch[1] != nil
 
-                comments.each { |comment|
-                    # at [0] is whether the line is an addition or deletion
-                    # The whole line is at [1]
-                    # Only the comment is at either [2] (if it is a # comment) or [3] if it
-                    # is a multi-line comment
-                    #comment[0]
+                #Ensure that the last new line isnt there
+                if patch[1][patch[1].size-1] != "\n"
+                    patch[1] += "\n"
+                end
 
-                    if comment[0] == '-'
-                        #Deletion
-                        cd.commentDeletion(1)
-                        #commentDeletion += 1
-                    elsif comment[0] == '+'
-                        #Addition
-                        cd.commentAddition(1)
-                        #commentAddition += 1
-                    elsif comment[0] == '@@'
-                        #Ignore
-                    end
-                }
+                #lines = patch[1].scan(LINE_EXPR)
 
-                code.each { |line|
+                #lines.each { |line|
+                    comments = patch[1].scan(PYTHON_COMMENT_EXPR)
+                    #comments = patch[1].scan(RUBY_COMMENT_EXPR)
 
-                    # Need to remove lines that start with spaces but 
-                    # are only comments
-                    if line[0] == '-' || line[0] == '+'
+                    codes = patch[1].scan(DIFF_REGULAR_EXPR)
 
-                        if !line[2].match(/^\s*#(.*)/)
+                    comments.each { |comment|
+                        # at [0] is whether the line is an addition or deletion
+                        # The whole line is at [1]
+                        # Only the comment is at either [2] (if it is a # comment) or [3] if it
+                        # is a multi-line comment
+                        #comment[0]
 
-                            if line[0] == '-'
-                                #Deletion
-                                cd.codeDeletion(1)
-                                #codeDeletions += 1
-                            elsif line[0] == '-' || line[0] == '+'
-                                #Addition
-                                cd.codeAddition(1)
-                                #codeAdditions += 1
-                            end
+                        if comment[0] == '-'
+                            #Deletion
+                            cd.commentDeletion(1)
+                            #commentDeletion += 1
+                        elsif comment[0] == '+'
+                            #Addition
+                            cd.commentAddition(1)
+                            #commentAddition += 1
+                        elsif comment[0] == '@@'
+                            #Ignore
                         end
+                    }
 
-                    elsif line[0] == '@@'
-                        #Ignore
-                    end
-                }
+                    codes.each { |code|
+
+                        if code[0] == '-' || code[0] == '+'
+
+                            # Check if the line is spaces and a comment
+                            # TODO just remove these lines while parsing the comments
+                            if !code[2].match(/^\s*#(.*)/)
+
+                                if code[0] == '-'
+                                    #Deletion
+                                    cd.codeDeletion(1)
+                                    #codeDeletions += 1
+                                elsif code[0] == '-' || code[0] == '+'
+                                    #Addition
+                                    cd.codeAddition(1)
+                                    #codeAdditions += 1
+                                end
+                            end
+
+                        elsif code[0] == '@@'
+                            #Ignore
+                        end
+                    }
+                #}
             end
         }
         stats.push(cd)

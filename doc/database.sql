@@ -105,9 +105,26 @@ CREATE TABLE tags
     tag_date DATETIME
 );
 
+/* Will store 'py', 'rb', 'java'... */
+CREATE TABLE file_types
+(
+    type_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(16) 
+);
+
+CREATE TABLE repo_file_types
+(
+    repo_id INTEGER UNSIGNED REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    file_type_id INTEGER UNSIGNED REFERENCES file_types (type_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+INSERT INTO file_types (type) VALUES ('py'),('rb'),('java');
 /*
  * The commands for dropping the tables.
  */
+DROP TABLE file_types;
+DROP TABLE repo_file_types;
 DROP TABLE tags;
 DROP TABLE file;
 DROP TABLE parent_commits;

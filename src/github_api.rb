@@ -187,6 +187,10 @@ def getAllCommits(con, github, username, repo_name)
         puts e.message
     end
 
+    # Set the types of files this project uses
+    puts "settings file types."
+    setFileTypes(con, repo_name, username)
+
 end
 
 #Tag stuff
@@ -267,6 +271,8 @@ end
         end
 =end
 
+#TODO add something that keeps track of all the file types in the program ()
+
 con = createConnection()
 
 start_time = Time.now
@@ -283,10 +289,10 @@ start_time = Time.now
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
 
 #medium-large
-#getAllCommits(con, github, 'spotify', 'luigi')
+getAllCommits(con, github, 'spotify', 'luigi')
 
 #huge
-getAllCommits(con, github, 'peter-murach', 'github')
+#getAllCommits(con, github, 'peter-murach', 'github')
 
 #Huge (because of libraries commited)
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')

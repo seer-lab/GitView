@@ -1,0 +1,27 @@
+DIRECTION:
+1. Query/Visualize:
+    - Project,
+    - Package,
+    - Class
+    - Unit
+2. Gather data from multiple files projects
+3. Data collection
+    - Code
+    - Commit Info
+    - Comment on commits
+    - grep files for
+        - bug
+        - feature
+        - fix...
+4. Code metrics
+    - Compexity.
+
+Submitting abstract to Quebect Conference to be able to display a poster there.
+
+AFTER:
+
+File parsing:
+    - Fixed up the mult-line parser to work a project (the actual project file names are hashed to allow for multiple entires to compare the entries)
+    - Added some counts to count documentation
+    - stored code and documentation strings collected while parsing.
+

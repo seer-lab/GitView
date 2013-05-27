@@ -12,6 +12,8 @@ COMMITS = 'commits'
 PARENT_COMMITS = 'parent_commits'
 FILE = 'file'
 TAGS = 'tags'
+FILE_TYPE = 'file_types'
+REPO_FILE_TYPE = 'repo_file_types'
 
 # Drop table commands
 DROP_REPO = 'DROP TABLE repositories'
@@ -60,6 +62,15 @@ TAG_NAME = 'tag_name'
 TAG_DESC = 'tag_description'
 TAG_DATE = 'tag_date'
 
+# File_types
+TYPE_ID = 'type_id'
+TYPE = 'type'
+
+# Repo file types
+#REPO_ID = 'repo_id'
+FILE_TYPE_ID = 'file_type_id'
+
+EXTENSION_EXPRESSION = '%\.'
 
 #con = Mysql.new(HOST, USERNAME, PASSWORD, DATABASE)
 
@@ -505,6 +516,33 @@ def toInteger(array)
     end
 end
 
+def setFileTypes(con, repo_name, repo_owner)
+    pick = con.prepare("SELECT #{TYPE} FROM #{FILE_TYPE}")
 
-#TODO in file that is using sql queries call 'con.commit' so that information is actually stored.
-#def getCompleteCommit(con, sha)
+    pick.execute
+
+    rows = pick.num_rows
+    results = Array.new(rows)
+
+    rows.times do |x|
+        results[x] = pick.fetch
+
+        pick2 = con.prepare("SELECT DISTINCT 1 FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ?")
+        pick2.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{results[x]}")
+    end
+end
+
+def getFileTypes(con, repo_name, repo_owner)
+    pick = con.prepare("SELECT #{TYPE} FROM #{FILE_TYPE} AS ft INNER JOIN #{REPO_FILE_TYPE} AS rf ON ft.#{TYPE_ID} = rf.#{FILE_TYPE_ID} INNER JOIN #{REPO} AS r ON rf.#{REPO_ID} = r.#{REPO_ID} WHERE r.REPO_NAME LIKE ? AND r.#{REPO_OWNER} LIKE ?")
+
+    pick.execute(repo_name, repo_owner)
+
+    rows = pick.num_rows
+    results = Array.new(rows)
+
+    rows.times do |x|
+        results[x] = pick.fetch
+    end
+
+    return results
+end
