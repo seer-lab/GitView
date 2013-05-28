@@ -277,7 +277,7 @@ def setFiles(con, github, commitUrl, commit_id)
             body = file.children.children.children.children.text
 
             # Remove carriage return
-            body.gsub('\r','')
+            body = body.gsub(/\r/,'')
             #puts commit_id[0]
             
         rescue OpenURI::HTTPError => e

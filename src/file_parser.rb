@@ -3,15 +3,15 @@ require_relative 'database_interface'
 # The neccessary regular expressions for python multi-line comments
 PYTHON_MULTI_LINE_FULL = /(.*?)(#.*)|(""".*""")/
 
-PYTHON_MULTI_LINE_FIRST_HALF = /"""(.*)/
+PYTHON_MULTI_LINE_FIRST_HALF = /(""".*)/
 
-PYTHON_MULTI_LINE_SECOND_HALF = /(.*)"""/
+PYTHON_MULTI_LINE_SECOND_HALF = /(.*""")/
 
 JAVA_MULTI_LINE_FULL = /(.*?)(\/\/.*)|((\/\*.*\*\/)(.*))/
 
-JAVA_MULTI_LINE_FIRST_HALF = /\/\*(.*)/
+JAVA_MULTI_LINE_FIRST_HALF = /(\/\*.*)/
 
-JAVA_MULTI_LINE_SECOND_HALF = /(.*)\*\//
+JAVA_MULTI_LINE_SECOND_HALF = /(.*\*\/)/
 
 RUBY_MULTI_LIKE_FULL = /(.*?)(#.*)/
 
@@ -127,6 +127,7 @@ def findMultiLineComments (lines)
                 #Still part of the multi-line, terminating line has not be found
                 result = line
                 lineCounter.multiLineComment(1)
+
                 #puts "part of multi"
             else
                 #Found multi-line terminator
@@ -135,7 +136,10 @@ def findMultiLineComments (lines)
                 #puts "end of multi"
             end
             #puts "X#{result[0]}X"
-            #puts "Here #{comments[index]}" 
+            #puts "Here #{comments[index]}"
+            
+            #Set the grouping to the comment
+            grouped.setComment("\n#{result[0]}")
             comments[index] += "\n#{result[0]}"
         else
             #Python
@@ -163,7 +167,12 @@ def findMultiLineComments (lines)
                     elsif result[2] != nil # Multi Comment 'In-line'
                         lineCounter.multiLineCommentInLine(1)
                         comment = result[2]
-                        #puts "In Line Multi"            
+                        #puts "In Line Multi"
+
+                        #Set the grouping to the comment
+                        grouped.setComment(comment)
+                        #Start looking for the code that this comment is talking about
+                        commentLookingForChild = true        
                     end
 
                     if result[0] != nil && result[0].match(WHITE_SPACE) == nil
@@ -204,8 +213,6 @@ def findMultiLineComments (lines)
 
             else
 
-                #TODO handle when some one starts a multi-line comment on a line that has source code
-                #OR when some one ends a mutli-line comment and has source code preceeding it. (on the same line)
                 #Check for part of multi line comment
                 result = line[0].scan(JAVA_MULTI_LINE_FIRST_HALF)
                 if result[0] != nil
@@ -214,6 +221,11 @@ def findMultiLineComments (lines)
                     index = comments.size
                     comments.push(result[0][0])
                     lineCounter.multiLineComment(1)
+
+                    #Set the grouping to the comment
+                    grouped.setComment(result[0][0])
+                    #Start looking for the code that this comment is talking about
+                    commentLookingForChild = true
                     #puts "multi line "
                 else
 
@@ -236,7 +248,7 @@ def findMultiLineComments (lines)
         end
         puts "Comment #{grouped.getComment}"
         puts "Code #{grouped.getSourceCode}"
-        a = gets
+        #a = gets
     }
 
 
