@@ -445,13 +445,6 @@ end
 def insertFileId(con, file)
 
     pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
-    #puts "commit #{file.commit[0]} #{file.commit[0].class.name}"
-    #puts "name #{file.name} #{file.name.class.name}"
-    #puts "addition #{file.addition} #{file.addition.class.name}"
-    #puts "deletion #{file.deletion} #{file.deletion.class.name}"
-    #puts "patch #{file.patch} #{file.patch.class.name}"
-    #puts "file #{file.file} #{file.file.class.name}"
-
     pick.execute(file.commit, file.name, file.addition, file.deletion, file.patch, file.file)
 
     return toInteger(pick.insert_id)
