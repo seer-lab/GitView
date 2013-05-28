@@ -7,6 +7,18 @@ PYTHON_MULTI_LINE_FIRST_HALF = /"""(.*)/
 
 PYTHON_MULTI_LINE_SECOND_HALF = /(.*)"""/
 
+JAVA_MULTI_LINE_FULL = /(.*?)(\/\/.*)|((\/\*.*\*\/)(.*))/
+
+JAVA_MULTI_LINE_FIRST_HALF = /\/\*(.*)/
+
+JAVA_MULTI_LINE_SECOND_HALF = /(.*)\*\//
+
+RUBY_MULTI_LIKE_FULL = /(.*?)(#.*)/
+
+RUBY_MULTI_LINE_FIRST_HALF = /=being (.*)/
+
+RUBY_MULTI_LINE_SECOND_HALF = /^=end/
+
 WHITE_SPACE = /^\s*$/
 
 LINE_EXPR = /(.*?)\n/
@@ -14,6 +26,8 @@ LINE_EXPR = /(.*?)\n/
 PYTHON = 'py'
 
 RUBY = 'rb'
+
+JAVA = 'java'
 
 class LineCounter
     def initialize()
@@ -50,97 +64,41 @@ class LineCounter
     end
 end
 
-
-=begin
-class StatArray
+class Linker
     def initialize()
-        @singleLineComment = Array.new
-        @inLineSingle =  Array.new 
-        @inLineMulti = Array.new
-        @multiLineCommentInLine =  Array.new
-        @multiLineComment = Array.new
-        @linesOfCode = Array.new
+        @comment = Array.new
+        @source_code = Array.new
     end
 
-    def singleLineCommentPush(value)
-        @singleLineComment.push(value)
+    def push()
+        pushComment()
+        pushSourceCode()
     end
 
-    def inLineSinglePush(value)
-        @inLineSingle.push(value)
+    def pushComment()
+        @comment.push("")
     end
 
-    def inLineMultiPush(value)
-        @inLineMulti.push(value)
+    def pushSourceCode()
+        @source_code.push("")
     end
 
-    def multiLineCommentInLinePush(value)
-        @multiLineCommentInLine.push(value)
+    def setComment(comment)
+        @comment[@comment.size-1] += comment
     end
 
-    def multiLineCommentPush(value)
-        @multiLineComment.push(value)
+    def setSourceCode(source_code)
+        @source_code[@source_code.size-1] += source_code
     end
 
-    def linesOfCodePush(value)
-        @linesOfCode.push(value)
+    def getComment()
+        @comment[@comment.size-1]
     end
 
-    def singleLineComment()
-        @singleLineComment
-    end
-
-    def inLineSingle()
-        @inLineSingle
-    end
-
-    def inLineMulti()
-        @inLineMulti
-    end
-
-    def multiLineCommentInLine()
-        @multiLineCommentInLine
-    end
-
-    def multiLineComment()
-        @multiLineComment
-    end
-
-    def linesOfCode()
-        @linesOfCode
+    def getSourceCode()
+        @source_code[@source_code.size-1]
     end
 end
-=end
-
-=begin
-def createStateArray(codeChurns)
-
-    metricArray = StatArray.new
-    codeChurns.each { |codeChurn|
-
-        # Add the number of single line comments
-        metricArray.singleLineCommentPush(codeChurns.singleLineComment(0))
-
-        # Add the number of in-line comments with code
-        metricArray.inLineSinglePush(codeChurns.inLineSingle(0))
-
-        # Add the number of in-line multi-line comments with code
-        metricArray.inLineMultiPush(codeChurns.inLineMultiPush(0))
-
-        # Add the number of multiLine In line comments there are
-        metricArray.multiLineCommentInLinePush(codeChurns.multiLineCommentInLine(0))
-
-        # Add the number of lines of multiLine comment there are
-        metricArray.multiLineCommentPush(codeChurns.multiLineComment(0))
-
-        # Add the number of lines of code
-        metricArray.linesOfCodePush(codeChurns.linesOfCode(0))
-
-    }
-    return metricArray
-end
-=end
-
 
 
 # For now I am not handling 2 multi line comments on the same line they will be
@@ -151,12 +109,269 @@ def findMultiLineComments (lines)
     comments = Array.new
     index = 0
     lineCounter = LineCounter.new
-    #singleLineComment = 0
-    #multiLineComment = 0
-    #multiLineCommentInLine = 0
-    #inLineSingle = 0
-    #inLineMulti = 0
-    #code = 0
+    codeLines = Array.new
+    grouped = Linker.new
+    commentLookingForChild = false
+
+    lines.each { |line|
+        #Create a new grouping
+        if !commentLookingForChild
+            grouped.push
+        end
+
+        #puts line[0]
+        #a = gets
+        if multiLine
+            result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
+            if result == nil
+                #Still part of the multi-line, terminating line has not be found
+                result = line
+                lineCounter.multiLineComment(1)
+                #puts "part of multi"
+            else
+                #Found multi-line terminator
+                multiLine = false
+                lineCounter.multiLineComment(1)
+                #puts "end of multi"
+            end
+            #puts "X#{result[0]}X"
+            #puts "Here #{comments[index]}" 
+            comments[index] += "\n#{result[0]}"
+        else
+            #Python
+            result = line[0].scan(JAVA_MULTI_LINE_FULL)
+
+            result = result[0]
+            if result != nil
+                #$0 is code before comment
+                #$1 is single line comment
+                #$2 is multi-line comment
+                #$3 is the code after the comment
+                
+                comment = nil
+                if result[1] != nil || result[2] != nil
+
+                    if result[1] != nil # Single Comment 'In-line'
+                        lineCounter.singleLineComment(1)
+                        comment = result[1]
+                        #Set the grouping to the comment
+                        grouped.setComment(comment)
+                        #Start looking for the code that this comment is talking about
+                        commentLookingForChild = true
+
+                        #puts "In Line Single"
+                    elsif result[2] != nil # Multi Comment 'In-line'
+                        lineCounter.multiLineCommentInLine(1)
+                        comment = result[2]
+                        #puts "In Line Multi"            
+                    end
+
+                    if result[0] != nil && result[0].match(WHITE_SPACE) == nil
+                        #puts "with Source code"
+                        if result[1] != nil # Signle inline comment that has source code prior to it
+                            lineCounter.inLineSingle(1)
+                            
+                            #Code found store it in the grouping
+                            grouped.setSourceCode(result[0])
+                            #Stop looking for the code
+                            commentLookingForChild = false
+                        elsif result[2] != nil # Multi inline comment that has source code prior to it
+                            lineCounter.inLineMulti(1)
+
+                            #Code found store it in the grouping
+                            grouped.setSourceCode(result[1])
+                            #Stop looking for the code
+                            commentLookingForChild = false
+                        end
+                        # CommentInline with code
+                        lineCounter.linesOfCode(1)
+                        codeLines.push(result[0])
+                    end
+
+                    if result[3] != nil && result[3].match(WHITE_SPACE) == nil
+                        if result[2] != nil # Multi inline comment that has source code prior to it
+                            lineCounter.inLineMulti(1)
+                        end
+                        #Code found store it in the grouping
+                        grouped.setSourceCode(result[3])
+                        #Stop looking for the code
+                        commentLookingForChild = false
+                    end
+
+                    # Add the comment to the list of comments
+                    comments.push(comment)
+                end
+
+            else
+
+                #TODO handle when some one starts a multi-line comment on a line that has source code
+                #OR when some one ends a mutli-line comment and has source code preceeding it. (on the same line)
+                #Check for part of multi line comment
+                result = line[0].scan(JAVA_MULTI_LINE_FIRST_HALF)
+                if result[0] != nil
+                    #There is a multi-line comment starting here
+                    multiLine = true
+                    index = comments.size
+                    comments.push(result[0][0])
+                    lineCounter.multiLineComment(1)
+                    #puts "multi line "
+                else
+
+                    if line[0].match(WHITE_SPACE) == nil
+
+                        #puts "codes if nothing else"
+                        #This line is not a comment
+                        lineCounter.linesOfCode(1)
+                        codeLines.push(line[0])
+                        
+                        if commentLookingForChild
+                            #Code found store it in the grouping
+                            grouped.setSourceCode(line[0])
+                            #Stop looking for the code
+                            commentLookingForChild = false
+                        end
+                    end
+                end
+            end
+        end
+        puts "Comment #{grouped.getComment}"
+        puts "Code #{grouped.getSourceCode}"
+        a = gets
+    }
+
+
+    return [comments, codeLines, lineCounter]
+end
+
+# For now I am not handling 2 multi line comments on the same line they will be
+# treaded as 1
+# Pass it the lines of the file that have been determined to be additions or deletions
+def findMultiLineCommentsPython (lines)
+    multiLine = false
+    comments = Array.new
+    index = 0
+    lineCounter = LineCounter.new
+    codeLines = Array.new
+    grouped = Linker.new
+    commentLookingForChild = false
+
+    lines.each { |line|
+        #Create a new grouping
+        if !commentLookingForChild
+            grouped.push
+        end
+
+        #puts line[0]
+        #a = gets
+        if multiLine
+            result = line[0].scan(PYTHON_MULTI_LINE_SECOND_HALF)[0]
+            if result == nil
+                #Still part of the multi-line, terminating line has not be found
+                result = line
+                lineCounter.multiLineComment(1)
+                #puts "part of multi"
+            else
+                #Found multi-line terminator
+                multiLine = false
+                lineCounter.multiLineComment(1)
+                #puts "end of multi"
+            end
+            #puts "X#{result[0]}X"
+            #puts "Here #{comments[index]}" 
+            comments[index] += "\n#{result[0]}"
+        else
+            #Python
+            result = line[0].scan(PYTHON_MULTI_LINE_FULL)
+
+            result = result[0]
+            if result != nil
+
+                #The first element with contain the comment if it is a in-line comment
+                #The second element will contain the comment if it is a multi-line comment
+                comment = nil
+                if result[1] != nil || result[2] != nil
+
+                    if result[1] != nil # Single Comment 'In-line'
+                        lineCounter.singleLineComment(1)
+                        comment = result[1]
+                        #Set the grouping to the comment
+                        grouped.setComment(comment)
+                        #Start looking for the code that this comment is talking about
+                        commentLookingForChild = true
+
+                        #puts "In Line Single"
+                    elsif result[2] != nil # Multi Comment 'In-line'
+                        lineCounter.multiLineCommentInLine(1)
+                        comment = result[2]
+                        #puts "In Line Multi"            
+                    end
+
+                    if result[0] != nil && result[0].match(WHITE_SPACE) == nil
+                        #puts "with Source code"
+                        if result[1] != nil # Signle inline comment that has source code prior to it
+                            lineCounter.inLineSingle(1)
+                            
+                            #Code found store it in the grouping
+                            grouped.setSourceCode(result[0])
+                            #Stop looking for the code
+                            commentLookingForChild = false
+                        elsif result[2] != nil # Multi inline comment that has source code prior to it
+                            lineCounter.inLineMulti(1)
+                        end
+                        # CommentInline with code
+                        lineCounter.linesOfCode(1)
+                        codeLines.push(result[0])
+                    end
+
+                    # Add the comment to the list of comments
+                    comments.push(comment)
+                end
+
+            else
+
+                #TODO add support for inline commenting with multi-line comments
+                #Check for part of multi line comment
+                result = line[0].scan(PYTHON_MULTI_LINE_FIRST_HALF)
+                if result[0] != nil
+                    #There is a multi-line comment starting here
+                    multiLine = true
+                    index = comments.size
+                    comments.push(result[0][0])
+                    lineCounter.multiLineComment(1)
+                    #puts "multi line "
+                else
+
+                    if line[0].match(WHITE_SPACE) == nil
+
+                        #puts "codes if nothing else"
+                        #This line is not a comment
+                        lineCounter.linesOfCode(1)
+                        codeLines.push(line[0])
+                        
+                        if commentLookingForChild
+                            #Code found store it in the grouping
+                            grouped.setSourceCode(line[0])
+                            #Stop looking for the code
+                            commentLookingForChild = false
+                        end
+                    end
+                end
+            end
+        end
+        puts "Comment #{grouped.getComment}"
+        puts "Code #{grouped.getSourceCode}"
+        a = gets
+    }
+
+
+    return [comments, codeLines, lineCounter]
+end
+
+def findMultiLineCommentsLink (lines)
+    multiLine = false
+    comments = Array.new
+    index = 0
+    lineCounter = LineCounter.new
     codeLines = Array.new
 
     lines.each { |line|
@@ -181,12 +396,6 @@ def findMultiLineComments (lines)
         else
             #Python
             result = line[0].scan(PYTHON_MULTI_LINE_FULL)
-
-            #Ruby
-            #result = line.scan(/=begin(.*)(end)?/)
-
-            #Java/C(++)
-            #result = line.scan(/\/\*(.*)(\*\/)?/)
 
             result = result[0]
             if result != nil
@@ -219,16 +428,6 @@ def findMultiLineComments (lines)
 
                     # Add the comment to the list of comments
                     comments.push(comment)
-                #else
-                #    if line[0].match(WHITE_SPACE) == nil
-                #        puts "Just code"
-                #        # Code with line comment
-                #        code += 1
-                #        #codeLine = result[0]
-                #    else
-                #        puts "white space"
-                #        # disregard the white space
-                #    end
                 end
 
             else
@@ -256,19 +455,6 @@ def findMultiLineComments (lines)
             end
         end
     }
-
-    # Going to actually kept it since it will be assumed to be comments
-    # Remove the dangling comment
-    #if multiLine
-    #    comments.pop
-    #end
-    
-    #puts "in line single #{lineCounter.inLineSingle(0)}"
-    #puts "in line multi #{lineCounter.inLineMulti(0)}"
-    #puts "single #{lineCounter.singleLineComment(0)}"
-    #puts "multiInline = #{lineCounter.multiLineCommentInLine(0)}"
-    #puts "multi #{lineCounter.multiLineComment(0)}"
-    #puts "code #{lineCounter.linesOfCode(0)}"
     return [comments, codeLines, lineCounter]
 end
 
@@ -290,7 +476,9 @@ end
 
 con = createConnection()
 
-files = getFile(con, PYTHON, 'luigi', 'spotify')
+#files = getFile(con, PYTHON, 'luigi', 'spotify')
+#files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
+files = getFile(con, JAVA, 'Android-Universal-Image-Loader', 'nostra13')
 
 fileHashTable = Hash.new
 

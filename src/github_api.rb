@@ -35,6 +35,30 @@ class Rate
     def rate()
         @rateRemaining
     end
+
+    def getTime()
+        @timeStart
+    end
+
+    def runOut()
+        if @rateRemaining <= 0
+            return true
+        else
+            return false
+        end
+    end
+
+    def waitIsOver(time)
+        if (time - @timeStart)/3600 >= 1
+            return true
+        else
+            return false
+        end
+    end
+
+    def getTimeRemaining(time)
+        3600 - (time - @timeStart)
+    end
 end
 
 #Github.repos.list user: 'dataBaseError'
@@ -90,9 +114,11 @@ puts rate.rate()
 def getAllCommits(con, github, username, repo_name)
     
     puts "Getting all commits..."
-
+    rate = Rate.new(github)
     # Get the repo's commits
     allCommits = github.repos.commits.all username, repo_name
+
+    puts rate.getTimeRemaining(Time.now)
 
     # Get the repo's database Id
     repo_id = toInteger(getRepoId(con, repo_name, username))
@@ -249,6 +275,9 @@ def setFiles(con, github, commitUrl, commit_id)
         begin
             file = Nokogiri::HTML(open(url))
             body = file.children.children.children.children.text
+
+            # Remove carriage return
+            body.gsub('\r','')
             #puts commit_id[0]
             
         rescue OpenURI::HTTPError => e
@@ -285,11 +314,14 @@ start_time = Time.now
 #slightly small
 #getAllCommits(con, github, 'rauhryan', 'ghee')
 
+#java large
+getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
+
 #medium
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
 
 #medium-large
-getAllCommits(con, github, 'spotify', 'luigi')
+#getAllCommits(con, github, 'spotify', 'luigi')
 
 #huge
 #getAllCommits(con, github, 'peter-murach', 'github')

@@ -61,4 +61,11 @@ SELECT DISTINCT 1 FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = 
 /* Same as the one right below */
 SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body REGEXP '.*fix.*' ORDER BY com.date;
 
-SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body LIKE '%fix%' ORDER BY com.date;
+/* Can search for just .*bug.* but will also get 'debug' which could be desired or not */
+SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body REGEXP '.*( |^)bug.*' ORDER BY com.date;
+
+/* Got nothing */
+SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body REGEXP '.*feature.*' ORDER BY com.date;
+
+/* Get all the file names with full path on repo.
+SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' ORDER BY com.date;

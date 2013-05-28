@@ -1,0 +1,32 @@
+Comments:
+1. Multi-line style
+    a.  in line (before) (java/C/C++)
+        ex. /* Hello World */ System.out.println("Hello World");
+    b. in line (after) (java/C/C++)
+        ex. System.out.println("Hello World"); /* Hello World
+    c. in line (above) (Java/C/C++/python)
+        ex. /* Hello World */
+            System.out.println("Hello World");
+    d. multi-line (above) (Java/C/C++/python/ruby (all))
+        ex /* Hello
+            * World
+            */
+            System.out.println("Hello World");
+    e. In line (middle) (java/C/C++)
+        ex System.out.println(/* Hello World */ "Hello World");
+2. Single-Line Style
+    a. in line (after) (all)
+        ex. System.out.println("Hello World"); // Hello World
+    b. single line above (all)
+        ex. // Hello World
+            System.out.println("Hello World");
+    c. multi-line single line (above) (all)
+        ex. // Hello
+            // World
+            System.out.println("Hello World");
+
+Assumptions
+- All comments are documentation (and not commented out code, this is hopefully temporary)
+- Comments refer to the code below
+    - This is really for comments that are above or below code. This assumption helps simplify organizing the comments and mapping them to the source code they refer to.
+- If I am doing Java it might be good to just settle on Javadoc style of commenting
