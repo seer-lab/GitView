@@ -57,3 +57,8 @@ SELECT f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.re
 SELECT DISTINCT com.date, f.name, f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' ORDER BY com.date;
 
 SELECT DISTINCT 1 FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND f.name LIKE '%\.py';
+
+/* Same as the one right below */
+SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body REGEXP '.*fix.*' ORDER BY com.date;
+
+SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' AND c.body LIKE '%fix%' ORDER BY com.date;

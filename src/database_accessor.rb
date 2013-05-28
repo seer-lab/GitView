@@ -184,8 +184,8 @@ end
 #have the time as part of the chart (the x axis)
 con = createConnection()
 
-username, repo_name = 'peter-murach', 'github'
-#username, repo_name = 'spotify', 'luigi'
+#username, repo_name = 'peter-murach', 'github'
+username, repo_name = 'spotify', 'luigi'
 commits = getCommitIds(con, username, repo_name)
 
 stats = Array.new
@@ -197,8 +197,8 @@ stats = Array.new
 numOfNonCodeCommits = 0
 
 commits.each { |commit|
-    #patches = getPatches(con, commit[0], PYTHON)
-    patches = getPatches(con, commit[0], RUBY)
+    patches = getPatches(con, commit[0], PYTHON)
+    #patches = getPatches(con, commit[0], RUBY)
 
     cd = CodeChurn.new()
 
