@@ -14,9 +14,9 @@ DIRECTION:
         - feature
         - fix...
 4. Code metrics
-    - Compexity.
+    - Complexity.
 
-Submitting abstract to Quebect Conference to be able to display a poster there.
+Submitting abstract to Quebec Conference to be able to display a poster there.
 
 AFTER:
 
@@ -26,5 +26,7 @@ File parsing:
     - stored code and documentation strings collected while parsing.
 
 Next steps:
-    1. Search throught commit message and title for 'fix', 'bug', 'feature'...
+    1. Search through commit message and title for 'fix', 'bug', 'feature'...
     2. Link the code to the comments
+        1. Work on identifying blocks in the source code.
+            - Depending on the comment type will change what body needs to be taken in.
