@@ -247,8 +247,16 @@ def setFiles(con, github, commitUrl, commit_id)
     # TODO decide on whether to ignore /doc folder or not, since the projects im looking for should have source code documentation (so /doc would be duplication or not what im looking for)
     puts 'working on files'
 
-    # Get all files
-    commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+    begin
+        # Get all files
+        commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+    rescue Github::Error::Unauthorized
+        puts github.ratelimit_remaining
+        puts rate.getTimeRemaining
+        a = gets
+        # Try again
+        commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+    end
 
     commitFiles.each { |file|
 
