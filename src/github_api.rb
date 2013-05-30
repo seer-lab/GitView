@@ -323,13 +323,16 @@ start_time = Time.now
 #getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
-getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
+#getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
 
 #medium
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
 
 #medium-large
 #getAllCommits(con, github, 'spotify', 'luigi')
+
+#java huge
+getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 #huge
 #getAllCommits(con, github, 'peter-murach', 'github')
