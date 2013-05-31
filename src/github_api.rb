@@ -252,10 +252,11 @@ def setFiles(con, github, commitUrl, commit_id)
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized
         puts github.ratelimit_remaining
-        puts rate.getTimeRemaining
-        a = gets
+        #puts rate.getTimeRemaining
+        #a = gets
         # Try again
-        commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+	retry
+        #commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     end
 
     commitFiles.each { |file|
@@ -294,6 +295,10 @@ def setFiles(con, github, commitUrl, commit_id)
             # database it will be easier to tell that the there was a problem
             # getting the file.
             body = "#{e}\n#{url}"
+	rescue Exception
+            puts url
+            puts "retrying"
+            retry
         end
         insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
     }
