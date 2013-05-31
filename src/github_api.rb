@@ -255,7 +255,8 @@ def setFiles(con, github, commitUrl, commit_id)
         puts rate.getTimeRemaining
         a = gets
         # Try again
-        commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+        retry
+        #commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     end
 
     commitFiles.each { |file|
@@ -331,14 +332,14 @@ start_time = Time.now
 #medium-large
 #getAllCommits(con, github, 'spotify', 'luigi')
 
-#java huge
-getAllCommits(con, github, 'SpringSource', 'spring-framework')
-
-#huge
+#large
 #getAllCommits(con, github, 'peter-murach', 'github')
 
 #Huge (because of libraries commited)
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
+
+#java large
+#getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 finish_time = Time.now
 
