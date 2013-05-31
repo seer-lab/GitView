@@ -30,3 +30,9 @@ Assumptions
 - Comments refer to the code below
     - This is really for comments that are above or below code. This assumption helps simplify organizing the comments and mapping them to the source code they refer to.
 - If I am doing Java it might be good to just settle on Javadoc style of commenting
+
+Collecting the body after a multi-line comment
+    - Java
+        - Look for either a ';' or a '{'
+            - if ';' is found, take from after comment till ';'
+            - if '{' is found, take from after comment until a '}' is found at the same level
