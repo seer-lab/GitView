@@ -252,10 +252,10 @@ def setFiles(con, github, commitUrl, commit_id)
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized
         puts github.ratelimit_remaining
-        puts rate.getTimeRemaining
-        a = gets
+        #puts rate.getTimeRemaining
+        #a = gets
         # Try again
-        retry
+		retry
         #commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     end
 
