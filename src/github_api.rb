@@ -4,6 +4,8 @@ require 'nokogiri'
 require 'open-uri'
 require_relative 'database_interface'
 
+$stdout.sync = true
+$stderr.sync = true
 
 class Rate
     def initialize(github)
@@ -321,7 +323,7 @@ start_time = Time.now
 #getAllCommits(con, github, 'stormpath', 'stormpath-rails')
 
 #slightly small
-#getAllCommits(con, github, 'rauhryan', 'ghee')
+getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
 #getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')

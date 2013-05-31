@@ -1,0 +1,16 @@
+#/bin/bash
+#The directory where the log files will go
+LOGDIR=../testlog/
+#The file that the log will be saved to. Format: testHHMM_mmddyyyy
+LOGFILE=test$(date +"%H%M_%m%d%Y")
+
+#Full path of the file
+FULLPATH=$LOGDIR$LOGFILE
+
+#Make the directory if it doesnt already exist
+mkdir -p $LOGDIR
+
+#Run the script in a virtual screen to allow for access to the server still
+ruby github_api.rb 2>&1 | tee $FULLPATH
+
+echo log file: $LOGDIR$LOGFILE
