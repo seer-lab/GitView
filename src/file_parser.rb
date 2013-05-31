@@ -90,7 +90,7 @@ def findMultiLineComments (lines)
 
     lines.each { |line|
         #Create a new grouping
-        if !commentLookingForChild
+        if !commentLookingForChild && !commentLookingForMultiChild
             grouped.push
         end
 
@@ -101,12 +101,18 @@ def findMultiLineComments (lines)
             if result == nil
                 #Still part of the multi-line, terminating line has not be found
                 result = line
+
+                #Can remove empty comment lines
+                #if line[0].gsub(/\*/, '').match(/^\s*$/) == nil
                 lineCounter.multiLineComment(1)
 
                 #puts "part of multi"
             else
                 #Found multi-line terminator
                 multiLine = false
+
+                #Can remove empty ending line
+                #if result[0].gsub(/[\*\/]/, '').match(/^\s*$/) == nil
                 lineCounter.multiLineComment(1)
                 #puts "end of multi"
             end
@@ -117,7 +123,7 @@ def findMultiLineComments (lines)
             grouped.setComment("\n#{result[0]}")
             comments[index] += "\n#{result[0]}"
         else
-            #Python
+            #Java
             result = line[0].scan(JAVA_MULTI_LINE_FULL)
 
             result = result[0]
@@ -510,6 +516,9 @@ fileHashTable = Hash.new
 #Map file name to the array of stats about that file.
 files.each { |file|
     #file = files[0][0]
+
+    puts "file: #{file[1]}"
+    a = gets
 
     size = file[0].size
 
