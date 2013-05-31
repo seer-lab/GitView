@@ -85,6 +85,7 @@ def findMultiLineComments (lines)
     lineCounter = LineCounter.new
     codeLines = Array.new
     grouped = Linker.new
+    commentLookingForMultiChild = false
     commentLookingForChild = false
 
     lines.each { |line|
@@ -209,7 +210,7 @@ def findMultiLineComments (lines)
                     #Set the grouping to the comment
                     grouped.setComment(result[0][0])
                     #Start looking for the code that this comment is talking about
-                    commentLookingForChild = true
+                    commentLookingForMultiChild = true
                     #puts "multi line "
                 else
 
@@ -225,6 +226,34 @@ def findMultiLineComments (lines)
                             grouped.setSourceCode(line[0])
                             #Stop looking for the code
                             commentLookingForChild = false
+
+                        elsif commentLookingForMultiChild
+
+                            #Remove strings 
+                            #statements = line[0].gsub(/\".*?\"/, '')
+
+                            # Check if it is a single line terminator
+                            result = line[0].scan(JAVA_CODE_LINE_BLOCK)
+
+                            commentLookingForMultiChild = false
+
+                            if result[0] == nil
+                                result = line[0].scan(JAVA_CODE_BLOCK)
+                                
+                                if result[0] == nil
+                                    result = line[0].scan(JAVA_CODE_TERMINATOR)
+                                   
+                                    if result[0] == nil
+                                        result = line
+                                        commentLookingForMultiChild = true
+                                    end
+                                else
+                                    commentLookingForMultiChild = true
+                                end
+                            end
+                            
+                            grouped.setSourceCode(result[0])                            
+
                         end
                     end
                 end

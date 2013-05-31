@@ -11,11 +11,19 @@ JAVA_MULTI_LINE_FIRST_HALF = /(\/\*.*)/
 
 JAVA_MULTI_LINE_SECOND_HALF = /(.*\*\/)/
 
+JAVA_CODE_TERMINATOR = /.*?}/
+
+JAVA_CODE_LINE_BLOCK = /.*?{.*?}/
+
+JAVA_CODE_BLOCK = /.*?{.*/
+
 RUBY_MULTI_LIKE_FULL = /(.*?)(#.*)/
 
 RUBY_MULTI_LINE_FIRST_HALF = /=being (.*)/
 
 RUBY_MULTI_LINE_SECOND_HALF = /^=end/
+
+REMOVE_QUOTE = /\".*?\"/
 
 WHITE_SPACE = /^\s*$/
 
