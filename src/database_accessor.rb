@@ -182,7 +182,7 @@ end
 
 
 #have the time as part of the chart (the x axis)
-con = createConnection()
+con = Github_database.createConnection()
 
 #username, repo_name = 'peter-murach', 'github'
 username, repo_name = 'spotify', 'luigi'

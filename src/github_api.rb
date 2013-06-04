@@ -3,6 +3,7 @@ require 'github_api'
 require 'nokogiri'
 require 'open-uri'
 require_relative 'database_interface'
+require_relative 'utility'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -123,7 +124,7 @@ def getAllCommits(con, github, username, repo_name)
     puts rate.getTimeRemaining(Time.now)
 
     # Get the repo's database Id
-    repo_id = toInteger(getRepoId(con, repo_name, username))
+    repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
 
     allCommits.body.each { |commit|
 
@@ -142,7 +143,7 @@ def getAllCommits(con, github, username, repo_name)
         end
         author_date = commit["commit"]["author"]["date"]
 
-        author_id = toInteger(getUserId(con, User.new(author_name, author_date)))
+        author_id = Utility.toInteger(Github_database.getUserId(con, User.new(author_name, author_date)))
 
         
         #puts "author_id = #{author_id}"
@@ -159,7 +160,7 @@ def getAllCommits(con, github, username, repo_name)
 
         commiter_date = commit["commit"]["committer"]["date"]
 
-        commiter_id = toInteger(getUserId(con, User.new(commiter_name, commiter_date)))
+        commiter_id = Utility.toInteger(Github_database.getUserId(con, User.new(commiter_name, commiter_date)))
 
         #puts "commiter_id = #{commiter_id}"
 
@@ -169,13 +170,13 @@ def getAllCommits(con, github, username, repo_name)
         # Insert the commits into the database.
 
         # Get the insert id
-        commit_id = toInteger(insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha)))
+        commit_id = Utility.toInteger(Github_database.insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha)))
     
         #parentHash = Array.new
         # Insert the parents
         commit["parents"].each { |parent|
             #parentHash.push parent["sha"]
-            insertParent(con, commit_id, parent["sha"])
+            Github_database.insertParent(con, commit_id, parent["sha"])
         }
 
         setFiles(con, github, commit["url"], commit_id)
@@ -209,7 +210,7 @@ def getAllCommits(con, github, username, repo_name)
             #sha = tag["commit"]["sha"]
             #test the actual command
             #tagMore = github.git_data.tags.get username, repo_name, sha
-            insertTag(con, Tag.new(sha, name, message, date))
+            Github_database.insertTag(con, Tag.new(sha, name, message, date))
         }
     rescue Github::Error::GithubError => e
         puts e.message
@@ -217,7 +218,7 @@ def getAllCommits(con, github, username, repo_name)
 
     # Set the types of files this project uses
     puts "settings file types."
-    setFileTypes(con, repo_name, username)
+    Github_database.setFileTypes(con, repo_name, username)
 
 end
 
@@ -298,7 +299,7 @@ def setFiles(con, github, commitUrl, commit_id)
             # getting the file.
             body = "#{e}\n#{url}"
         end
-        insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
+        Github_database.insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
     }
 end
 =begin
@@ -313,17 +314,17 @@ end
 
 #TODO add something that keeps track of all the file types in the program ()
 
-con = createConnection()
+con = Github_database.createConnection()
 
 start_time = Time.now
 #really small
-#getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
+getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
 
 #small
 #getAllCommits(con, github, 'stormpath', 'stormpath-rails')
 
 #slightly small
-getAllCommits(con, github, 'rauhryan', 'ghee')
+#getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
 #getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
