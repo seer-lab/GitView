@@ -80,4 +80,8 @@ SELECT DISTINCT c.commit_id, c.body FROM repositories AS r INNER JOIN commits AS
 
 /* Get all the file names with full path on repo.
 SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify' ORDER BY com.date;
-#r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify'
+#r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify'*/
+
+SELECT commit_date, total_comments, total_code FROM commits ORDER BY commit_date;
+
+SELECT DATE(commit_date), SUM(total_comments), SUM(total_code) FROM commits GROUP BY DATE(commit_date) ORDER BY commit_date;
