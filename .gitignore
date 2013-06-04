@@ -1,0 +1,13 @@
+# Ignore output log files
+testlog
+
+# Ignore back up files
+*~
+
+# Ignore database backups
+database
+
+# Ignore project files
+.project
+.buildpath
+.settings
