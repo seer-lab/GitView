@@ -284,20 +284,34 @@ def setFiles(con, github, commitUrl, commit_id)
         #body = nil
 
         #Added try catch since some file urls do not work. (such as file to large)
-        begin
-            file = Nokogiri::HTML(open(url))
-            body = file.children.children.children.children.text
+        if filename.match(/.*?\.java/)
+            begin
 
-            # Remove carriage return
-            body = body.gsub(/\r/,'')
-            #puts commit_id[0]
-            
-        rescue OpenURI::HTTPError => e
-            puts e
-            # Add the error message to the url link so that when reading the
-            # database it will be easier to tell that the there was a problem
-            # getting the file.
-            body = "#{e}\n#{url}"
+                file = Nokogiri::HTML(open(url))
+                body = file.children.children.children.children.text
+
+                #puts ""
+                #puts "filename #{filename}"
+
+                # Remove carriage return
+                body = body.gsub(/\r/,'')
+
+                #puts "body #{body}"
+                #puts ""
+                #puts "patch #{patch}"
+
+                #a = gets
+                #puts commit_id[0]
+                
+            rescue OpenURI::HTTPError => e
+                puts e
+                # Add the error message to the url link so that when reading the
+                # database it will be easier to tell that the there was a problem
+                # getting the file.
+                body = "#{e}\n#{url}"
+            end
+        else
+            body = url
         end
         Github_database.insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
     }
@@ -318,7 +332,7 @@ con = Github_database.createConnection()
 
 start_time = Time.now
 #really small
-getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
+#getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
 
 #small
 #getAllCommits(con, github, 'stormpath', 'stormpath-rails')
@@ -327,7 +341,7 @@ getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
 #getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
-#getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
+getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
 
 #medium
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
