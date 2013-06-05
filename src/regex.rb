@@ -29,6 +29,10 @@ WHITE_SPACE = /^\s*$/
 
 LINE_EXPR = /(.*?)\n/
 
+PATCH_EXPR = /((@@)|-|\+|\s)?(.*?)\n/
+
+PATCH_LINE_NUM = /-([0-9]+),([0-9]+)\s*\+([0-9]*),([0-9]*)/
+
 PYTHON = 'py'
 
 RUBY = 'rb'
