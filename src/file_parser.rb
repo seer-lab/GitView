@@ -345,6 +345,12 @@ def mergePatch(lines, patch)
 
     currentLine = 0
 
+    if lines.size == patches.size
+        puts true
+    else 
+        puts false
+    end
+
     #Parsing patches:
     # Break up into patch lines (easy enough)
         # Lines starting with '@@' are patch blocks (block is up til next @@ or end of patch)
@@ -361,6 +367,8 @@ def mergePatch(lines, patch)
 #This would allow for the code churn to be calculated at any point but would
 #For both of these options however the ability to identify multiline comments that are added to a existing mutli-line comment (more than 3 to 6 lines (based on how it is parsed))
 #Since 3 lines of context before and after are given.
+
+=begin
     patches.each { |patchLine|
 
         puts "#{patchLine}"
@@ -368,6 +376,12 @@ def mergePatch(lines, patch)
         #line = patchLine[0].scan(PATCH_EXPR)
         puts "currentLine = #{currentLine}"
         puts "line #{lines[currentLine]}"
+
+        if lines[currentLine].class == Array
+            puts "line #{lines[currentLine][0]}"
+        else
+            
+        end
 
         if patchLine[0] == "+"
             #Addition
@@ -397,8 +411,9 @@ def mergePatch(lines, patch)
 
         #puts lines[0]
         #puts ""
-        a = gets
+        #a = gets
     }
+=end
 
 #    file = ""
     # TODO make apart of the main loop (divide iterations in half)
@@ -646,7 +661,7 @@ end
 
 
 con = Github_database.createConnection()
-stats_con = Stats_db.createConnection()
+#stats_con = Stats_db.createConnection()
 
 repo_name = 'Android-Universal-Image-Loader'
 username = 'nostra13'
@@ -654,7 +669,7 @@ username = 'nostra13'
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)
 
-repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
+#repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
 
 prev_commit = files[0][2]
 current_commit = 0
@@ -670,7 +685,7 @@ files.each { |file|
     #file = files[0][0]
 
     if commit_id == nil
-        commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], commit_comments, commit_code)
+        #commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], commit_comments, commit_code)
     end
     
     current_commit = file[2]
