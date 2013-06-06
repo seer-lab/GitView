@@ -341,79 +341,88 @@ end
 
 def mergePatch(lines, patch)
 
-    patches = patch.scan(PATCH_EXPR)
+    if patch != nil
+        patches = patch.scan(PATCH_EXPR)
 
-    currentLine = 0
 
-    if lines.size == patches.size
-        puts true
-    else 
-        puts false
+
+        currentLine = 0
+
+        #if lines.size == patches.size
+        #    puts true
+        #else 
+        #    puts false
+        #end
+
+        #Parsing patches:
+        # Break up into patch lines (easy enough)
+            # Lines starting with '@@' are patch blocks (block is up til next @@ or end of patch)
+            # Lines starting with '+'/'-'\s are addition and deletion lines
+            # Lines with no special symbol are context lines
+        # Identify what block the additions and deletions are apart of
+            # based on how it is implemented... (see below)
+        #Continue on next patch item
+        
+    #Could go through patches and identify where the comments code blocks are (with line numbers)
+    #I would then need to always go back to the previous patch as well, to get the object and then update the object accordingly
+    #OR
+    #Could go through patches but base it off the original file
+    #This would allow for the code churn to be calculated at any point but would
+    #For both of these options however the ability to identify multiline comments that are added to a existing mutli-line comment (more than 3 to 6 lines (based on how it is parsed))
+    #Since 3 lines of context before and after are given.
+
+    #begin
+        patches.each { |patchLine|
+
+            puts "#{patchLine}"
+
+            #line = patchLine[0].scan(PATCH_EXPR)
+            puts "currentLine = #{currentLine}"
+            puts "line #{lines[currentLine]}"
+
+            if lines[currentLine].class == Array
+                puts "line #{lines[currentLine][0]}"
+            else
+                
+            end
+
+            if patchLine[0] == "+"
+                #Addition
+                puts "addition"
+                #line should be in file
+                lines[currentLine][0] =  "+" +  lines[currentLine][0]
+                currentLine+=1
+            elsif patchLine[0] == "-"
+                #Deletion
+                puts "deletion"
+                #line should not be in the file.
+                #TODO remove carrage return from patch
+                lines.insert(currentLine, ["-" + patchLine[2]])
+                currentLine+=1
+            elsif patchLine[0] == "@@"
+                #Patch start
+                puts "patch start"
+                patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
+                puts "#{patchOffset}"
+                lines, currentLine = fillBefore(lines, patchOffset[0][2].to_i-1, currentLine)
+            else
+                #Context
+                puts "context"
+                #Do nothing since the lines of code should alreay be there.
+                currentLine+=1
+            end
+            puts lines[currentLine-1][0]
+            #a = gets
+
+            #puts lines[0]
+            #puts ""
+            #a = gets
+        }
+    else
+        # Patch is empty
+        puts "nothing in patch!?"
     end
 
-    #Parsing patches:
-    # Break up into patch lines (easy enough)
-        # Lines starting with '@@' are patch blocks (block is up til next @@ or end of patch)
-        # Lines starting with '+'/'-'\s are addition and deletion lines
-        # Lines with no special symbol are context lines
-    # Identify what block the additions and deletions are apart of
-        # based on how it is implemented... (see below)
-    #Continue on next patch item
-    
-#Could go through patches and identify where the comments code blocks are (with line numbers)
-#I would then need to always go back to the previous patch as well, to get the object and then update the object accordingly
-#OR
-#Could go through patches but base it off the original file
-#This would allow for the code churn to be calculated at any point but would
-#For both of these options however the ability to identify multiline comments that are added to a existing mutli-line comment (more than 3 to 6 lines (based on how it is parsed))
-#Since 3 lines of context before and after are given.
-
-=begin
-    patches.each { |patchLine|
-
-        puts "#{patchLine}"
-
-        #line = patchLine[0].scan(PATCH_EXPR)
-        puts "currentLine = #{currentLine}"
-        puts "line #{lines[currentLine]}"
-
-        if lines[currentLine].class == Array
-            puts "line #{lines[currentLine][0]}"
-        else
-            
-        end
-
-        if patchLine[0] == "+"
-            #Addition
-            puts "addition"
-            #line should be in file
-            lines[currentLine][0] =  "+" +  lines[currentLine][0]
-            currentLine+=1
-        elsif patchLine[0] == "-"
-            #Deletion
-            puts "deletion"
-            #
-            lines.insert(currentLine, ["-" + patchLine[2]])
-            currentLine+=1
-        elsif patchLine[0] == "@@"
-            #Patch start
-            puts "patch start"
-            patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
-            puts "#{patchOffset}"
-            lines, currentLine = fillBefore(lines, patchOffset[0][2].to_i-1, currentLine)
-        else
-            #Context
-            puts "context"
-            #Do nothing since the lines of code should alreay be there.
-            currentLine+=1
-        end
-        puts lines[currentLine-1][0]
-
-        #puts lines[0]
-        #puts ""
-        #a = gets
-    }
-=end
 
 #    file = ""
     # TODO make apart of the main loop (divide iterations in half)
