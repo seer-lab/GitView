@@ -2,8 +2,6 @@ require_relative 'database_interface'
 require_relative 'regex'
 require_relative 'stats_db_interface'
 
-
-
 class LineCounter
     def initialize()
         @singleLineComment = 0
@@ -100,7 +98,7 @@ class Linker
     end
 end
 
-def findMultiLineComments (lines, patch)
+def findMultiLineComments (lines)
     multiLine = false
     index = 0
     lineCounter = LineCounter.new
@@ -113,7 +111,7 @@ def findMultiLineComments (lines, patch)
 
     #puts patches
     #puts lines[0]
-
+    #puts ""
     lines.each { |line|
         #Create a new grouping
 
@@ -147,7 +145,7 @@ def findMultiLineComments (lines, patch)
             if line[0][0] == "+"
                 codeChurn.commentAdded(1)
             elsif line[0][0] == "-"
-                codeChurn.commentDeleted()
+                codeChurn.commentDeleted(1)
             end
 
             #puts "X#{result[0]}X"
@@ -333,10 +331,17 @@ def findMultiLineComments (lines, patch)
         #puts "multiInline = #{lineCounter.multiLineCommentInLine(0)}"
         #puts "multi #{lineCounter.multiLineComment(0)}"
         #puts "code #{lineCounter.linesOfCode(0)}"
-        puts ""
-        a = gets
+
+        #puts "commentAdded = #{codeChurn.commentAdded(0)}"
+        #puts "commentDeleted = #{codeChurn.commentDeleted(0)}"
+        #puts "codeAdded = #{codeChurn.codeAdded(0)}"
+        #puts "codeDeleted = #{codeChurn.codeDeleted(0)}"
+        #puts ""
+
+        
+        #a = gets
     }
-    return [comments, codeLines, lineCounter]
+    return [comments, codeLines, lineCounter, codeChurn]
 end
 
 def mergePatch(lines, patch)
@@ -374,40 +379,39 @@ def mergePatch(lines, patch)
     #begin
         patches.each { |patchLine|
 
-            puts "#{patchLine}"
+            #puts "#{patchLine}"
 
-            #line = patchLine[0].scan(PATCH_EXPR)
-            puts "currentLine = #{currentLine}"
-            puts "line #{lines[currentLine]}"
+            #puts "currentLine = #{currentLine}"
+            #puts "line #{lines[currentLine]}"
 
-            if lines[currentLine].class == Array
-                puts "line #{lines[currentLine][0]}"
-            else
+            #if lines[currentLine].class == Array
+            #    puts "line #{lines[currentLine][0]}"
+            #else
                 
-            end
+            #end
 
             if patchLine[0] == "+"
                 #Addition
-                puts "addition"
+                #puts "addition"
                 #line should be in file
                 lines[currentLine][0] =  "+" +  lines[currentLine][0]
                 currentLine+=1
             elsif patchLine[0] == "-"
                 #Deletion
-                puts "deletion"
+                #puts "deletion"
                 #line should not be in the file.
                 #TODO remove carrage return from patch
                 lines.insert(currentLine, ["-" + patchLine[2]])
                 currentLine+=1
             elsif patchLine[0] == "@@"
                 #Patch start
-                puts "patch start"
+                #puts "patch start"
                 patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
                 puts "#{patchOffset}"
                 lines, currentLine = fillBefore(lines, patchOffset[0][2].to_i-1, currentLine)
             else
                 #Context
-                puts "context"
+                #puts "context"
                 #Do nothing since the lines of code should alreay be there.
                 currentLine+=1
             end
@@ -687,6 +691,12 @@ commit_code = 0
 
 commit_id = nil
 
+churn = Hash.new()
+churn["CommentAdded"] = Array.new
+churn["CommentDeleted"] = Array.new
+churn["CodeAdded"] = Array.new
+churn["CodeDeleted"] = Array.new
+
 fileHashTable = Hash.new
 
 #Map file name to the array of stats about that file.
@@ -711,6 +721,20 @@ files.each { |file|
 
     file = mergePatch(lines, file[5])
     #pass the lines of code and the related patch
+
+    comments = findMultiLineComments(lines)
+
+    churn["CommentAdded"].push(comments[3].commentAdded(0))
+    churn["CommentDeleted"].push(comments[3].commentDeleted(0))
+    churn["CodeAdded"].push(comments[3].codeAdded(0))
+    churn["CodeDeleted"].push(comments[3].codeDeleted(0))
+
+    puts "CommentAdded = #{churn["CommentAdded"]}"
+    puts "CommentDeleted = #{churn["CommentDeleted"]}"
+    puts "CodeAdded = #{churn["CodeAdded"]}"
+    puts "CodeDeleted = #{churn["CodeDeleted"]}"
+
+    a = gets
 =begin
    comments = findMultiLineComments(lines, file[5])
 

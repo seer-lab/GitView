@@ -55,7 +55,7 @@ function areaPlot(id, comments, code) {
                 //xAxis: data["date"]
             },
             title: {
-                text: 'Comment and Code Churn'
+                text: 'Total Comments and Code Per day'
             },
             subtitle: {
                 //TODO set to db query
