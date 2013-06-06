@@ -287,8 +287,18 @@ def setFiles(con, github, commitUrl, commit_id)
         if filename.match(/.*?\.java/)
             begin
 
-                file = Nokogiri::HTML(open(url))
-                body = file.children.children.children.children.text
+                body = ""
+                # Open up the url 
+                urlIO = open(url)
+
+                # Read the io buffer into the body of the file
+                urlIO.each { |line|
+                    body += line
+                }
+                #file = Nokogiri::HTML(open(url)) do |config|
+                #    config.default_html.
+                #end
+                #body = file.children.children.children.children.text
 
                 #puts ""
                 #puts "filename #{filename}"
