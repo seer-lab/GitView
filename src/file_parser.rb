@@ -407,7 +407,7 @@ def mergePatch(lines, patch)
                 #Patch start
                 #puts "patch start"
                 patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
-                puts "#{patchOffset}"
+                #puts "#{patchOffset}"
                 lines, currentLine = fillBefore(lines, patchOffset[0][2].to_i-1, currentLine)
             else
                 #Context
@@ -415,7 +415,7 @@ def mergePatch(lines, patch)
                 #Do nothing since the lines of code should alreay be there.
                 currentLine+=1
             end
-            puts lines[currentLine-1][0]
+            #puts lines[currentLine-1][0]
             #a = gets
 
             #puts lines[0]
@@ -674,7 +674,7 @@ end
 
 
 con = Github_database.createConnection()
-#stats_con = Stats_db.createConnection()
+stats_con = Stats_db.createConnection()
 
 repo_name = 'Android-Universal-Image-Loader'
 username = 'nostra13'
@@ -682,7 +682,7 @@ username = 'nostra13'
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)
 
-#repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
+repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
 
 prev_commit = files[0][2]
 current_commit = 0
@@ -692,10 +692,10 @@ commit_code = 0
 commit_id = nil
 
 churn = Hash.new()
-churn["CommentAdded"] = Array.new
-churn["CommentDeleted"] = Array.new
-churn["CodeAdded"] = Array.new
-churn["CodeDeleted"] = Array.new
+churn["CommentAdded"] = 0
+churn["CommentDeleted"] = 0
+churn["CodeAdded"] = 0
+churn["CodeDeleted"] = 0
 
 fileHashTable = Hash.new
 
@@ -704,7 +704,7 @@ files.each { |file|
     #file = files[0][0]
 
     if commit_id == nil
-        #commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], commit_comments, commit_code)
+        commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
     end
     
     current_commit = file[2]
@@ -719,22 +719,39 @@ files.each { |file|
 
     lines = file[0].scan(LINE_EXPR)
 
-    file = mergePatch(lines, file[5])
+    lines = mergePatch(lines, file[5])
     #pass the lines of code and the related patch
 
     comments = findMultiLineComments(lines)
 
-    churn["CommentAdded"].push(comments[3].commentAdded(0))
-    churn["CommentDeleted"].push(comments[3].commentDeleted(0))
-    churn["CodeAdded"].push(comments[3].codeAdded(0))
-    churn["CodeDeleted"].push(comments[3].codeDeleted(0))
+    churn["CommentAdded"] += comments[3].commentAdded(0)
+    churn["CommentDeleted"] += comments[3].commentDeleted(0)
+    churn["CodeAdded"] += comments[3].codeAdded(0)
+    churn["CodeDeleted"] += comments[3].codeDeleted(0)
 
-    puts "CommentAdded = #{churn["CommentAdded"]}"
-    puts "CommentDeleted = #{churn["CommentDeleted"]}"
-    puts "CodeAdded = #{churn["CodeAdded"]}"
-    puts "CodeDeleted = #{churn["CodeDeleted"]}"
+    #puts "CommentAdded = #{churn["CommentAdded"]}"
+    #puts "CommentDeleted = #{churn["CommentDeleted"]}"
+    #puts "CodeAdded = #{churn["CodeAdded"]}"
+    #puts "CodeDeleted = #{churn["CodeDeleted"]}"
 
-    a = gets
+    Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
+
+
+    if prev_commit != current_commit
+        #puts "finished commit"
+        prev_commit = current_commit
+
+        Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+        commit_id = nil
+        churn["CommentAdded"] = 0
+        churn["CommentDeleted"] = 0
+        churn["CodeAdded"] = 0
+        churn["CodeDeleted"] = 0 
+        #commit_comments = 0
+        #commit_code = 0
+    end
+
+    #a = gets
 =begin
    comments = findMultiLineComments(lines, file[5])
 
@@ -754,15 +771,7 @@ files.each { |file|
     commit_comments += fileComments
     commit_code += fileCode
     
-    if prev_commit != current_commit
-        puts "finished commit"
-        prev_commit = current_commit
-
-        Stats_db.updateCommit(stats_con, commit_id, commit_comments, commit_code)
-        commit_id = nil
-        commit_comments = 0
-        commit_code = 0
-    end
+    
 
     #puts file[1]
     #puts "Comments: #{comments[0]}"
