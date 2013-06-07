@@ -44,5 +44,5 @@ function getCommitsChurnAPI()
 	}
 	
 	/* Encode the results as JSON */
-	echo json_encode(getChurn($mysqli_stats));
+	echo json_encode(getChurnDays($mysqli_stats));
 }
