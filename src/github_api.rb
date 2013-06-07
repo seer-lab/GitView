@@ -320,7 +320,7 @@ def setFiles(con, github, commitUrl, commit_id)
                 # getting the file.
                 body = "#{e}\n#{url}"
                 retry
-            rescue OPENURI::SocketError => e
+            rescue OpenURI::SocketError => e
                 puts e
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
