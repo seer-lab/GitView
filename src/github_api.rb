@@ -323,6 +323,7 @@ def setFiles(con, github, commitUrl, commit_id)
             rescue OPENURI::SocketError => e
                 puts e
                 puts puts github.ratelimit_remaining
+                retry
             end
         else
             body = url
