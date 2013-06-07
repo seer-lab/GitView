@@ -322,7 +322,13 @@ def setFiles(con, github, commitUrl, commit_id)
                 retry
             rescue OPENURI::SocketError => e
                 puts e
-                puts puts github.ratelimit_remaining
+                puts github.ratelimit_remaining
+                body = "#{e}\n#{url}"
+                retry
+            rescue Faraday::Error::ConnectionFailed => e
+                put e
+                puts github.ratelimit_remaining
+                body = "#{e}\n#{url}"
                 retry
             end
         else
