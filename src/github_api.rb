@@ -313,12 +313,16 @@ def setFiles(con, github, commitUrl, commit_id)
                 #a = gets
                 #puts commit_id[0]
                 
-            rescue OpenURI::HTTPError => e
+            rescue OpenURI::HTTPError => e 
                 puts e
                 # Add the error message to the url link so that when reading the
                 # database it will be easier to tell that the there was a problem
                 # getting the file.
                 body = "#{e}\n#{url}"
+                retry
+            rescue OPENURI::SocketError => e
+                puts e
+                puts puts github.ratelimit_remaining
             end
         else
             body = url
@@ -351,7 +355,7 @@ start_time = Time.now
 #getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
-getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
+#getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
 
 #medium
 #getAllCommits(con, github, 'gnu-user', 'free-room-website')
@@ -366,7 +370,7 @@ getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
 #java large
-#getAllCommits(con, github, 'SpringSource', 'spring-framework')
+getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 finish_time = Time.now
 

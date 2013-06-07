@@ -5,7 +5,8 @@ $(document).ready(function () {
     /* Display the election results when page is loaded */
     if (window.location.pathname.match(/index\.php/))
     {
-        allCommits();
+        //allCommits();
+        getChurn();
     }
 });
 
@@ -18,6 +19,38 @@ function allCommits() {
             plotCommits(data);
         }
     });
+}
+
+function getChurn() {
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/commitsChurn',
+        dataType: "json", // data type of response
+        success: function(data) {
+            plotChurn(data);
+        }
+    });
+}
+
+function plotChurn(data) {
+    console.log(data);
+
+    keys = Object.keys(data);
+    dataLength = data[keys[0]].length;
+
+    // Start from index one since the first is the date.
+    var statsArray = {keys[1]: new Array(dataLength), keys[2]: new Array(dataLength), keys[3]: new Array(dataLength), keys[4]: new Array(dataLength)};
+
+    // Linearize the elements and add the date to them.
+    for(var j = 0; j < data[keys[i]].length; j++) {
+        statsArray[key[1]][j] = [data[keys[1]][j], data[keys[0]][j]];
+        statsArray[key[2]][j] = [data[keys[2]][j], data[keys[0]][j]];
+        statsArray[key[3]][j] = [data[keys[3]][j], data[keys[0]][j]];
+        statsArray[key[4]][j] = [data[keys[4]][j], data[keys[0]][j]];
+    }
+
+    //var comments = new Array(data["comments"].length);
+    //var code = new Array(data["code"].length);
 }
 
 function plotCommits(data) {
@@ -50,125 +83,67 @@ function plotCommits(data) {
 function areaPlot(id, comments, code) {
 
     var chart = $('#container').highcharts({
-            chart: {
-                type: 'area'
-                //xAxis: data["date"]
-            },
-            title: {
-                text: 'Total Comments and Code Per day'
-            },
-            subtitle: {
-                //TODO set to db query
-                text: "nostra13" + "/" + "Android-Universal-Image-Loader"
-            },
-            xAxis: {
-                type: 'datetime',
-                labels: {
-                formatter: function () {
-                    return Highcharts.dateFormat('%b %Y', this.value);
-                },
-                dateTimeLabelFormats: {
-                    month: '%b \'%y',
-                    year: '%Y'
-                }
-            }
-            },
-            yAxis: {
-                title: {
-                    text: 'Number of Lines'
-                },
-                labels: {
-                    formatter: function() {
-                        return this.value / 1000 +'k';
-                    }
-                }
-            },
-            tooltip: {
-                pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
-                shared: true
-            },
-            plotOptions: {
-                area: {
-                    
-                    marker: {
-                        enabled: false,
-                        symbol: 'circle',
-                        radius: 2,
-                        states: {
-                            hover: {
-                                enabled: true
-                            }
-                        }
-                    }
-                }
-            },
-            series: [{
-                name: 'Code',
-                data: code,
-                color: 'rgba(0, 0, 255, 0.7)'
-                //color: 'rgba(255, 255, 255, 0.7)'
-            }, {
-                name: 'Comments',
-                data: comments,
-                color: 'rgba(0, 255, 0, 0.7)'
-            }]
-        });
-    //chart.xAxis[0] = data["date"];
-    /*var chart;
-    var options = {
         chart: {
-            type: 'area',
-            renderTo: id
+            type: 'area'
+            //xAxis: data["date"]
         },
         title: {
-            text: "title"
+            text: 'Total Comments and Code Per day'
         },
-        series: [{
-            name: 'USSR/Russia',
-            data: [null, null, null, null, null, null, null , null , null ,null,
-            5, 25, 50, 120, 150, 200, 426, 660, 869, 1060, 1605, 2471, 3322,
-            4238, 5221, 6129, 7089, 8339, 9399, 10538, 11643, 13092, 14478,
-            15915, 17385, 19055, 21205, 23044, 25393, 27935, 30062, 32049,
-            33952, 35804, 37431, 39197, 45000, 43000, 41000, 39000, 37000,
-            35000, 33000, 31000, 29000, 27000, 25000, 24000, 23000, 22000,
-            21000, 20000, 19000, 18000, 18000, 17000, 16000]
-        }]
-    };
-    chart = new Highcharts.Chart(options);*/
-      /*      series: [{
-                
-            }, {
-                name: 'USSR/Russia',
-                data: [null, null, null, null, null, null, null , null , null ,null,
-                5, 25, 50, 120, 150, 200, 426, 660, 869, 1060, 1605, 2471, 3322,
-                4238, 5221, 6129, 7089, 8339, 9399, 10538, 11643, 13092, 14478,
-                15915, 17385, 19055, 21205, 23044, 25393, 27935, 30062, 32049,
-                33952, 35804, 37431, 39197, 45000, 43000, 41000, 39000, 37000,
-                35000, 33000, 31000, 29000, 27000, 25000, 24000, 23000, 22000,
-                21000, 20000, 19000, 18000, 18000, 17000, 16000]
-            }]
-        });*/
-    /*$('#container').highcharts({
-        chart: {
-            
-        },
-        title: {
-            text: 'Comment and Code Churn'
+        subtitle: {
+            //TODO set to db query
+            text: "nostra13" + "/" + "Android-Universal-Image-Loader"
         },
         xAxis: {
-            categories: data["date"]
+            type: 'datetime',
+            labels: {
+            formatter: function () {
+                return Highcharts.dateFormat('%b %Y', this.value);
+            },
+            dateTimeLabelFormats: {
+                month: '%b \'%y',
+                year: '%Y'
+            }
+        }
         },
         yAxis: {
             title: {
                 text: 'Number of Lines'
+            },
+            labels: {
+                formatter: function() {
+                    return this.value / 1000 +'k';
+                }
+            }
+        },
+        tooltip: {
+            pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
+            shared: true
+        },
+        plotOptions: {
+            area: {
+                
+                marker: {
+                    enabled: false,
+                    symbol: 'circle',
+                    radius: 2,
+                    states: {
+                        hover: {
+                            enabled: true
+                        }
+                    }
+                }
             }
         },
         series: [{
-            name: 'Comments',
-            data: data["comments"]
-        }, {
             name: 'Code',
-            data: data["code"]
-        }],
-    });*/
+            data: code,
+            color: 'rgba(0, 0, 255, 0.7)'
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }, {
+            name: 'Comments',
+            data: comments,
+            color: 'rgba(0, 255, 0, 0.7)'
+        }]
+    });
 }
