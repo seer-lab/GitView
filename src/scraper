@@ -1,8 +1,8 @@
 #/bin/bash
 #The directory where the log files will go
 LOGDIR=../testlog/
-#The file that the log will be saved to. Format: testHHMM_mmddyyyy
-LOGFILE=test$(date +"%H%M_%m%d%Y")
+#The file that the log will be saved to. Format: testmmddyyyy_HHMM
+LOGFILE=test$(date +"%m%d%Y_%H%M")
 
 #Full path of the file
 FULLPATH=$LOGDIR$LOGFILE
