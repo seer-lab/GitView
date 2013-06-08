@@ -2,6 +2,7 @@ gem 'json', '~> 1.7.7'
 require 'github_api'
 require 'nokogiri'
 require 'open-uri'
+require 'socket'    # Required to catch socket error
 require_relative 'database_interface'
 require_relative 'utility'
 
@@ -320,7 +321,7 @@ def setFiles(con, github, commitUrl, commit_id)
                 # getting the file.
                 body = "#{e}\n#{url}"
                 retry
-            rescue OpenURI::SocketError => e
+            rescue SocketError => e
                 puts e
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
