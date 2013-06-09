@@ -336,6 +336,11 @@ def setFiles(con, github, commitUrl, commit_id)
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
+            rescue Exception => e
+                put e
+                puts github.ratelimit_remaining
+                body = "#{e}\n#{url}"
+                retry
             end
         else
             body = url
