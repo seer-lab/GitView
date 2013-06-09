@@ -327,17 +327,17 @@ def setFiles(con, github, commitUrl, commit_id)
                 body = "#{e}\n#{url}"
                 retry
             rescue Faraday::Error::ConnectionFailed => e
-                put e
+                puts e
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Errno::ECONNRESET => e
-                put e
+                puts e
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Exception => e
-                put e
+                puts e
                 puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
