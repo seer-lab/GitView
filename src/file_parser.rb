@@ -379,10 +379,10 @@ def mergePatch(lines, patch)
     #begin
         patches.each { |patchLine|
 
-            #puts "#{patchLine}"
+            puts "#{patchLine}"
 
-            #puts "currentLine = #{currentLine}"
-            #puts "line #{lines[currentLine]}"
+            puts "currentLine = #{currentLine}"
+            puts "line #{lines[currentLine]}"
 
             #if lines[currentLine].class == Array
             #    puts "line #{lines[currentLine][0]}"
@@ -402,13 +402,20 @@ def mergePatch(lines, patch)
                 #line should not be in the file.
                 #TODO remove carrage return from patch
                 lines.insert(currentLine, ["-" + patchLine[2]])
+		#if lines[currentLine].class == Array
+		#	puts "Is an array"
+		#	a = gets
+		#	puts "lines = #{lines[currentLine]}"
+		#	a = gets
+		#end
                 currentLine+=1
             elsif patchLine[0] == "@@"
                 #Patch start
                 #puts "patch start"
                 patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
-                #puts "#{patchOffset}"
-                lines, currentLine = fillBefore(lines, patchOffset[0][2].to_i-1, currentLine)
+                #puts "patchoffset #{patchOffset}"
+		#puts "lines #{lines}"
+                lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1, currentLine)
             else
                 #Context
                 #puts "context"
@@ -419,7 +426,7 @@ def mergePatch(lines, patch)
             #a = gets
 
             #puts lines[0]
-            #puts ""
+            puts ""
             #a = gets
         }
     else
@@ -676,8 +683,9 @@ end
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
-repo_name = 'Android-Universal-Image-Loader'
-username = 'nostra13'
+
+#username, repo_name = 'SpringSource', 'spring-framework'
+username, repo_name = 'ACRA', 'acra'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)

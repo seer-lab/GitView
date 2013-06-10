@@ -5,6 +5,7 @@ require 'open-uri'
 require 'socket'    # Required to catch socket error
 require_relative 'database_interface'
 require_relative 'utility'
+require_relative 'regex'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -277,6 +278,9 @@ def setFiles(con, github, commitUrl, commit_id)
         # Get patch info
         patch = file["patch"]
 
+	if patch != nil
+		patch.gsub(NEWLINE_FIXER,"\n")
+	end
         # Get the file that was updated
         url = URI::encode(file["raw_url"].force_encoding('binary'))
         #puts url
@@ -305,7 +309,7 @@ def setFiles(con, github, commitUrl, commit_id)
                 #puts "filename #{filename}"
 
                 # Remove carriage return
-                body = body.gsub(/\r/,'')
+                body = body.gsub(NEWLINE_FIXER,"\n")
 
                 #puts "body #{body}"
                 #puts ""
