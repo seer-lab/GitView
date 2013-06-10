@@ -395,7 +395,7 @@ start_time = Time.now
 getAllCommits(con, github, 'ACRA', 'acra')
 
 #java large
-getAllCommits(con, github, 'SpringSource', 'spring-framework')
+#getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 finish_time = Time.now
 

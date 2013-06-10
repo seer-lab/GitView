@@ -162,11 +162,11 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             //xAxis: data["date"]
         },
         title: {
-            text: 'Total Comments and Code Per day'
+            text: 'Comments and Code Churn Per Month'
         },
         subtitle: {
             //TODO set to db query
-            text: "nostra13" + "/" + "Android-Universal-Image-Loader"
+            text: "ACRA" + "/" + "acra"
         },
         xAxis: {
             type: 'datetime',
