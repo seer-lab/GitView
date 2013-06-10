@@ -387,6 +387,9 @@ start_time = Time.now
 #Huge (because of libraries commited)
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
+#Java medium
+getAllCommits(con, github, 'ACRA', 'acra')
+
 #java large
 getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
