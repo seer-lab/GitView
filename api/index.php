@@ -10,7 +10,7 @@ $app = new \Slim\Slim();
 
 // GET route
 $app->get('/commits', 'getCommitsAPI');
-$app->get('/commitsChurn', 'getCommitsChurnAPI');
+$app->get('/commitsChurn/:user/:repo/:position', 'getCommitsChurnAPI');
 
 
 $app->run();
@@ -31,7 +31,7 @@ function getCommitsAPI()
 	echo json_encode(getCommitsMonths($mysqli_stats));
 }
 
-function getCommitsChurnAPI()
+function getCommitsChurnAPI($user, $repo, $group)
 {
 	global $db_user, $db_pass, $db_stats;
 	
@@ -44,5 +44,22 @@ function getCommitsChurnAPI()
 	}
 	
 	/* Encode the results as JSON */
-	echo json_encode(getChurnDays($mysqli_stats));
+	if(isset($group))
+	{
+		/* Split the repo into its owner and name */
+    	//$repo = explode('/', $repo);
+		if($group == $MONTH)
+		{
+			echo json_encode(getChurnMonths($mysqli_stats, $user, $repo));
+		}
+		elseif($group == $DAY)
+		{
+			echo json_encode(getChurnDays($mysqli_stats, $user, $repo));
+		}
+		else
+		{
+			/* On a per commit basis */
+			echo json_encode(getChurn($mysqli_stats, $user, $repo));
+		}
+	}
 }

@@ -256,12 +256,21 @@ def setFiles(con, github, commitUrl, commit_id)
         # Get all files
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized
+        puts e
         puts github.ratelimit_remaining
         #puts rate.getTimeRemaining
         #a = gets
         # Try again
 		retry
-        #commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
+    rescue Github::Error::ServiceError
+        puts e
+        puts github.ratelimit_remaining
+        a = gets
+        retry
+    rescue Exception => e
+        puts e
+        a = gets
+        retry
     end
 
     commitFiles.each { |file|

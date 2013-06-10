@@ -6,9 +6,23 @@ $(document).ready(function () {
     if (window.location.pathname.match(/index\.php/))
     {
         //allCommits();
-        getChurn();
+        //getChurn();
     }
 });
+
+$('#update').click(function(event) {
+        /* Get the unique session id and POST data */
+        var repo = $('#repo').val();
+        var group = $('#group').val();
+        //var quantity = $('#quantity').val();
+
+        /* Pass these values to the function that gets the data using
+           REST and plots it */
+        getChurn(repo, group)
+
+        event.preventDefault();
+    });
+
 
 function allCommits() {
     $.ajax({
@@ -21,10 +35,10 @@ function allCommits() {
     });
 }
 
-function getChurn() {
+function getChurn(repo, group) {
     $.ajax({
         type: 'GET',
-        url: rootURL + '/commitsChurn',
+        url: rootURL + '/commitsChurn/' + repo + "/" + group,
         dataType: "json", // data type of response
         success: function(data) {
             plotChurn(data);

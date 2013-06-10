@@ -1,5 +1,32 @@
 <?php
 
+function getAllRepos($mysqli)
+{
+     $results = array(array('repo_name'   => "",
+                            'repo_owner'  => ""
+                     ));
+
+    if ($stmt = $mysqli->prepare("SELECT repo_name, repo_owner FROM repositories"))
+    {
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($repo_name, $repo_owner);
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results[$i]['repo_name'] = $repo_name;
+            $results[$i]['repo_owner'] = $repo_owner;
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    return $results;
+}
+
 function getCommits($mysqli)
 {
     $results = array(   'date'      => array(),
@@ -62,7 +89,7 @@ function getCommitsMonths($mysqli)
     return $results;
 }
 
-function getChurn($mysqli)
+function getChurn($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
@@ -71,10 +98,10 @@ function getChurn($mysqli)
                         'codeDeleted'       => array()
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT commit_date, total_comment_addition, total_comment_deletion, total_code_addition, total_code_deletion FROM commits ORDER BY commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date"))
     {
         /* execute query */
-        $stmt->execute();
+        $stmt->execute($user, $repo);
 
         /* bind result variables */
         $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
@@ -98,7 +125,7 @@ function getChurn($mysqli)
 
 }
 
-function getChurnDays($mysqli)
+function getChurnDays($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
@@ -135,7 +162,7 @@ function getChurnDays($mysqli)
 }
 
 
-function getChurnMonths($mysqli)
+function getChurnMonths($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
