@@ -7,8 +7,11 @@ Furthermore, source code analysis such as code churn does not distinguish source
 
 Work has been done on looking at the code churn of projects to determine the quality of the software produced. By dividing code churn into two separate categories, commenting churn and source code churn we Hypothesize that more useful information about the project will be identified
 
-2. Approach to Data Mining Github
-Github is a very popular source code version management software that is used by some of the most popular open source projects. Github uses 'git' to provide the source code management and hosts the source code so that users and the public can access. Through the use of Github's git api source code version history was gathered and stored. Once stored it was parsed to identify comments and code for additions and deletions. 
+2. Background
+Github is a very popular source code version management software that is used by some of the most popular open source projects. Github uses 'git' to provide the source code management and hosts the source code so that users and the public can access. 
+
+3. Approach to Data Mining Github
+Through the use of Github's git api source code version history was gathered and stored. Once stored it was parsed to identify comments and code for additions and deletions. 
 
 3. Preliminary Results
 <Graph of churn per month> 
