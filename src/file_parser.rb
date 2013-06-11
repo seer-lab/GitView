@@ -347,8 +347,13 @@ end
 def mergePatch(lines, patch)
 
     if patch != nil
+        puts "#{patch}"
+
+        patch = patch.gsub(NEWLINE_FIXER,"\n")
         patches = patch.scan(PATCH_EXPR)
 
+        #patch = patch.gsub(NEWLINE_FIXER,"\n")
+        #patchlines = patch.scan(LINE_EXPR)
 
 
         currentLine = 0
@@ -380,6 +385,7 @@ def mergePatch(lines, patch)
         patches.each { |patchLine|
 
             puts "#{patchLine}"
+            #puts "patchDiff #{patchlines}"
 
             puts "currentLine = #{currentLine}"
             puts "line #{lines[currentLine]}"
@@ -659,9 +665,17 @@ def findMultiLineCommentsTotal (lines)
         #puts ""
         #a = gets
     }
-
-
     return [comments, codeLines, lineCounter]
+end
+
+# Parse the path of each file for their package.
+# Return the package and the file name (with extention)
+def parsePackages(path)
+    package = path.scan(PACKAGE_PARSER)
+    #puts "name #{path}"
+    #puts "package #{package[0]}"
+    #a = gets
+    return package[0]
 end
 
 
@@ -679,18 +693,21 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
+test = true
 
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
-
+username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'
-username, repo_name = 'ACRA', 'acra'
+#username, repo_name = 'ACRA', 'acra'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)
 
-repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
+if !test
+    repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
+end
 
 prev_commit = files[0][2]
 current_commit = 0
@@ -711,7 +728,7 @@ fileHashTable = Hash.new
 files.each { |file|
     #file = files[0][0]
 
-    if commit_id == nil
+    if commit_id == nil && !test
         commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
     end
     
@@ -742,14 +759,21 @@ files.each { |file|
     #puts "CodeAdded = #{churn["CodeAdded"]}"
     #puts "CodeDeleted = #{churn["CodeDeleted"]}"
 
-    Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
+    #Get the path and the name of the file.
+    package, name = parsePackages(file[1])
+    if !test
+        Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
+    end
+    
 
 
     if prev_commit != current_commit
         #puts "finished commit"
         prev_commit = current_commit
 
-        Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+        if !test
+            Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+        end
         commit_id = nil
         churn["CommentAdded"] = 0
         churn["CommentDeleted"] = 0

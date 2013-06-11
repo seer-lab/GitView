@@ -85,3 +85,7 @@ SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_
 SELECT commit_date, total_comments, total_code FROM commits ORDER BY commit_date;
 
 SELECT DATE(commit_date), SUM(total_comments), SUM(total_code) FROM commits GROUP BY DATE(commit_date) ORDER BY commit_date;
+
+SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'Android-Universal-Image-Loader' AND r.repo_owner LIKE 'nostra13' GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date
+
+SELECT DISTINCT name FROM file WHERE name Like 'UniversalImageLoader%';

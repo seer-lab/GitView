@@ -31,6 +31,7 @@ CREATE TABLE file
 (
     file_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    path TEXT,
     name TEXT,/*
     num_comments INT,
     num_code INT,*/

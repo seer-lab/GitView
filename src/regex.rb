@@ -29,11 +29,13 @@ WHITE_SPACE = /^\s*$/
 
 LINE_EXPR = /(.*?)(\n|\r+)/
 
-PATCH_EXPR = /((@@)|-|\+|\s)?(.*?)[\n\r]/
+PATCH_EXPR = /((@@)|-|\+| )?(.*?)[\n\r]/
 
 PATCH_LINE_NUM = /-([0-9]+)(,([0-9]*))?\s*\+([0-9]*)(,([0-9]*))?/
 
-NEWLINE_FIXER = /[(\n\r)\r\n]/
+NEWLINE_FIXER = /(\r?\n)|(\r)/
+
+PACKAGE_PARSER = /(.?*\/)(.*?\.java)/
 
 PYTHON = 'py'
 
