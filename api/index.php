@@ -33,7 +33,7 @@ function getCommitsAPI()
 
 function getCommitsChurnAPI($user, $repo, $group)
 {
-	global $db_user, $db_pass, $db_stats;
+	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	
 	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 	
@@ -43,6 +43,10 @@ function getCommitsChurnAPI($user, $repo, $group)
 		exit();
 	}
 	
+	#$user = urldecode($user);
+	#$repo = urldecode($repo);
+	#$group = urldecode($group);
+
 	/* Encode the results as JSON */
 	if(isset($group))
 	{
@@ -58,6 +62,7 @@ function getCommitsChurnAPI($user, $repo, $group)
 		}
 		else
 		{
+
 			/* On a per commit basis */
 			echo json_encode(getChurn($mysqli_stats, $user, $repo));
 		}

@@ -6,7 +6,9 @@ $(document).ready(function () {
     if (window.location.pathname.match(/index\.php/))
     {
         //allCommits();
-        //getChurn();
+        var repo = $('#repo').val();
+        var group = $('#group').val();
+        getChurn(repo, group);
     }
 });
 
@@ -35,18 +37,18 @@ function allCommits() {
     });
 }
 
-function getChurn(repo, group) {
+function getChurn(repo, group) { //encodeURIComponent()
     $.ajax({
         type: 'GET',
         url: rootURL + '/commitsChurn/' + repo + "/" + group,
         dataType: "json", // data type of response
         success: function(data) {
-            plotChurn(data);
+            plotChurn(data, repo);
         }
     });
 }
 
-function plotChurn(data) {
+function plotChurn(data, repo) {
     console.log(data);
 
     keys = Object.keys(data);
@@ -68,7 +70,7 @@ function plotChurn(data) {
     }
 
     console.log(statsArray)
-    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]]);
+    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], repo);
     //var comments = new Array(data["comments"].length);
     //var code = new Array(data["code"].length);
 }
@@ -168,7 +170,7 @@ function areaPlot(id, comments, code) {
     });
 }
 
-function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted) {
+function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, repo) {
 
     var chart = $('#container').highcharts({
         chart: {
@@ -180,7 +182,7 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         },
         subtitle: {
             //TODO set to db query
-            text: "ACRA" + "/" + "acra"
+            text: repo
         },
         xAxis: {
             type: 'datetime',

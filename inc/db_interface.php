@@ -99,9 +99,13 @@ function getChurn($mysqli, $user, $repo)
                     );
     // TODO change to use only 1 repo
     if ($stmt = $mysqli->prepare("SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date"))
-    {
+    
+{       
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
         /* execute query */
-        $stmt->execute($user, $repo);
+        $stmt->execute();
 
         /* bind result variables */
         $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
@@ -133,9 +137,12 @@ function getChurnDays($mysqli, $user, $repo)
                         'codeAdded'         => array(),
                         'codeDeleted'       => array()
                     );
-    // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DATE(commit_date), SUM(total_comment_addition), SUM(total_comment_deletion), SUM(total_code_addition), SUM(total_code_deletion) FROM commits GROUP BY DATE(commit_date) ORDER BY commit_date"))
+
+    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
         /* execute query */
         $stmt->execute();
 
@@ -170,9 +177,12 @@ function getChurnMonths($mysqli, $user, $repo)
                         'codeAdded'         => array(),
                         'codeDeleted'       => array()
                     );
-    // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(commit_date, '%Y-%m'), SUM(total_comment_addition), SUM(total_comment_deletion), SUM(total_code_addition), SUM(total_code_deletion) FROM commits GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY commit_date"))
+
+    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
     {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
         /* execute query */
         $stmt->execute();
 
