@@ -35,7 +35,7 @@ PATCH_LINE_NUM = /-([0-9]+)(,([0-9]*))?\s*\+([0-9]*)(,([0-9]*))?/
 
 NEWLINE_FIXER = /(\r?\n)|(\r)/
 
-PACKAGE_PARSER = /(.?*\/)(.*?\.java)/
+PACKAGE_PARSER = /(.*?\/)(.*?\.java)/
 
 PYTHON = 'py'
 
