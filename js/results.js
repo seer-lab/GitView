@@ -43,12 +43,12 @@ function getChurn(repo, group) { //encodeURIComponent()
         url: rootURL + '/commitsChurn/' + repo + "/" + group,
         dataType: "json", // data type of response
         success: function(data) {
-            plotChurn(data, repo);
+            plotChurn(data, repo, group);
         }
     });
 }
 
-function plotChurn(data, repo) {
+function plotChurn(data, repo, group) {
     console.log(data);
 
     keys = Object.keys(data);
@@ -70,7 +70,7 @@ function plotChurn(data, repo) {
     }
 
     console.log(statsArray)
-    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], repo);
+    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], repo, group);
     //var comments = new Array(data["comments"].length);
     //var code = new Array(data["code"].length);
 }
@@ -170,7 +170,7 @@ function areaPlot(id, comments, code) {
     });
 }
 
-function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, repo) {
+function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, repo, group) {
 
     var chart = $('#container').highcharts({
         chart: {
@@ -178,7 +178,7 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             //xAxis: data["date"]
         },
         title: {
-            text: 'Comments and Code Churn Per Month'
+            text: 'Comments and Code Churn Per ' + group
         },
         subtitle: {
             //TODO set to db query
@@ -228,20 +228,20 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         series: [{
             name: 'Comments Added',
             data: commentsAdded,
-            color: 'rgba(255, 0, 0, 0.7)'
+            color: 'rgba(0, 255, 0, 0.8)'
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
             name: 'Comments Deleted',
             data: commentsDeleted,
-            color: 'rgba(0, 255, 0, 0.7)'
+            color: 'rgba(255, 0, 0, 0.8)'
         }, {
             name: 'Code Added',
             data: codeAdded,
-            color: 'rgba(0, 0, 255, 0.7)'
+            color: 'rgba(0, 0, 255, 0.8)'
         }, {
             name: 'Code Deleted',
             data: codeDeleted,
-            color: 'rgba(255, 0, 255, 0.7)'
+            color: 'rgba(125, 0, 255, 0.8)'
         }]
     });
 }

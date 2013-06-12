@@ -30,7 +30,7 @@
       <div class="navbar-inner">
         <div class="container">
           <a class="brand" href="../index.php">
-            Github data
+            Mining GitHub for Comment and Code Churn Information
           </a>            
         </div>
       </div>

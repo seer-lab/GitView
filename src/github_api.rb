@@ -257,14 +257,14 @@ def setFiles(con, github, commitUrl, commit_id)
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized
         puts e
-        puts github.ratelimit_remaining
+        #puts github.ratelimit_remaining
         #puts rate.getTimeRemaining
         #a = gets
         # Try again
 		retry
     rescue Github::Error::ServiceError
         puts e
-        puts github.ratelimit_remaining
+        #puts github.ratelimit_remaining
         a = gets
         retry
     rescue Exception => e
@@ -401,10 +401,10 @@ start_time = Time.now
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
 #Java medium
-getAllCommits(con, github, 'ACRA', 'acra')
+#getAllCommits(con, github, 'ACRA', 'acra')
 
 #java large
-#getAllCommits(con, github, 'SpringSource', 'spring-framework')
+getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 finish_time = Time.now
 
