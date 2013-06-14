@@ -88,4 +88,9 @@ SELECT DATE(commit_date), SUM(total_comments), SUM(total_code) FROM commits GROU
 
 SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'Android-Universal-Image-Loader' AND r.repo_owner LIKE 'nostra13' GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date
 
+/* Query to remove 'empty' commits */
+SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'Android-Universal-Image-Loader' AND r.repo_owner LIKE 'nostra13' AND c.total_comment_addition + c.total_comment_deletion + c.total_code_addition + c.total_code_deletion != 0 ORDER BY c.commit_date
+
+SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND (c.total_comment_addition + c.total_comment_deletion + c.total_code_addition + c.total_code_deletion) != 0 ORDER BY c.commit_date
+
 SELECT DISTINCT name FROM file WHERE name Like 'UniversalImageLoader%';
