@@ -382,58 +382,74 @@ def mergePatch(lines, patch)
     #Since 3 lines of context before and after are given.
 
     #begin
+	
         patches.each { |patchLine|
+	    begin
+		    puts "#{patchLine}"
+		    #puts "patchDiff #{patchlines}"
 
-            puts "#{patchLine}"
-            #puts "patchDiff #{patchlines}"
+		    puts "currentLine = #{currentLine}"
+		    puts "line #{lines[currentLine]}"
 
-            puts "currentLine = #{currentLine}"
-            puts "line #{lines[currentLine]}"
+		    #if lines[currentLine].class == Array
+		    #    puts "line #{lines[currentLine][0]}"
+		    #else
+		        
+		    #end
 
-            #if lines[currentLine].class == Array
-            #    puts "line #{lines[currentLine][0]}"
-            #else
-                
-            #end
+		    if patchLine[0] == "+"
+		        #Addition
+		        #puts "addition"
+		        #line should be in file
+		        lines[currentLine][0] =  "+" +  lines[currentLine][0]
+		        currentLine+=1
+		    elsif patchLine[0] == "-"
+		        #Deletion
+		        #puts "deletion"
+		        #line should not be in the file.
+		        #TODO remove carrage return from patch
+		        lines.insert(currentLine, ["-" + patchLine[2]])
+			#if lines[currentLine].class == Array
+			#	puts "Is an array"
+			#	a = gets
+			#	puts "lines = #{lines[currentLine]}"
+			#	a = gets
+			#end
+		        currentLine+=1
+		    elsif patchLine[0] == "@@"
+		        #Patch start
+		        #puts "patch start"
+		        patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
 
-            if patchLine[0] == "+"
-                #Addition
-                #puts "addition"
-                #line should be in file
-                lines[currentLine][0] =  "+" +  lines[currentLine][0]
-                currentLine+=1
-            elsif patchLine[0] == "-"
-                #Deletion
-                #puts "deletion"
-                #line should not be in the file.
-                #TODO remove carrage return from patch
-                lines.insert(currentLine, ["-" + patchLine[2]])
-		#if lines[currentLine].class == Array
-		#	puts "Is an array"
-		#	a = gets
-		#	puts "lines = #{lines[currentLine]}"
-		#	a = gets
-		#end
-                currentLine+=1
-            elsif patchLine[0] == "@@"
-                #Patch start
-                #puts "patch start"
-                patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
-                #puts "patchoffset #{patchOffset}"
-		#puts "lines #{lines}"
-                lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1, currentLine)
-            else
-                #Context
-                #puts "context"
-                #Do nothing since the lines of code should alreay be there.
-                currentLine+=1
-            end
-            #puts lines[currentLine-1][0]
-            #a = gets
+			check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
+			
+			
+			if check[0] == nil
+				#Handle bad patch
+				puts "check #{check}"
+				a = gets
+			end
+		        #puts "patchoffset #{patchOffset}"
+			#puts "lines #{lines}"
+		        lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1, currentLine)
+		    else
+		        #Context
+		        #puts "context"
+		        #Do nothing since the lines of code should alreay be there.
+		        currentLine+=1
+		    end
+		    #puts lines[currentLine-1][0]
+		    #a = gets
 
-            #puts lines[0]
-            puts ""
-            #a = gets
+		    #puts lines[0]
+		    puts ""
+		rescue Exception => e
+			a = gets
+			puts "patchstart\n#{patch}\npatchend"
+			#puts check
+			a = gets
+		end
+		    
         }
     else
         # Patch is empty
@@ -698,8 +714,8 @@ test = true
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
-username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
-#username, repo_name = 'SpringSource', 'spring-framework'
+#username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
+username, repo_name = 'SpringSource', 'spring-framework'
 #username, repo_name = 'ACRA', 'acra'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
