@@ -27,7 +27,7 @@ REMOVE_QUOTE = /\".*?\"/
 
 WHITE_SPACE = /^\s*$/
 
-LINE_EXPR = /(.*?)(\n|\r+)/
+LINE_EXPR = /(.*?)\n/
 
 PATCH_EXPR = /((@@)|-|\+| )?(.*?)[\n\r]/
 

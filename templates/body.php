@@ -56,5 +56,9 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                 </select>
             </div>
         </div>
-    <button class="btn btn-primary" id='update' >Submit</button>
+        <div class="control-group">
+          <div class="controls">
+            <button class="btn btn-primary" id='update' >Submit</button>
+          </div>
+        </div>
 </form>

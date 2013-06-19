@@ -255,7 +255,7 @@ def setFiles(con, github, commitUrl, commit_id)
     begin
         # Get all files
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
-    rescue Github::Error::Unauthorized
+    rescue Github::Error::Unauthorized => e
         puts e
         #puts github.ratelimit_remaining
         #puts rate.getTimeRemaining
@@ -301,14 +301,30 @@ def setFiles(con, github, commitUrl, commit_id)
         if filename.match(/.*?\.java/)
             begin
 
-                body = ""
-                # Open up the url 
-                urlIO = open(url)
+                valid = false
+                while !valid
+                    body = ""
+                    # Open up the url 
+                    urlIO = open(url)
 
-                # Read the io buffer into the body of the file
-                urlIO.each { |line|
-                    body += line
-                }
+                    # Read the io buffer into the body of the file
+                    urlIO.each { |line|
+                        body += line
+                    }
+
+                    if body.match(/^<!DOCTYPE html>/)
+                        puts "bad url"
+                        puts "url: #{url}"
+                        puts github.ratelimit_remaining
+                        a = gets
+                        puts body
+                        a = gets
+                        #retry
+                        valid = false
+                    else
+                        valid = true
+                    end
+                end
                 #file = Nokogiri::HTML(open(url)) do |config|
                 #    config.default_html.
                 #end
@@ -404,7 +420,9 @@ start_time = Time.now
 #getAllCommits(con, github, 'ACRA', 'acra')
 
 #java large
-getAllCommits(con, github, 'SpringSource', 'spring-framework')
+#getAllCommits(con, github, 'SpringSource', 'spring-framework')
+
+getAllCommits(con, github, 'elasticsearch', 'elasticsearch')
 
 finish_time = Time.now
 
