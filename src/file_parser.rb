@@ -350,7 +350,10 @@ def mergePatch(lines, patch, name)
 
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
-        puts "#{patch}"
+
+        if !TEST
+            puts "#{patch}"
+        end
 
         patch = patch.gsub(NEWLINE_FIXER,"\n")
         flag = false
@@ -374,60 +377,64 @@ def mergePatch(lines, patch, name)
         #end
 
         deletions = 0
-    #begin
-    a = ''
-	
+        #begin
+        a = ''
+    
         patches.each { |patchLine|
             begin
             
-    		    puts "#{patchLine}"
-    		    #puts "patchDiff #{patchlines}"
+                if !TEST
+                    puts "#{patchLine}"
+                    #puts "patchDiff #{patchlines}"
 
-    		    puts "currentLine = #{currentLine}"
-    		    puts "line #{lines[currentLine]}"
+                    puts "currentLine = #{currentLine}"
+                    puts "line #{lines[currentLine]}"
 
-    		    #if lines[currentLine].class == Array
-    		    #    puts "line #{lines[currentLine][0]}"
-    		    #else
-    		        
-    		    #end
+                    #if lines[currentLine].class == Array
+                    #    puts "line #{lines[currentLine][0]}"
+                    #else
+                        
+                    #end
+                end
 
-    		    if patchLine[0] == "+"
-    		        #Addition
-    		        #puts "addition"
-    		        #line should be in file
-    		        lines[currentLine][0] =  "+" +  lines[currentLine][0]
-    		        currentLine+=1
-    		    elsif patchLine[0] == "-"
-    		        #Deletion
-    		        #puts "deletion"
-    		        #line should not be in the file.
-    		        #TODO remove carrage return from patch
-    		        lines.insert(currentLine, ["-" + patchLine[2]])
+                if patchLine[0] == "+"
+                    #Addition
+                    #puts "addition"
+                    #line should be in file
+                    lines[currentLine][0] =  "+" +  lines[currentLine][0]
+                    currentLine+=1
+                elsif patchLine[0] == "-"
+                    #Deletion
+                    #puts "deletion"
+                    #line should not be in the file.
+                    #TODO remove carrage return from patch
+                    lines.insert(currentLine, ["-" + patchLine[2]])
                     deletions += 1
-    			#if lines[currentLine].class == Array
-    			#	puts "Is an array"
-    			#	a = gets
-    			#	puts "lines = #{lines[currentLine]}"
-    			#	a = gets
-    			#end
-    		        currentLine+=1
-    		    elsif patchLine[0] == "@@"
-    		        #Patch start
-    		        #puts "patch start"
-    		        patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
+                #if lines[currentLine].class == Array
+                #    puts "Is an array"
+                #    a = gets
+                #    puts "lines = #{lines[currentLine]}"
+                #    a = gets
+                #end
+                    currentLine+=1
+                elsif patchLine[0] == "@@"
+                    #Patch start
+                    #puts "patch start"
+                    patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
 
-    			check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
-    			
-    			
-    			if check[0] == nil
-    				#Handle bad patch
-    				puts "check #{check}"
-    				#a = gets
-    			end
-    		        #puts "patchoffset #{patchOffset}"
-    			#puts "lines #{lines}"
-    		        lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1 + deletions, currentLine)
+                    check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
+                
+                
+                    if !TEST
+                        if check[0] == nil
+                            #Handle bad patch
+                            puts "check #{check}"
+                            #a = gets
+                        end
+                    end
+                    #puts "patchoffset #{patchOffset}"
+                    #puts "lines #{lines}"
+                    lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1 + deletions, currentLine)
                     deletions = 0
 
                     #while deletions > 0 
@@ -435,26 +442,29 @@ def mergePatch(lines, patch, name)
                     #    currentLine+=1
                     #    deletions -= 1
                     #end
-    		    else
+                else
                     if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
                     else
-        		        #Context
-        		        #puts "context"
-        		        #Do nothing since the lines of code should alreay be there.
-        		        currentLine+=1
+                        #Context
+                        #puts "context"
+                        #Do nothing since the lines of code should alreay be there.
+                        currentLine+=1
                     end
-    		    end
-    		    #puts lines[currentLine-1][0]
-    		    #a = gets
+                end
 
-    		    #puts lines[0]
-                puts "deletions #{deletions}"
-    		    puts ""
+                if !TEST
+                    #puts lines[currentLine-1][0]
+                    #a = gets
+
+                    #puts lines[0]
+                    puts "deletions #{deletions}"
+                    puts ""
+                end
 #=begin
             rescue Exception => e
                 puts e
-    			a = gets
-    			puts "patchstart\n#{patch}\npatchend"
+                a = gets
+                puts "patchstart\n#{patch}\npatchend"
 
                 lines.each { |line| 
                     puts line
@@ -468,7 +478,7 @@ def mergePatch(lines, patch, name)
                 #a = gets
 
                 puts "lines #{lines.length}"
-    			a = gets
+                a = gets
                 
 
                 puts "name #{name}"
@@ -482,8 +492,10 @@ def mergePatch(lines, patch, name)
             #end
         }
     else
-        # Patch is empty
-        puts "nothing in patch!?"
+        if !TEST
+            # Patch is empty
+            puts "nothing in patch!?"
+        end
     end
 
 
@@ -739,7 +751,7 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
-test = true
+TEST = true
 
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
@@ -752,7 +764,7 @@ username, repo_name = 'elasticsearch', 'elasticsearch'
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)
 
-if !test
+if !TEST
     repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
 end
 
@@ -775,13 +787,16 @@ fileHashTable = Hash.new
 files.each { |file|
     #file = files[0][0]
 
-    if commit_id == nil && !test
+    if commit_id == nil && !TEST
         commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
     end
     
     current_commit = file[2]
-    puts "file: #{file[1]}"
-    #a = gets
+
+    if !TEST
+        puts "file: #{file[1]}"
+        #a = gets
+    end
 
     size = file[0].size
 
@@ -808,7 +823,7 @@ files.each { |file|
 
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
-    if !test
+    if !TEST
         Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
     end
     
@@ -818,7 +833,7 @@ files.each { |file|
         #puts "finished commit"
         prev_commit = current_commit
 
-        if !test
+        if !TEST
             Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
         commit_id = nil
