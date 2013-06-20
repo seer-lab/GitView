@@ -174,7 +174,8 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
 
     var chart = $('#container').highcharts({
         chart: {
-            type: 'spline'
+            type: 'spline',
+            zoomType: 'x'
             //xAxis: data["date"]
         },
         title: {
@@ -186,9 +187,13 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         },
         xAxis: {
             type: 'datetime',
+            maxZoom: 14 * 24 * 3600000,
+
             labels: {
+                //step: 2,
+                staggerLines: 2,
             formatter: function () {
-                return Highcharts.dateFormat('%b %Y', this.value);
+                return Highcharts.dateFormat('%b %d %Y', this.value);
             },
             dateTimeLabelFormats: {
                 month: '%b \'%y',
