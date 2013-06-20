@@ -5,7 +5,7 @@ require_once 'inc/db_interface.php';
 $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 ?>
 
-<div id="container" style="width:100%; height:500px;"></div>
+<div class="row" id="container" style="width:100%; height:500px;"></div>
 
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
@@ -56,5 +56,9 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                 </select>
             </div>
         </div>
-    <button class="btn btn-primary" id='update' >Submit</button>
+        <div class="control-group">
+          <div class="controls">
+            <button class="btn btn-primary" id='update' >Submit</button>
+          </div>
+        </div>
 </form>

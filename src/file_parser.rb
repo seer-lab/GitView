@@ -344,12 +344,21 @@ def findMultiLineComments (lines)
     return [comments, codeLines, lineCounter, codeChurn]
 end
 
-def mergePatch(lines, patch)
+def mergePatch(lines, patch, name)
 
     if patch != nil
+
+        # A file that does not have a new line at the end will have
+        # '\ No newline at end of file' at the very end
         puts "#{patch}"
 
         patch = patch.gsub(NEWLINE_FIXER,"\n")
+        flag = false
+        #if patch.match(/\\ No newline at end of file\n.+/)
+        #    puts "no new line!"
+        #    a = gets
+        #    flag = true
+        #end
         patches = patch.scan(PATCH_EXPR)
 
         #patch = patch.gsub(NEWLINE_FIXER,"\n")
@@ -364,76 +373,113 @@ def mergePatch(lines, patch)
         #    puts false
         #end
 
-        #Parsing patches:
-        # Break up into patch lines (easy enough)
-            # Lines starting with '@@' are patch blocks (block is up til next @@ or end of patch)
-            # Lines starting with '+'/'-'\s are addition and deletion lines
-            # Lines with no special symbol are context lines
-        # Identify what block the additions and deletions are apart of
-            # based on how it is implemented... (see below)
-        #Continue on next patch item
-        
-    #Could go through patches and identify where the comments code blocks are (with line numbers)
-    #I would then need to always go back to the previous patch as well, to get the object and then update the object accordingly
-    #OR
-    #Could go through patches but base it off the original file
-    #This would allow for the code churn to be calculated at any point but would
-    #For both of these options however the ability to identify multiline comments that are added to a existing mutli-line comment (more than 3 to 6 lines (based on how it is parsed))
-    #Since 3 lines of context before and after are given.
-
+        deletions = 0
     #begin
+    a = ''
+	
         patches.each { |patchLine|
+            begin
+            
+    		    puts "#{patchLine}"
+    		    #puts "patchDiff #{patchlines}"
 
-            puts "#{patchLine}"
-            #puts "patchDiff #{patchlines}"
+    		    puts "currentLine = #{currentLine}"
+    		    puts "line #{lines[currentLine]}"
 
-            puts "currentLine = #{currentLine}"
-            puts "line #{lines[currentLine]}"
+    		    #if lines[currentLine].class == Array
+    		    #    puts "line #{lines[currentLine][0]}"
+    		    #else
+    		        
+    		    #end
 
-            #if lines[currentLine].class == Array
-            #    puts "line #{lines[currentLine][0]}"
-            #else
+    		    if patchLine[0] == "+"
+    		        #Addition
+    		        #puts "addition"
+    		        #line should be in file
+    		        lines[currentLine][0] =  "+" +  lines[currentLine][0]
+    		        currentLine+=1
+    		    elsif patchLine[0] == "-"
+    		        #Deletion
+    		        #puts "deletion"
+    		        #line should not be in the file.
+    		        #TODO remove carrage return from patch
+    		        lines.insert(currentLine, ["-" + patchLine[2]])
+                    deletions += 1
+    			#if lines[currentLine].class == Array
+    			#	puts "Is an array"
+    			#	a = gets
+    			#	puts "lines = #{lines[currentLine]}"
+    			#	a = gets
+    			#end
+    		        currentLine+=1
+    		    elsif patchLine[0] == "@@"
+    		        #Patch start
+    		        #puts "patch start"
+    		        patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
+
+    			check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
+    			
+    			
+    			if check[0] == nil
+    				#Handle bad patch
+    				puts "check #{check}"
+    				#a = gets
+    			end
+    		        #puts "patchoffset #{patchOffset}"
+    			#puts "lines #{lines}"
+    		        lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1 + deletions, currentLine)
+                    deletions = 0
+
+                    #while deletions > 0 
+                    #    lines[currentLine][0] = " " + lines[currentLine][0]
+                    #    currentLine+=1
+                    #    deletions -= 1
+                    #end
+    		    else
+                    if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
+                    else
+        		        #Context
+        		        #puts "context"
+        		        #Do nothing since the lines of code should alreay be there.
+        		        currentLine+=1
+                    end
+    		    end
+    		    #puts lines[currentLine-1][0]
+    		    #a = gets
+
+    		    #puts lines[0]
+                puts "deletions #{deletions}"
+    		    puts ""
+#=begin
+            rescue Exception => e
+                puts e
+    			a = gets
+    			puts "patchstart\n#{patch}\npatchend"
+
+                lines.each { |line| 
+                    puts line
+                    a = gets
+                }
+                a = gets
+                puts "flag #{flag}"
+                puts "deletions = #{deletions}"
+                puts "currentLine = #{currentLine}"
+                puts "patchlines #{patches.length}"
+                #a = gets
+
+                puts "lines #{lines.length}"
+    			a = gets
                 
-            #end
 
-            if patchLine[0] == "+"
-                #Addition
-                #puts "addition"
-                #line should be in file
-                lines[currentLine][0] =  "+" +  lines[currentLine][0]
-                currentLine+=1
-            elsif patchLine[0] == "-"
-                #Deletion
-                #puts "deletion"
-                #line should not be in the file.
-                #TODO remove carrage return from patch
-                lines.insert(currentLine, ["-" + patchLine[2]])
-		#if lines[currentLine].class == Array
-		#	puts "Is an array"
-		#	a = gets
-		#	puts "lines = #{lines[currentLine]}"
-		#	a = gets
-		#end
-                currentLine+=1
-            elsif patchLine[0] == "@@"
-                #Patch start
-                #puts "patch start"
-                patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
-                #puts "patchoffset #{patchOffset}"
-		#puts "lines #{lines}"
-                lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1, currentLine)
-            else
-                #Context
-                #puts "context"
-                #Do nothing since the lines of code should alreay be there.
-                currentLine+=1
+                puts "name #{name}"
+                a = gets
             end
-            #puts lines[currentLine-1][0]
-            #a = gets
-
-            #puts lines[0]
-            puts ""
-            #a = gets
+#=end
+            #if lines[currentLine-1][0] == patchLine[2]
+            #    if a != "s" 
+            #        a = gets.chomp!
+            #   end
+            #end
         }
     else
         # Patch is empty
@@ -698,8 +744,9 @@ test = true
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
-username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
+#username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'
+username, repo_name = 'elasticsearch', 'elasticsearch'
 #username, repo_name = 'ACRA', 'acra'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
@@ -744,7 +791,7 @@ files.each { |file|
 
     lines = file[0].scan(LINE_EXPR)
 
-    lines = mergePatch(lines, file[5])
+    lines = mergePatch(lines, file[5], file[1])
     #pass the lines of code and the related patch
 
     comments = findMultiLineComments(lines)

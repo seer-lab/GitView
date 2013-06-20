@@ -6,6 +6,7 @@ function getAllRepos($mysqli)
                             'repo_owner'  => ""
                      ));
 
+    # Changed to order in reverse to put the better repo first.
     if ($stmt = $mysqli->prepare("SELECT repo_name, repo_owner FROM repositories ORDER BY repo_id DESC"))
     {
         /* execute query */
