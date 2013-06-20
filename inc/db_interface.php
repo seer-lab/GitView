@@ -6,7 +6,7 @@ function getAllRepos($mysqli)
                             'repo_owner'  => ""
                      ));
 
-    if ($stmt = $mysqli->prepare("SELECT repo_name, repo_owner FROM repositories"))
+    if ($stmt = $mysqli->prepare("SELECT repo_name, repo_owner FROM repositories ORDER BY repo_id DESC"))
     {
         /* execute query */
         $stmt->execute();
