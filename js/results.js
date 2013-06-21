@@ -193,15 +193,20 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             labels: {
                 //step: 2,
                 staggerLines: 2,
-            formatter: function () {
-                return Highcharts.dateFormat('%b %d %Y', this.value);
-            },
-            dateTimeLabelFormats: {
-                month: '%b \'%y',
-                year: '%Y'
+                formatter: function () {
+                    return Highcharts.dateFormat('%b %d %Y', this.value);
+                },
+                dateTimeLabelFormats: {
+                    month: '%b \'%y',
+                    year: '%Y'
+                }
             }
-        }
         },
+
+        legend:{
+            enabled: true
+        },
+
 
         rangeSelector:{
             enabled:true,
@@ -258,5 +263,23 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             data: codeDeleted,
             color: 'rgba(125, 0, 255, 0.8)'
         }]
+    }, function(chart){
+
+            // apply the date pickers
+            setTimeout(function () {
+                $('input.highcharts-range-selector', $(chart.container).parent())
+                    .datepicker();
+            }, 0);
     });
 }
+
+$(function() {
+    // Set the datepicker's date format
+    $.datepicker.setDefaults({
+        dateFormat: 'yy-mm-dd',
+        onSelect: function(dateText) {
+            this.onchange();
+            this.onblur();
+        }
+    });
+});

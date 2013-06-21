@@ -16,6 +16,7 @@
     <script src="../js/highstock/highstock.js"></script>
     <script src="../js/moment.min.js"></script>
     <script src="../js/results.js"></script>
+    <script src="../js/jquery-ui.js"></script>
 
   </body>
 </html>
