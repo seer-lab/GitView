@@ -352,22 +352,22 @@ def setFiles(con, github, commitUrl, commit_id)
                 retry
             rescue SocketError => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Faraday::Error::ConnectionFailed => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Errno::ECONNRESET => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Exception => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             end
@@ -422,7 +422,17 @@ start_time = Time.now
 #java large
 #getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
-getAllCommits(con, github, 'elasticsearch', 'elasticsearch')
+#getAllCommits(con, github, 'elasticsearch', 'elasticsearch')
+
+#getAllCommits(con, github, 'jenkinsci','jenkins')
+
+#getAllCommits(con, github, 'thinkaurelius', 'titan')
+
+#getAllCommits(con, github, 'nathanmarz', 'storm')
+
+#getAllCommits(con, github, 'Bukkit', 'CraftBukkit')
+
+getAllCommits(con, github, 'voldemort', 'voldemort')
 
 finish_time = Time.now
 
