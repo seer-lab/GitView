@@ -253,10 +253,6 @@ def setFiles(con, github, commitUrl, commit_id)
     puts 'working on files'
 
     begin
-        #while github.ratelimit_remaining > 1
-#
-        #end
-    
         # Get all files
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized => e
@@ -265,7 +261,7 @@ def setFiles(con, github, commitUrl, commit_id)
         #puts rate.getTimeRemaining
         #a = gets
         # Try again
-        retry
+		retry
     rescue Github::Error::ServiceError
         puts e
         #puts github.ratelimit_remaining
@@ -291,9 +287,9 @@ def setFiles(con, github, commitUrl, commit_id)
         # Get patch info
         patch = file["patch"]
 
-    if patch != nil
-        patch.gsub(NEWLINE_FIXER,"\n")
-    end
+	if patch != nil
+		patch.gsub(NEWLINE_FIXER,"\n")
+	end
         # Get the file that was updated
         url = URI::encode(file["raw_url"].force_encoding('binary'))
         #puts url
@@ -356,22 +352,22 @@ def setFiles(con, github, commitUrl, commit_id)
                 retry
             rescue SocketError => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Faraday::Error::ConnectionFailed => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Errno::ECONNRESET => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             rescue Exception => e
                 puts e
-                puts github.ratelimit_remaining
+                #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
                 retry
             end
@@ -421,12 +417,22 @@ start_time = Time.now
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
 #Java medium
-getAllCommits(con, github, 'ACRA', 'acra')
+#getAllCommits(con, github, 'ACRA', 'acra')
 
 #java large
 #getAllCommits(con, github, 'SpringSource', 'spring-framework')
 
 #getAllCommits(con, github, 'elasticsearch', 'elasticsearch')
+
+#getAllCommits(con, github, 'jenkinsci','jenkins')
+
+#getAllCommits(con, github, 'thinkaurelius', 'titan')
+
+#getAllCommits(con, github, 'nathanmarz', 'storm')
+
+#getAllCommits(con, github, 'Bukkit', 'CraftBukkit')
+
+getAllCommits(con, github, 'voldemort', 'voldemort')
 
 finish_time = Time.now
 
