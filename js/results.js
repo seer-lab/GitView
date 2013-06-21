@@ -172,9 +172,10 @@ function areaPlot(id, comments, code) {
 
 function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, repo, group) {
 
-    var chart = $('#container').highcharts({
+    var chart = $('#container').highcharts('StockChart', {
         chart: {
-            type: 'spline'
+            type: 'spline'//,
+            //zoomType: 'x'
             //xAxis: data["date"]
         },
         title: {
@@ -182,13 +183,18 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         },
         subtitle: {
             //TODO set to db query
-            text: repo
+            text: '<a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
+            useHTML: true
         },
         xAxis: {
             type: 'datetime',
+            //maxZoom: 14 * 24 * 3600000,
+
             labels: {
+                //step: 2,
+                staggerLines: 2,
             formatter: function () {
-                return Highcharts.dateFormat('%b %Y', this.value);
+                return Highcharts.dateFormat('%b %d %Y', this.value);
             },
             dateTimeLabelFormats: {
                 month: '%b \'%y',
@@ -196,6 +202,15 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             }
         }
         },
+
+        rangeSelector:{
+            enabled:true,
+            buttons: [{
+                type: 'all',
+                text: 'All'
+            }]
+        },
+
         yAxis: {
             title: {
                 text: 'Number of Lines'
