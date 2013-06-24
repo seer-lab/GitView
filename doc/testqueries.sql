@@ -53,6 +53,9 @@ SELECT c.commit_id FROM repositories AS r INNER JOIN commits AS c ON r.repo_id =
 # Get all the version of a given file
 SELECT f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE f.name LIKE 'luigi/hdfs.py' AND r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify';
 
+ # Get all the files that are in the database
+SELECT com.date, f.name, f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'android_frameworks_base' AND r.repo_owner LIKE 'ParanoidAndroid' AND f.name LIKE '%\.java' ORDER BY com.date;
+
 # Get all the files that are in the database
 SELECT com.date, f.name, f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'Android-Universal-Image-Loader' AND r.repo_owner LIKE 'nostra13' AND f.name LIKE '%\.java' ORDER BY com.date;
 
@@ -94,3 +97,9 @@ SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.tota
 SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND (c.total_comment_addition + c.total_comment_deletion + c.total_code_addition + c.total_code_deletion) != 0 ORDER BY c.commit_date
 
 SELECT DISTINCT name FROM file WHERE name Like 'UniversalImageLoader%';
+
+
+#Does not work.
+DELETE file, commits, repositories FROM file INNER JOIN commits INNER JOIN repositories WHERE file.commit_reference = commits.commit_id AND commits.repo_reference = repositories.repo_id AND repositories.repo_id = 8;
+android_frameworks_base
+ParanoidAndroid

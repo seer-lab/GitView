@@ -1,4 +1,5 @@
 gem 'json', '~> 1.7.7'
+gem 'github_api', '=0.9.7'
 require 'github_api'
 require 'nokogiri'
 require 'open-uri'
@@ -9,6 +10,8 @@ require_relative 'regex'
 
 $stdout.sync = true
 $stderr.sync = true
+
+HOUR = 3600
 
 class Rate
     def initialize(github)
@@ -82,9 +85,9 @@ github = Github.new do | config |
 end
 
 
-rate = Rate.new(github)
+#rate = Rate.new(github)
 
-puts rate.rate()
+#puts rate.rate()
 
 #a = github.repos.commits.all 'tinfoilhat', 'tinfoil-sms'
 
@@ -115,15 +118,31 @@ puts rate.rate()
 #a = github.repos.list_tags 'torvalds', 'linux'
 
 #con = createConnection()
+def waitOnRate(con, github, amount)
+    while github.ratelimit_remaining < amount
+        con.close()
+        sleep(HOUR)
+        con = Github_database.createConnection()
+    end
+end
 
 def getAllCommits(con, github, username, repo_name)
     
     puts "Getting all commits..."
-    rate = Rate.new(github)
+    #rate = Rate.new(github)
     # Get the repo's commits
-    allCommits = github.repos.commits.all username, repo_name
 
-    puts rate.getTimeRemaining(Time.now)
+    begin
+        #Put 1000 since it is a large request but it is unlikely that a repo will contain more than 1000*100 commits
+        waitOnRate(con, github, 1000)
+
+        allCommits = github.repos.commits.all username, repo_name
+    rescue Exception => e
+        puts e
+        retry
+    end
+
+    #puts rate.getTimeRemaining(Time.now)
 
     # Get the repo's database Id
     repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
@@ -224,35 +243,12 @@ def getAllCommits(con, github, username, repo_name)
 
 end
 
-#Tag stuff
-=begin 
-puts 'working on tags'
-tagList = github.git_data.references.list 'peter-murach', 'github', ref:'tags'
-
-tagList.body.each { |tag|
-
-    tagMore = (github.git_data.tags.get 'peter-murach', 'github', tag["object"]["sha"]).body
-
-    # Get the commit sha
-    sha = tagMore["object"]["sha"]
-
-    # Get the tag name
-    name = tagMore["tag"]
-
-    #Get the tag message
-    message = tagMore["message"]
-    #sha = tag["commit"]["sha"]
-    #test the actual command
-    #tagMore = github.git_data.tags.get username, repo_name, sha
-    insertTag(con, Tag.new(sha, name, message))
-}
-=end
-
 def setFiles(con, github, commitUrl, commit_id)
     # TODO decide on whether to ignore /doc folder or not, since the projects im looking for should have source code documentation (so /doc would be duplication or not what im looking for)
     puts 'working on files'
 
     begin
+        waitOnRate(con, github, 2)
         # Get all files
         commitFiles = github.repos.commits.get_request(commitUrl).body["files"]
     rescue Github::Error::Unauthorized => e
@@ -261,15 +257,15 @@ def setFiles(con, github, commitUrl, commit_id)
         #puts rate.getTimeRemaining
         #a = gets
         # Try again
-		retry
+        retry
     rescue Github::Error::ServiceError
         puts e
         #puts github.ratelimit_remaining
-        a = gets
+        #a = gets
         retry
     rescue Exception => e
         puts e
-        a = gets
+        #a = gets
         retry
     end
 
@@ -287,9 +283,11 @@ def setFiles(con, github, commitUrl, commit_id)
         # Get patch info
         patch = file["patch"]
 
-	if patch != nil
-		patch.gsub(NEWLINE_FIXER,"\n")
-	end
+        if patch != nil
+            patch.gsub(NEWLINE_FIXER,"\n")
+        end
+
+        waitOnRate(con, github, 2)
         # Get the file that was updated
         url = URI::encode(file["raw_url"].force_encoding('binary'))
         #puts url
@@ -316,9 +314,9 @@ def setFiles(con, github, commitUrl, commit_id)
                         puts "bad url"
                         puts "url: #{url}"
                         puts github.ratelimit_remaining
-                        a = gets
+                        #a = gets
                         puts body
-                        a = gets
+                        #a = gets
                         #retry
                         valid = false
                     else
@@ -417,7 +415,7 @@ start_time = Time.now
 #getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
 
 #Java medium
-#getAllCommits(con, github, 'ACRA', 'acra')
+getAllCommits(con, github, 'ACRA', 'acra')
 
 #java large
 #getAllCommits(con, github, 'SpringSource', 'spring-framework')
@@ -432,7 +430,7 @@ start_time = Time.now
 
 #getAllCommits(con, github, 'Bukkit', 'CraftBukkit')
 
-getAllCommits(con, github, 'voldemort', 'voldemort')
+#getAllCommits(con, github, 'voldemort', 'voldemort')
 
 finish_time = Time.now
 

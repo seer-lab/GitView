@@ -27,6 +27,7 @@ Comments:
 
 Assumptions
 - All comments are documentation (and not commented out code, this is hopefully temporary)
+    - could possibly attempt to parse comment block but ignore comment indicator characters and if the java parse fails then the block is not code (might not be comments still but really what else could it be)
 - Comments refer to the code below
     - This is really for comments that are above or below code. This assumption helps simplify organizing the comments and mapping them to the source code they refer to.
 - If I am doing Java it might be good to just settle on Javadoc style of commenting
@@ -36,3 +37,12 @@ Collecting the body after a multi-line comment
         - Look for either a ';' or a '{'
             - if ';' is found, take from after comment till ';'
             - if '{' is found, take from after comment until a '}' is found at the same level
+
+All comments that are in the same line as the code are trivial to link to code (the code that is in the same line as it)
+
+That are on a seperate line than the code the describe are harder to link.
+    - Some cases are harder to identify than others
+        - Ex.
+        Comments for methods are defined to be right above the method and in multi-line style (each line with the same indentation and a '*' at the beginning)
+    - For the harder types (where it cant easily be identified) context lines could be taken to try to help identify what parts of the code are desired
+        - Context lines and the line number so more lines can be taken if needed.

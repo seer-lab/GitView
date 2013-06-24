@@ -351,7 +351,7 @@ def mergePatch(lines, patch, name)
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
 
-        if !TEST
+        if TEST
             puts "#{patch}"
         end
 
@@ -383,7 +383,7 @@ def mergePatch(lines, patch, name)
         patches.each { |patchLine|
             begin
             
-                if !TEST
+                if TEST
                     puts "#{patchLine}"
                     #puts "patchDiff #{patchlines}"
 
@@ -425,7 +425,7 @@ def mergePatch(lines, patch, name)
                     check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
                 
                 
-                    if !TEST
+                    if TEST
                         if check[0] == nil
                             #Handle bad patch
                             puts "check #{check}"
@@ -452,7 +452,7 @@ def mergePatch(lines, patch, name)
                     end
                 end
 
-                if !TEST
+                if TEST
                     #puts lines[currentLine-1][0]
                     #a = gets
 
@@ -492,7 +492,7 @@ def mergePatch(lines, patch, name)
             #end
         }
     else
-        if !TEST
+        if TEST
             # Patch is empty
             puts "nothing in patch!?"
         end
@@ -751,15 +751,15 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
-TEST = true
+TEST = false
 
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
 #username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'
-username, repo_name = 'elasticsearch', 'elasticsearch'
-#username, repo_name = 'ACRA', 'acra'
+#username, repo_name = 'elasticsearch', 'elasticsearch'
+username, repo_name = 'ACRA', 'acra'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, username)
@@ -787,13 +787,11 @@ fileHashTable = Hash.new
 files.each { |file|
     #file = files[0][0]
 
-    if commit_id == nil && !TEST
-        commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
-    end
+    
     
     current_commit = file[2]
 
-    if !TEST
+    if TEST
         puts "file: #{file[1]}"
         #a = gets
     end
@@ -823,17 +821,19 @@ files.each { |file|
 
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
-    if !TEST
+    if !TEST && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+        
+        if commit_id == nil
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+        end
         Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
     end
     
-
-
     if prev_commit != current_commit
         #puts "finished commit"
         prev_commit = current_commit
 
-        if !TEST
+        if !TEST && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
             Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
         commit_id = nil
