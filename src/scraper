@@ -17,8 +17,8 @@ read -s -p "Password: " password
 echo
 
 # The repo to be scraped and then parsed.
-REPO_OWNER=nostra13
-REPO_NAME=Android-Universal-Image-Loader
+REPO_OWNER=ACRA
+REPO_NAME=acra
 
 # Make the directory if it doesnt already exist
 mkdir -p $LOGDIR
@@ -33,11 +33,11 @@ RESULT= $?
 echo log file: $LOGDIR$LOGFILE
 
 # If the github scrap was successful move on to parsing the file
-if [$RESULT -eq 0]; then
+if [ $RESULT -eq 0 ]; then
 	ruby file_parser.rb $REPO_OWNER $REPO_NAME true
 
 	# If the test parse does not yeild an error then run the actual thing (not as a test) to store in the db
-	if [$? -eq 0]; then
+	if [ $? -eq 0 ]; then
 		ruby file_parser.rb $REPO_OWNER $REPO_NAME false
 	fi
 fi
