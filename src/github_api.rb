@@ -13,6 +13,16 @@ $stderr.sync = true
 
 HOUR = 3600
 
+#Command line arguements in order
+repo_owner, repo_name, username, password = "", "", "", ""
+
+if ARGV.size == 4
+	repo_owner, repo_name = ARGV[0], ARGV[1]
+	username, password = ARGV[2], ARGV[3]
+end
+
+
+
 class Rate
     def initialize(github)
         getRateRemaining(github)
@@ -70,8 +80,8 @@ class Rate
 end
 
 #Github.repos.list user: 'dataBaseError'
-puts "Password"
-password = gets.chomp
+#puts "Password"
+#password = gets.chomp
 
 #\\n([+-][\w\s\.*;\/]*)
 #\\n[+-]([^(\\)]*)
@@ -80,7 +90,7 @@ password = gets.chomp
 github = Github.new do | config |
     config.auto_pagination = true
     config.mime_type = :full 
-    config.login = 'dataBaseError'
+    config.login = username
     config.password = password
 end
 
@@ -287,10 +297,15 @@ def setFiles(con, github, commitUrl, commit_id)
             patch.gsub(NEWLINE_FIXER,"\n")
         end
 
-        waitOnRate(con, github, 2)
-        # Get the file that was updated
-        url = URI::encode(file["raw_url"].force_encoding('binary'))
-        #puts url
+	begin 
+            waitOnRate(con, github, 2)
+            # Get the file that was updated
+            url = URI::encode(file["raw_url"].force_encoding('binary'))
+            #puts url
+	rescue Exception => e
+	    puts e
+            retry
+	end
 
 
         #body = nil
@@ -390,47 +405,9 @@ end
 con = Github_database.createConnection()
 
 start_time = Time.now
-#really small
-#getAllCommits(con, github, 'dataBaseError', 'intro-webdev')
-
-#small
-#getAllCommits(con, github, 'stormpath', 'stormpath-rails')
-
-#slightly small
-#getAllCommits(con, github, 'rauhryan', 'ghee')
 
 #java large
-#getAllCommits(con, github, 'nostra13', 'Android-Universal-Image-Loader')
-
-#medium
-#getAllCommits(con, github, 'gnu-user', 'free-room-website')
-
-#medium-large
-#getAllCommits(con, github, 'spotify', 'luigi')
-
-#large
-#getAllCommits(con, github, 'peter-murach', 'github')
-
-#Huge (because of libraries commited)
-#getAllCommits(con, github, 'tinfoilhat', 'tinfoil-sms')
-
-#Java medium
-getAllCommits(con, github, 'ACRA', 'acra')
-
-#java large
-#getAllCommits(con, github, 'SpringSource', 'spring-framework')
-
-#getAllCommits(con, github, 'elasticsearch', 'elasticsearch')
-
-#getAllCommits(con, github, 'jenkinsci','jenkins')
-
-#getAllCommits(con, github, 'thinkaurelius', 'titan')
-
-#getAllCommits(con, github, 'nathanmarz', 'storm')
-
-#getAllCommits(con, github, 'Bukkit', 'CraftBukkit')
-
-#getAllCommits(con, github, 'voldemort', 'voldemort')
+getAllCommits(con, github, repo_owner, repo_name)
 
 finish_time = Time.now
 

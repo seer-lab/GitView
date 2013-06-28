@@ -344,14 +344,14 @@ def findMultiLineComments (lines)
     return [comments, codeLines, lineCounter, codeChurn]
 end
 
-def mergePatch(lines, patch, name)
+def mergePatch(lines, patch, name, test)
 
     if patch != nil
 
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
 
-        if TEST
+        if test
             puts "#{patch}"
         end
 
@@ -381,9 +381,9 @@ def mergePatch(lines, patch, name)
         a = ''
     
         patches.each { |patchLine|
-            begin
+            #begin
             
-                if TEST
+                if test
                     puts "#{patchLine}"
                     #puts "patchDiff #{patchlines}"
 
@@ -425,7 +425,7 @@ def mergePatch(lines, patch, name)
                     check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
                 
                 
-                    if TEST
+                    if test
                         if check[0] == nil
                             #Handle bad patch
                             puts "check #{check}"
@@ -452,7 +452,7 @@ def mergePatch(lines, patch, name)
                     end
                 end
 
-                if TEST
+                if test
                     #puts lines[currentLine-1][0]
                     #a = gets
 
@@ -460,7 +460,7 @@ def mergePatch(lines, patch, name)
                     puts "deletions #{deletions}"
                     puts ""
                 end
-#=begin
+=begin
             rescue Exception => e
                 puts e
                 a = gets
@@ -484,7 +484,7 @@ def mergePatch(lines, patch, name)
                 puts "name #{name}"
                 a = gets
             end
-#=end
+=end
             #if lines[currentLine-1][0] == patchLine[2]
             #    if a != "s" 
             #        a = gets.chomp!
@@ -492,7 +492,7 @@ def mergePatch(lines, patch, name)
             #end
         }
     else
-        if TEST
+        if test
             # Patch is empty
             puts "nothing in patch!?"
         end
@@ -751,7 +751,19 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
-TEST = false
+
+#Command line arguements in order (default test to true)
+repo_owner, repo_name, test = "", "", true
+
+if ARGV.size == 3
+	repo_owner, repo_name = ARGV[0], ARGV[1]
+	
+	if ARGV[2] == "false"
+		test = false
+	end
+else
+	abort("Invalid parameters")
+end
 
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
@@ -759,12 +771,13 @@ stats_con = Stats_db.createConnection()
 #username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'
 #username, repo_name = 'elasticsearch', 'elasticsearch'
-username, repo_name = 'ACRA', 'acra'
+#username, repo_name = 'ACRA', 'acra'
+#username, repo_name = 'junit-team', 'junit'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
-files = getFile(con, JAVA, repo_name, username)
+files = getFile(con, JAVA, repo_name, repo_owner)
 
-if !TEST
+if !test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
 end
 
@@ -791,7 +804,7 @@ files.each { |file|
     
     current_commit = file[2]
 
-    if TEST
+    if test
         puts "file: #{file[1]}"
         #a = gets
     end
@@ -804,7 +817,7 @@ files.each { |file|
 
     lines = file[0].scan(LINE_EXPR)
 
-    lines = mergePatch(lines, file[5], file[1])
+    lines = mergePatch(lines, file[5], file[1], test)
     #pass the lines of code and the related patch
 
     comments = findMultiLineComments(lines)
@@ -821,7 +834,7 @@ files.each { |file|
 
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
-    if !TEST && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+    if !test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
         
         if commit_id == nil
             commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
@@ -833,7 +846,7 @@ files.each { |file|
         #puts "finished commit"
         prev_commit = current_commit
 
-        if !TEST && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+        if !test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
             Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
         commit_id = nil

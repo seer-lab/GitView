@@ -1,16 +1,45 @@
 #/bin/bash
-#The directory where the log files will go
+
+# The directory where the log files will go
 LOGDIR=../testlog/
-#The file that the log will be saved to. Format: testmmddyyyy_HHMM
+# The file that the log will be saved to. Format: testmmddyyyy_HHMM
 LOGFILE=test$(date +"%m%d%Y_%H%M")
 
-#Full path of the file
+# Full path of the file
 FULLPATH=$LOGDIR$LOGFILE
 
-#Make the directory if it doesnt already exist
+# The username used to login with for github api
+USERNAME=dataBaseError
+
+# The password for that user
+read -s -p "Password: " password
+# Extra echo so everything following will begin on a new line
+echo
+
+# The repo to be scraped and then parsed.
+REPO_OWNER=nostra13
+REPO_NAME=Android-Universal-Image-Loader
+
+# Make the directory if it doesnt already exist
 mkdir -p $LOGDIR
 
-#Run the script in a virtual screen to allow for access to the server still
-ruby github_api.rb 2>&1 | tee $FULLPATH
+# Run the script in a virtual screen to allow for access to the server still
+ruby github_api.rb $REPO_OWNER $REPO_NAME $USERNAME $password 2>&1 | tee $FULLPATH
 
+# Store the error code of the scraping ruby script
+RESULT= $?
+
+# Show the location of the log file for the scraping
 echo log file: $LOGDIR$LOGFILE
+
+# If the github scrap was successful move on to parsing the file
+if [$RESULT -eq 0]; then
+	ruby file_parser.rb $REPO_OWNER $REPO_NAME true
+
+	# If the test parse does not yeild an error then run the actual thing (not as a test) to store in the db
+	if [$? -eq 0]; then
+		ruby file_parser.rb $REPO_OWNER $REPO_NAME false
+	fi
+fi
+
+
