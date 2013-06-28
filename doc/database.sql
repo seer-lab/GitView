@@ -17,9 +17,10 @@ GRANT ALL ON github_data.* to 'git_miner'@'localhost';
  */
 CREATE TABLE repositories
 (
-    repo_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    repo_id INTEGER UNSIGNED AUTO_INCREMENT,
     repo_name VARCHAR(64),
-    repo_owner VARCHAR(64)
+    repo_owner VARCHAR(64),
+    PRIMARY KEY(repo_id)
 );
 
 /**
@@ -28,9 +29,10 @@ CREATE TABLE repositories
  */
 CREATE TABLE users
 (
-    user_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INTEGER UNSIGNED AUTO_INCREMENT,
     name VARCHAR(64),
-    date DATETIME
+    date DATETIME,
+    PRIMARY KEY(user_id)
 );
 
 
@@ -48,12 +50,16 @@ CREATE TABLE users
  */
 CREATE TABLE commits
 (
-    commit_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    repo_reference INTEGER UNSIGNED REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    commiter_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    author_reference INTEGER UNSIGNED REFERENCES users (users_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    commit_id BIGINT UNSIGNED AUTO_INCREMENT,
+    repo_reference INTEGER UNSIGNED,
+    commiter_reference INTEGER UNSIGNED,
+    author_reference INTEGER UNSIGNED,
     body TEXT,
-    sha_hash VARCHAR(64)
+    sha_hash VARCHAR(64),
+    PRIMARY KEY (commit_id),
+    CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_commits_2 FOREIGN KEY (commiter_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_commits_3 FOREIGN KEY (author_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -66,9 +72,11 @@ CREATE TABLE commits
  */
 CREATE TABLE parent_commits
 (
-    node_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    children_id BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    parent_sha VARCHAR(64)
+    node_id BIGINT UNSIGNED AUTO_INCREMENT,
+    children_id BIGINT UNSIGNED,
+    parent_sha VARCHAR(64),
+    PRIMARY KEY (node_id),
+    CONSTRAINT fkey_parent_1 FOREIGN KEY (children_id) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 /**
  * The create table command for store the message that was given with the commit
@@ -88,34 +96,39 @@ CREATE TABLE parent_commits
 CREATE TABLE file
 (
     file_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    commit_reference BIGINT UNSIGNED,
     name TEXT,
     addition INTEGER DEFAULT 0,
     deletion INTEGER DEFAULT 0,
     patch LONGBLOB,
-    file LONGBLOB
+    file LONGBLOB,
+    CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE tags
 (
     tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    commit_reference BIGINT UNSIGNED REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    commit_reference BIGINT UNSIGNED,
     tag_name TEXT,
     tag_description TEXT,
-    tag_date DATETIME
+    tag_date DATETIME, 
+    CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 /* Will store 'py', 'rb', 'java'... */
 CREATE TABLE file_types
 (
-    type_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    type VARCHAR(16) 
+    type_id INTEGER UNSIGNED AUTO_INCREMENT,
+    type VARCHAR(16),
+    PRIMARY KEY(type_id)
 );
 
 CREATE TABLE repo_file_types
 (
-    repo_id INTEGER UNSIGNED REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    file_type_id INTEGER UNSIGNED REFERENCES file_types (type_id) ON DELETE CASCADE ON UPDATE CASCADE
+    repo_id INTEGER UNSIGNED,
+    file_type_id INTEGER UNSIGNED,
+    CONSTRAINT fkey_repo_file_1 FOREIGN KEY (repo_id) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_repo_file_2 FOREIGN KEY (file_type_id) REFERENCES file_types (type_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 

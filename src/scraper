@@ -27,17 +27,17 @@ mkdir -p $LOGDIR
 ruby github_api.rb $REPO_OWNER $REPO_NAME $USERNAME $password 2>&1 | tee $FULLPATH
 
 # Store the error code of the scraping ruby script
-RESULT= $?
+RESULT=$?
 
 # Show the location of the log file for the scraping
 echo log file: $LOGDIR$LOGFILE
 
 # If the github scrap was successful move on to parsing the file
-if [ $RESULT -eq 0 ]; then
+if [[ $RESULT == 0 ]]; then
 	ruby file_parser.rb $REPO_OWNER $REPO_NAME true
 
 	# If the test parse does not yeild an error then run the actual thing (not as a test) to store in the db
-	if [ $? -eq 0 ]; then
+	if [[ $? == 0 ]]; then
 		ruby file_parser.rb $REPO_OWNER $REPO_NAME false
 	fi
 fi

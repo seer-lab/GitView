@@ -778,7 +778,7 @@ stats_con = Stats_db.createConnection()
 files = getFile(con, JAVA, repo_name, repo_owner)
 
 if !test
-    repo_id = Stats_db.getRepoId(stats_con, repo_name, username)
+    repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
 end
 
 prev_commit = files[0][2]
