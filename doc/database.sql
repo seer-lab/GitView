@@ -144,3 +144,16 @@ DROP TABLE parent_commits;
 DROP TABLE commits;
 DROP TABLE users;
 DROP TABLE repositories;
+
+/*
+ * Use to update github_data tables that were created using old schema
+ */ 
+ALTER TABLE commits ADD CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_commits_2 FOREIGN KEY (commiter_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_commits_3 FOREIGN KEY (author_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE parent_commits ADD CONSTRAINT fkey_parent_1 FOREIGN KEY (children_id) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE file ADD CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE tags ADD CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE repo_file_types ADD CONSTRAINT fkey_repo_file_1 FOREIGN KEY (repo_id) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_repo_file_2 FOREIGN KEY (file_type_id) REFERENCES file_types (type_id) ON DELETE CASCADE ON UPDATE CASCADE;
