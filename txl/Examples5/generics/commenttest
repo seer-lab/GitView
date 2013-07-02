@@ -1,0 +1,10 @@
+Script started on Sat Dec  8 23:32:48 2007
+[Auriga:java5Grammar/Examples5/generics] dean% txl -q[K
+Usage:  txl [txloptions] [-o outputfile] inputfile [txlfile] [- progoptions]
+(for more information use txl -help)
+[Auriga:java5Grammar/Examples5/generics] dean% quit
+tcsh: quit: Command not found.
+[Auriga:java5Grammar/Examples5/generics] dean% exit
+exit
+
+Script done on Sat Dec  8 23:32:58 2007
