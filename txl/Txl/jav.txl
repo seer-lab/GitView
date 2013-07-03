@@ -19,29 +19,81 @@ function main
 	replace [program]
 		P [program]
 	by
-		P [package_comment_tagging] [class_comment_tagging]
+		P [package_comment_tagging] [class_comment_tagger]
 end function
 
-rule class_comment_tagging
-	replace [class_declaration]
-		CL [class_declaration]
-	deconstruct CL
-    	CL_head [class_header] CL_body [class_body]
-	deconstruct CL_head
-	    M [repeat modifier] 'class CL_name [class_name] EX [opt extends_clause] IM [opt implements_clause]
-	deconstruct CL_name
-		CL_name_2 [declared_name]
-	deconstruct CL_name_2
-	   CL_name_3 [id] GP [opt generic_parameter]   
-	construct string_name [stringlit]
-		"temp_class"
-	construct tagged_CL [class_declaration]
-		'checked CL_head CL_body
+
+% TODO handle enum and interface
+% TODO extend to also handle inner classes (allow for a parameter to be passed (optional though))
+rule class_comment_tagger
+	replace [type_declaration]
+		TD [type_declaration]
+	deconstruct TD 
+		Comments [comment_block_NL] CD [class_declaration]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
+	deconstruct CD
+		CH [class_header] CB [class_body]
+	deconstruct CH
+		M [repeat modifier] 'class N [class_name] EX_clause[opt extends_clause] Imp_clause[opt implements_clause]
+	deconstruct N
+		DB [declared_name]
+	deconstruct DB
+	    ClassName [id] GP [opt generic_parameter]
+	construct tag_string [stringlit]
+		"class"
+	construct TaggedClassC [comment_block_NL]
+		'<COMMENT 'type = tag_string 'value = ClassName '> FirstComment OtherComments
+		'</COMMENT>
 	by
-		tagged_CL [tag_class_comments string_name] 
+		TaggedClassC CH CB [class_body_parser ClassName] 
 end rule
 
-rule tag_class_comments class_name [stringlit]
+function class_body_parser class_name [id]
+	replace [class_body]
+		CB [class_body]
+    deconstruct CB
+    	classBody [class_or_interface_body]
+    deconstruct classBody
+	    '{ Body [repeat class_body_declaration] '}                      
+    by
+    	CB [class_body_tagging class_name]
+end function
+
+function class_body_tagging class_name [id]
+	replace [repeat class_body_declaration]
+		Body [repeat class_body_declaration]
+	deconstruct Body
+		firstPart [class_body_declaration] rest [repeat class_body_declaration]
+	by
+		firstPart rest [member_comment_tagger class_name] [class_body_tagging class_name]
+		% [instance_tagger] [static_tagger] [field_tagger] 
+end function
+
+function member_comment_parser class_name [id]
+	replace [class_body_declaration]
+		CD [class_body_declaration]
+	deconstruct CD
+		member [member_declaration]
+	by
+		member [class_comment_tagger] [method_comment_parser class_name]
+end function
+
+function method_comment_parser class_name [id]
+	replace [method_declaration]
+		MD [method_declaration]
+	deconstruct MD
+		MC [method_or_constructor_declaration]
+	by
+		MC [method_comment_tagger class_name] %[constructor_comment_tagger class_name]
+end function
+
+function method_comment_tagger class_name [id]
+	replace [method_declarator]
+	
+end function
+
+rule tag_class_comments class_name [id]
 	replace [comment_block_NL]
 		CB [comment_block_NL]
 	deconstruct CB
@@ -50,7 +102,7 @@ rule tag_class_comments class_name [stringlit]
 		"class"
 	construct Tag_Comments [comment_block_NL]
 		'<COMMENT 'type = tag_string 'value = class_name '> FirstComment OtherComments
-		'</COMMENT>		
+		'</COMMENT>
 	by
 		Tag_Comments		
 end rule
@@ -70,76 +122,3 @@ rule package_comment_tagging
 	by
 		Tag_Comments PackageHeader ImportDeclarations TypeDeclarations
 end rule
-
-%function package_parse 
-%	replace [package_declaration]
-%		Comment [repeat comment_NL] PackageHeader [opt package_header] ImportDeclarations [repeat import_declaration] TypeDeclarations [repeat type_declaration]
-%	by
-%		Comment PackageHeader ImportDeclarations [importComment] TypeDeclarations [classParser]
-%end function
-%
-%function importComment 
-%	replace [repeat import_declaration]
-%		Import [import_declaration] rest [repeat import_declaration]
-%	by
-%		Import rest [importComment]
-%end function
-%
-%function classParser
-%	replace [repeat type_declaration]
-%		classDec [type_declaration] rest [repeat type_declaration]
-%	by
-%		classDec rest
-%end function
-
-%function matchToEmpty
-%	match [import_declaration]
-%		Empty [space]
-%end function
-
-
-%rule type_comments 
-%	replace [repeat type_declaration]
-%		TypeDeclaration [type_declaration] MoreTypeDeclarations [repeat type_declaration]
-%	by
-%		TypeDeclaration MoreTypeDeclarations
-%end rule
-%
-%rule import_comments 
-%	replace [repeat import_declaration]
-%		ImportDeclaration [import_declaration] MoreImportDeclarations [repeat import_declaration]
-%	by
-%		ImportDeclaration MoreImportDeclarations
-%end rule
-
-%function main
-%    replace [program]
-%	   P [program]
-%    construct newP [program]
-%        P [packageTagger]
-%    by
-%        newP
-%end function
-
-%function packageTagger
-%    replace [package_declaration]
-%        PA [package_declaration]
-%    construct newPack [package_declaration]
-%        PA [resolvePackageComment] [resolvePackage]
-%    by
-%        NewPack
-%end function
-
-%function resolvePackageComment
-%    replace [comment_NL]
-%        C [comment_NL]
-%    by 
-%        <package_comment name = 'package...'>C</package_comment>
-%end function
-
-%function resolvePackage
-%    replace [opt package_header]
-%        P [opt package_header]
-%    by
-%        <package name = 'package.P'>P</package>
-%end function

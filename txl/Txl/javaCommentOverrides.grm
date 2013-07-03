@@ -113,7 +113,7 @@ define tag_type
 end define
 
 define tag_value
-	'value = [stringlit] 
+	'value = [id] 
 end define
 
 define comment_end_tag
