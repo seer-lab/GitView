@@ -6,10 +6,11 @@
 package com.test;
 
 // Library for important stuff
-import libstuff; // For most important libs
+import libstuff;
 // Other lib
 import otherLib;
-import finalLib; // last library
+// last library
+import finalLib; 
 
 // For the each of the many 
 public class forIn {
@@ -22,5 +23,11 @@ public class forIn {
        	System.out.println(s);
        for (int i : primes)
        	System.out.println(i);
+    }
+
+    // Other method
+    public boolean isMethod()
+    {
+        return true;
     }
 }

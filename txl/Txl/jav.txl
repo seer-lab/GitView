@@ -18,13 +18,99 @@ function main
 	replace [program]
 		P [program]
 	by
-		P [package_comment_tagging] [class_comment_tagger]
+		P [package_comment_tagging] 
 end function
 
+rule package_comment_tagging 
+	replace [package_declaration]
+		 PD [package_declaration]
+	deconstruct PD
+		cr [comment_block_NL] PackageHeader [opt package_header] ImportDeclarations [repeat import_declaration] TypeDeclarations [repeat type_declaration]
+	deconstruct cr
+		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
+	construct tag_string [stringlit]
+		"package"
+	deconstruct PackageHeader
+		Anno [repeat annotation] 'package PN [package_name] ';
+	deconstruct PN
+		QN [qualified_name]
+	deconstruct QN
+		ref [reference]
+	deconstruct ref
+		firstPack [id] restPack [repeat component]
+	construct Path [stringlit]
+		_ [getPackageName firstPack restPack]
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = Path > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments PackageHeader ImportDeclarations [import_comment_tagger] TypeDeclarations [class_comment_tagger Path]
+end rule
+
+function getPackageName first [id] rest [repeat component]
+	replace [stringlit]
+		_ [stringlit]
+	construct startName [stringlit]
+		_ [+ first]
+	by
+		startName [parsePackage rest]
+end function
+
+function parsePackage rest [repeat component]
+	replace [stringlit]
+		start [stringlit]
+	deconstruct rest
+		firstId [dot_id] moreId [repeat component]
+	deconstruct firstId
+		'. GP [opt generic_argument] name [id]
+	construct seperator [stringlit]
+		"."
+	construct partPath [stringlit]
+ 		start [+ seperator]
+ 	construct fullPath [stringlit]
+ 		partPath [+ name]
+	by
+		fullPath [parsePackage moreId]
+end function
+
+function import_comment_tagger
+	replace [repeat import_declaration]
+		Imports [repeat import_declaration]
+	deconstruct Imports
+		first_import [import_declaration] otherImports [repeat import_declaration]
+	deconstruct first_import
+		Comment [comment_block_NL] 'import S [opt 'static] ImportName [imported_name] ';
+	deconstruct Comment
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct ImportName
+		Pack [package_or_type_name] Dot [opt dot_star]
+	deconstruct Pack
+		QN [qualified_name]
+	deconstruct QN
+		ref [reference]
+	deconstruct ref
+		firstPack [id] restPack [repeat component]
+	construct Path [stringlit]
+		_ [getPackageName firstPack restPack]
+	construct tag_string [stringlit]
+		"import"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = Path > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments 'import S ImportName ';  otherImports [import_comment_tagger]
+end function
+
+function import_end_comment
+	replace [comment_block_NL]
+		CB [comment_block_NL]
+	by
+		CB
+end function
 
 % TODO handle enum and interface
 % TODO extend to also handle inner classes (allow for a parameter to be passed (optional though))
-rule class_comment_tagger
+rule class_comment_tagger path [stringlit]
 	replace [type_declaration]
 		TD [type_declaration]
 	deconstruct TD 
@@ -39,18 +125,18 @@ rule class_comment_tagger
 		DB [declared_name]
 	deconstruct DB
 	    ClassName [id] GP [opt generic_parameter]
-	%construct tag_value [tag_value_rep]
-	%	\"ClassName \"
+	construct new_path [stringlit]
+		path [buildPath ClassName]
 	construct tag_string [stringlit]
 		"class"
 	construct TaggedClassC [comment_block_NL]
-		<COMMENT 'type = tag_string 'value = "tag_value" > FirstComment OtherComments
+		<COMMENT 'type = tag_string 'value = new_path > FirstComment OtherComments
 		</COMMENT>
 	by
-		TaggedClassC CH CB [class_body_parser ClassName] 
+		TaggedClassC CH CB [class_body_parser new_path] 
 end rule
 
-function class_body_parser class_name [id]
+function class_body_parser path [stringlit]
 	replace [class_body]
 		CB [class_body]
     deconstruct CB
@@ -58,29 +144,20 @@ function class_body_parser class_name [id]
     deconstruct classBody
 	    '{ Body [repeat class_body_declaration] '}                      
     by
-    	'{ Body [class_body_tagging class_name] '}
+    	'{ Body [class_body_tagging path] '}
 end function
 
-function class_body_tagging class_name [id]
+function class_body_tagging path [stringlit]
 	replace [repeat class_body_declaration]
 		Body [repeat class_body_declaration]
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [class_comment_tagger] [method_comment_tagger class_name] rest [class_body_tagging class_name]
+		firstPart [class_comment_tagger path] [method_comment_tagger path] rest [class_body_tagging path]
 		% [instance_tagger] [static_tagger] [field_tagger] 
 end function
 
-%function method_comment_parser class_name [id]
-%	replace [method_declaration]
-%		MD [method_declaration]
-	%deconstruct MD
-	%	MC [method_or_constructor_declaration]
-	%by
-%		MD [method_comment_tagger class_name] %[constructor_comment_tagger class_name]
-%end function
-
-function method_comment_tagger class_name [id]
+function method_comment_tagger path [stringlit]
 	replace [class_body_declaration]
 		classBody [class_body_declaration]
 	deconstruct classBody
@@ -99,14 +176,8 @@ function method_comment_tagger class_name [id]
 		name [id] GP [opt generic_parameter]
 	deconstruct Comment
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
-	construct TagSeparator [stringlit]
-		"."
-	construct TagClass [stringlit]
-		_ [+ class_name]
-	construct Cpath [stringlit]
-		TagClass [+ TagSeparator]
 	construct CMpath [stringlit]
-		Cpath [+ name]
+		path [buildPath name]
 	construct tag_string [stringlit]
 		"method"
 	construct Tag_Comments [comment_block_NL]
@@ -133,7 +204,7 @@ function buildPath new_path [id]
 	construct full_path [stringlit]
 		extention_path [+ new_path]
 	by
-		extention_path
+		full_path
 end function
 
 rule tag_class_comments class_name [id]
@@ -150,20 +221,4 @@ rule tag_class_comments class_name [id]
 		</COMMENT>
 	by
 		Tag_Comments		
-end rule
-
-rule package_comment_tagging 
-	replace [package_declaration]
-		 PD [package_declaration]
-	deconstruct PD
-		cr [comment_block_NL] PackageHeader [opt package_header] ImportDeclarations [repeat import_declaration] TypeDeclarations [repeat type_declaration]
-	deconstruct cr
-		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
-	construct tag_string [stringlit]
-		"package"
-	construct Tag_Comments [comment_block_NL]
-		'< 'COMMENT 'type = tag_string '> FirstComment OtherComments
-		'</ 'COMMENT '>
-		by
-		Tag_Comments PackageHeader ImportDeclarations TypeDeclarations
 end rule

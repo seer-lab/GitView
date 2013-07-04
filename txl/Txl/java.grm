@@ -174,9 +174,8 @@ define package_name
 end define
 
 % T.D. Oct 2007 added static import
-% Added optional comment after import statement
 define import_declaration
-        'import [opt 'static] [imported_name] '; [opt comment] [NL][NL]
+        'import [opt 'static] [imported_name] '; [NL][NL]
     |   '; [NL]    % JRC Apr 08
 end define
 
