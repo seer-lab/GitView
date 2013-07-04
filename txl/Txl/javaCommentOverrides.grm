@@ -53,6 +53,14 @@ redefine formal_parameter
 	...  [opt comment_block_NL]
 end redefine
 
+redefine constructor_declaration
+	[opt comment_block_NL] ...
+end redefine
+
+redefine method_declaration
+	[opt comment_block_NL] ...
+end redefine
+
 % ... or after a parameter list 
 redefine constructor_declarator
 	... [opt comment_block_NL]
@@ -105,7 +113,7 @@ define comment_block_NL
 end define
 
 define comment_start_tag
-	'<COMMENT [opt tag_type] [opt tag_value] '>
+	'< 'COMMENT [opt tag_type] [opt tag_value] '>
 end define
 
 define tag_type
@@ -113,9 +121,10 @@ define tag_type
 end define
 
 define tag_value
-	'value = [id] 
+	'value = [stringlit]
 end define
 
+
 define comment_end_tag
-	'</COMMENT> [NL]
+	'</ 'COMMENT '> [NL]
 end define
