@@ -8,17 +8,18 @@
 %	...
 %end redefine
 
+% redefined the comments to be attached to statements rather then to be a statement of their own
 define com_statement
-	[comment_block_NL][statement]
+	[opt comment_block_NL][statement]
 end define
 
 define com_declaration
-	[comment_block_NL][declaration]
+	[opt comment_block_NL][declaration]
 end define
 
 redefine declaration_or_statement
 	[com_declaration]
-    |   [statement]
+    |   [com_statement]
 end redefine
   
 % Can have comments as declarations
