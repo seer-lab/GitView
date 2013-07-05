@@ -4,9 +4,21 @@
 #pragma -comment
 
 % Can have comments as statements 
-redefine statement
-	...
-|	[comment_block_NL]
+%redefine statement
+%	...
+%end redefine
+
+define com_statement
+	[comment_block_NL][statement]
+end define
+
+define com_declaration
+	[comment_block_NL][declaration]
+end define
+
+redefine declaration_or_statement
+	[com_declaration]
+    |   [statement]
 end redefine
   
 % Can have comments as declarations

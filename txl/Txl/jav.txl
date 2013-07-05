@@ -98,7 +98,7 @@ function import_comment_tagger
 		<COMMENT 'type = tag_string 'value = Path > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments 'import S ImportName ';  otherImports [import_comment_tagger]
+		Tag_Comments 'import S ImportName '; otherImports [import_comment_tagger]
 end function
 
 function import_end_comment
@@ -176,16 +176,54 @@ function method_comment_tagger path [stringlit]
 		name [id] GP [opt generic_parameter]
 	deconstruct Comment
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
-	construct CMpath [stringlit]
+	construct newPath [stringlit]
 		path [buildPath name]
 	construct tag_string [stringlit]
 		"method"
 	construct Tag_Comments [comment_block_NL]
-		<COMMENT 'type = tag_string 'value = CMpath > FirstComment OtherComments
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments modifier genPar TS Mdec THROW MB
+		Tag_Comments modifier genPar TS Mdec THROW MB [method_body_block_tagger newPath] 
 end function
+
+function method_body_block_tagger path [stringlit]
+	replace [method_body]
+		MB [method_body]
+	deconstruct MB
+		BL [block]
+	deconstruct BL
+		Comment [comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
+	%construct newPath [stringlit]
+	%	path [dec_or_statement  ]
+	%deconstruct Comment
+	%	FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	%construct newPath [stringlit]
+	%	path [buildPath name]
+	%construct tag_string [stringlit]
+	%	"statement"
+	by
+		MB
+end function
+
+%function dec_or_statement Comment [comment_block_NL]
+%	replace [repeat declaration_or_statement]
+%		decOrStat [repeat declaration_or_statement]
+%	deconstruct decOrStat
+%		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statements]
+%	construct newDec [declaration_or_statement]
+%		firstStat
+%	deconstruct Comment
+%		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+%	construct newPath [stringlit]
+%		path [buildPath name]
+%	construct tag_string [stringlit]
+%		"statement"
+%	by
+%		newDec OtherStats
+%end function
+
+
 
 function createPath path [id]
 	replace [stringlit]
