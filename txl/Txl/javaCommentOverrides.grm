@@ -21,13 +21,19 @@ redefine declaration_or_statement
 	[com_declaration]
     |   [com_statement]
 end redefine
+
+redefine static_initializer
+    [NL] [opt comment_block_NL] 'static [block]     [NL][NL]
+end redefine
   
 % Need to change this to allow for comments linked to the different declarations
+%Including
+% 	- empty_declaration (might not be needed)
 % Can have comments as declarations
-redefine class_body_declaration
-	... 
-|	[comment_block_NL]
-end redefine
+%redefine class_body_declaration
+%	... 
+%|	[comment_block_NL]
+%end redefine
 
 redefine package_declaration
 	[opt comment_block_NL] ...
@@ -39,6 +45,10 @@ redefine import_declaration
 end redefine
 
 redefine type_declaration
+	[opt comment_block_NL] ...
+end redefine
+
+redefine variable_declaration
 	[opt comment_block_NL] ...
 end redefine
 
