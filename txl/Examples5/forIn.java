@@ -28,6 +28,12 @@ public class forIn {
     // Other method
     public boolean isMethod()
     {
-        return true;
+      /**
+       * comment heree
+       */
+      public class innerClass {
+        public static final boolean hello = true;
+      };
+        return hello;
     }
 }

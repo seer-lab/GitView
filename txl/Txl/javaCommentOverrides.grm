@@ -22,6 +22,7 @@ redefine declaration_or_statement
     |   [com_statement]
 end redefine
   
+% Need to change this to allow for comments linked to the different declarations
 % Can have comments as declarations
 redefine class_body_declaration
 	... 

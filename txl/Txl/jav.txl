@@ -9,7 +9,7 @@ include "java.grm"
 
 include "javaCommentOverrides.grm"
 
-
+%Need to fix rules so that if a class isnt commented the methods will still be checked and so on.
 redefine class_declaration
     [attr 'checked] [class_header] [class_body]
 end redefine
@@ -157,7 +157,7 @@ function class_body_tagging path [stringlit]
 		% [instance_tagger] [static_tagger] [field_tagger] 
 end function
 
-function method_comment_tagger path [stringlit]
+rule method_comment_tagger path [stringlit]
 	replace [class_body_declaration]
 		classBody [class_body_declaration]
 	deconstruct classBody
@@ -185,7 +185,7 @@ function method_comment_tagger path [stringlit]
 		</COMMENT>
 	by
 		Tag_Comments modifier genPar TS Mdec THROW MB [method_body_block_tagger newPath] 
-end function
+end rule
 
 function method_body_block_tagger path [stringlit]
 	replace [method_body]
@@ -195,8 +195,8 @@ function method_body_block_tagger path [stringlit]
 	deconstruct BL
 		Comment [opt comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
 	%Basically need to take DecORStat and use the new grammar to parser declaration or statement
-	%construct newPath [stringlit]
-	%	path [dec_or_statement  ]
+	construct newDec [repeat declaration_or_statement]
+		DecORStat [dec_or_statement path]
 	%deconstruct Comment
 	%	FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	%construct newPath [stringlit]
@@ -204,27 +204,76 @@ function method_body_block_tagger path [stringlit]
 	%construct tag_string [stringlit]
 	%	"statement"
 	by
-		MB
+		Comment '{ newDec '}
 end function
 
-function dec_or_statement Comment [comment_block_NL]
+function dec_or_statement path [stringlit]
 	replace [repeat declaration_or_statement]
 		decOrStat [repeat declaration_or_statement]
 	deconstruct decOrStat
-		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statements]
-	construct newDec [declaration_or_statement]
-		firstStat
-	deconstruct Comment
-		FirstComment [comment_NL] OtherComments [repeat comment_NL]
-	construct newPath [stringlit]
-		path [buildPath name]
-	construct tag_string [stringlit]
-		"statement"
+		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statement]
+	construct TaggedFirst [declaration_or_statement]
+		firstStat [decComParser path]
 	by
-		newDec OtherStats
+		TaggedFirst OtherStats [dec_or_statement path]
 end function
 
+function decComParser path [stringlit]
+	replace [declaration_or_statement]
+		dec_stat [declaration_or_statement]
+	deconstruct dec_stat
+		ComDec [com_declaration] 
+	construct newComDec [com_declaration]
+		ComDec [findClass path] [findVarName path]
+	by
+		newComDec 
+end function
 
+function findVarName path [stringlit]
+	replace [com_declaration]
+		comDec [com_declaration]
+	deconstruct comDec
+		Comments [comment_block_NL] Dec [declaration]
+	deconstruct * [variable_name] Dec
+		name [declared_name] dem [repeat dimension]
+	deconstruct name
+		id [id] GP [opt generic_parameter] 
+	construct newPath [stringlit]
+		path [buildPath id]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	construct tag_string [stringlit]
+		"declaration"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Dec
+end function
+
+function findClass path [stringlit]
+	replace [com_declaration]
+		ComDec [com_declaration]
+	deconstruct ComDec
+		Comments [comment_block_NL] Dec [declaration]
+	deconstruct Dec
+		ClassDec [class_declaration]
+	construct Type [type_declaration]
+		Comments ClassDec
+	construct TagType [type_declaration]
+		Type [class_comment_tagger path]
+	deconstruct TagType
+		TagComment [comment_block_NL] class_dec [class_declaration]
+	by 
+		TagComment Dec
+end function
+
+function PlaceSelf
+	replace [com_declaration]
+		CD [com_declaration]
+	by
+		CD
+end function
 
 function createPath path [id]
 	replace [stringlit]
