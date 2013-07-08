@@ -29,7 +29,7 @@ function package_comment_parser
 	deconstruct newPD
 		com [opt comment_block_NL] PH [opt package_header] ID [repeat import_declaration] TD [repeat type_declaration]
 	by
-		com PH ID [import_comment_tagger] TD [class_comment_tagger]
+		com PH ID [import_comment_tagger] TD [class_comment_parser]
 end function
 
 rule package_comment_tagger
@@ -84,7 +84,7 @@ function parsePackage rest [repeat component]
 		fullPath [parsePackage moreId]
 end function
 
-function import_comment_tagger
+rule import_comment_tagger
 	replace [repeat import_declaration]
 		Imports [repeat import_declaration]
 	deconstruct Imports
@@ -109,8 +109,8 @@ function import_comment_tagger
 		<COMMENT 'type = tag_string 'value = Path > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments 'import S ImportName '; otherImports [import_comment_tagger]
-end function
+		Tag_Comments 'import S ImportName '; otherImports
+end rule
 
 function import_end_comment
 	replace [comment_block_NL]
@@ -121,10 +121,25 @@ end function
 
 % TODO handle enum and interface
 % TODO extend to also handle inner classes (allow for a parameter to be passed (optional though))
+function class_comment_parser
+	replace [repeat type_declaration]
+		TD [repeat type_declaration]
+	construct newTD [repeat type_declaration]
+		TD [class_comment_tagger]
+	deconstruct newTD 
+		Comments [opt comment_block_NL] CD [class_declaration]
+	deconstruct CD
+		CH [class_header] CB [class_body]
+	by
+		Comments CH CB [class_body_parser] 
+end function
+
 rule class_comment_tagger
-	replace [type_declaration]
-		TD [type_declaration]
-	deconstruct TD 
+	replace [repeat type_declaration]
+		TD [repeat type_declaration]
+	deconstruct TD
+		firstTD [type_declaration] otherTD [repeat type_declaration]
+	deconstruct firstTD 
 		Comments [comment_block_NL] CD [class_declaration]
 	deconstruct Comments
 		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
@@ -140,11 +155,11 @@ rule class_comment_tagger
 		_ [+ ClassName]
 	construct tag_string [stringlit]
 		"class"
-	construct TaggedClassC [comment_block_NL]
+	construct TaggedClass [comment_block_NL]
 		<COMMENT 'type = tag_string 'value = new_path > FirstComment OtherComments
 		</COMMENT>
 	by
-		TaggedClassC CH CB [class_body_parser] 
+		TaggedClass CH CB otherTD
 end rule
 
 function class_body_parser
@@ -164,11 +179,11 @@ function class_body_tagging
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [class_comment_tagger] [method_comment_tagger] rest [class_body_tagging]
+		firstPart [class_comment_tagger] [method_comment_parser] rest [class_body_tagging]
 		% [instance_tagger] [static_tagger] [field_tagger] 
 end function
 
-rule method_comment_tagger
+function method_comment_parser
 	replace [class_body_declaration]
 		classBody [class_body_declaration]
 	deconstruct classBody
@@ -176,6 +191,17 @@ rule method_comment_tagger
 	deconstruct memDec
 		metOrCon [method_or_constructor_declaration]
 	deconstruct metOrCon
+		methodDec [method_declaration]
+	construct newBody [method_declaration]
+		methodDec [method_comment_tagger]
+	deconstruct newBody
+		Comment [opt comment_block_NL] modifier [repeat modifier] genPar [opt generic_parameter] TS [type_specifier] Mdec [method_declarator] THROW [opt throws] MB [method_body]
+	by 
+		Comment modifier genPar TS Mdec THROW MB [method_body_block_tagger] 
+end function
+
+rule method_comment_tagger
+	replace [method_declaration]
 		methodDec [method_declaration]
 	deconstruct methodDec
 		Comment [comment_block_NL] modifier [repeat modifier] genPar [opt generic_parameter] TS [type_specifier] Mdec [method_declarator] THROW [opt throws] MB [method_body]
@@ -195,7 +221,7 @@ rule method_comment_tagger
 		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments modifier genPar TS Mdec THROW MB [method_body_block_tagger] 
+		Tag_Comments modifier genPar TS Mdec THROW MB 
 end rule
 
 function method_body_block_tagger
@@ -265,7 +291,7 @@ function findClass
 	construct Type [type_declaration]
 		Comments ClassDec
 	construct TagType [type_declaration]
-		Type [class_comment_tagger]
+		Type [class_comment_parser]
 	deconstruct TagType
 		TagComment [comment_block_NL] class_dec [class_declaration]
 	by 
