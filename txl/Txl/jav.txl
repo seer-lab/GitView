@@ -18,12 +18,23 @@ function main
 	replace [program]
 		P [program]
 	by
-		P [package_comment_tagging] 
+		P [package_comment_parser] 
 end function
 
-rule package_comment_tagging 
-	replace [package_declaration]
+function package_comment_parser
+	replace * [package_declaration]
 		 PD [package_declaration]
+	construct newPD [package_declaration]
+		PD [package_comment_tagger]
+	deconstruct newPD
+		com [opt comment_block_NL] PH [opt package_header] ID [repeat import_declaration] TD [repeat type_declaration]
+	by
+		com PH ID [import_comment_tagger] TD [class_comment_tagger]
+end function
+
+rule package_comment_tagger
+	replace [package_declaration]
+		PD [package_declaration]
 	deconstruct PD
 		cr [comment_block_NL] PackageHeader [opt package_header] ImportDeclarations [repeat import_declaration] TypeDeclarations [repeat type_declaration]
 	deconstruct cr
@@ -44,7 +55,7 @@ rule package_comment_tagging
 		<COMMENT 'type = tag_string 'value = Path > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments PackageHeader ImportDeclarations [import_comment_tagger] TypeDeclarations [class_comment_tagger Path]
+		Tag_Comments PackageHeader ImportDeclarations TypeDeclarations
 end rule
 
 function getPackageName first [id] rest [repeat component]
@@ -110,7 +121,7 @@ end function
 
 % TODO handle enum and interface
 % TODO extend to also handle inner classes (allow for a parameter to be passed (optional though))
-rule class_comment_tagger path [stringlit]
+rule class_comment_tagger
 	replace [type_declaration]
 		TD [type_declaration]
 	deconstruct TD 
@@ -126,17 +137,17 @@ rule class_comment_tagger path [stringlit]
 	deconstruct DB
 	    ClassName [id] GP [opt generic_parameter]
 	construct new_path [stringlit]
-		path [buildPath ClassName]
+		_ [+ ClassName]
 	construct tag_string [stringlit]
 		"class"
 	construct TaggedClassC [comment_block_NL]
 		<COMMENT 'type = tag_string 'value = new_path > FirstComment OtherComments
 		</COMMENT>
 	by
-		TaggedClassC CH CB [class_body_parser new_path] 
+		TaggedClassC CH CB [class_body_parser] 
 end rule
 
-function class_body_parser path [stringlit]
+function class_body_parser
 	replace [class_body]
 		CB [class_body]
     deconstruct CB
@@ -144,20 +155,20 @@ function class_body_parser path [stringlit]
     deconstruct classBody
 	    '{ Body [repeat class_body_declaration] '}                      
     by
-    	'{ Body [class_body_tagging path] '}
+    	'{ Body [class_body_tagging] '}
 end function
 
-function class_body_tagging path [stringlit]
+function class_body_tagging
 	replace [repeat class_body_declaration]
 		Body [repeat class_body_declaration]
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [class_comment_tagger path] [method_comment_tagger path] rest [class_body_tagging path]
+		firstPart [class_comment_tagger] [method_comment_tagger] rest [class_body_tagging]
 		% [instance_tagger] [static_tagger] [field_tagger] 
 end function
 
-rule method_comment_tagger path [stringlit]
+rule method_comment_tagger
 	replace [class_body_declaration]
 		classBody [class_body_declaration]
 	deconstruct classBody
@@ -177,59 +188,52 @@ rule method_comment_tagger path [stringlit]
 	deconstruct Comment
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	construct newPath [stringlit]
-		path [buildPath name]
+		_ [+ name]
 	construct tag_string [stringlit]
 		"method"
 	construct Tag_Comments [comment_block_NL]
 		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments modifier genPar TS Mdec THROW MB [method_body_block_tagger newPath] 
+		Tag_Comments modifier genPar TS Mdec THROW MB [method_body_block_tagger] 
 end rule
 
-function method_body_block_tagger path [stringlit]
+function method_body_block_tagger
 	replace [method_body]
 		MB [method_body]
 	deconstruct MB
 		BL [block]
 	deconstruct BL
 		Comment [opt comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
-	%Basically need to take DecORStat and use the new grammar to parser declaration or statement
 	construct newDec [repeat declaration_or_statement]
-		DecORStat [dec_or_statement path]
-	%deconstruct Comment
-	%	FirstComment [comment_NL] OtherComments [repeat comment_NL]
-	%construct newPath [stringlit]
-	%	path [buildPath name]
-	%construct tag_string [stringlit]
-	%	"statement"
+		DecORStat [dec_or_statement]
 	by
 		Comment '{ newDec '}
 end function
 
-function dec_or_statement path [stringlit]
+function dec_or_statement
 	replace [repeat declaration_or_statement]
 		decOrStat [repeat declaration_or_statement]
 	deconstruct decOrStat
 		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statement]
 	construct TaggedFirst [declaration_or_statement]
-		firstStat [decComParser path]
+		firstStat [decComParser]
 	by
-		TaggedFirst OtherStats [dec_or_statement path]
+		TaggedFirst OtherStats [dec_or_statement]
 end function
 
-function decComParser path [stringlit]
+function decComParser
 	replace [declaration_or_statement]
 		dec_stat [declaration_or_statement]
 	deconstruct dec_stat
 		ComDec [com_declaration] 
 	construct newComDec [com_declaration]
-		ComDec [findClass path] [findVarName path]
+		ComDec [findClass] [findVarName]
 	by
 		newComDec 
 end function
 
-function findVarName path [stringlit]
+function findVarName
 	replace [com_declaration]
 		comDec [com_declaration]
 	deconstruct comDec
@@ -239,7 +243,7 @@ function findVarName path [stringlit]
 	deconstruct name
 		id [id] GP [opt generic_parameter] 
 	construct newPath [stringlit]
-		path [buildPath id]
+		_ [+ id]
 	deconstruct Comments
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	construct tag_string [stringlit]
@@ -251,7 +255,7 @@ function findVarName path [stringlit]
 		Tag_Comments Dec
 end function
 
-function findClass path [stringlit]
+function findClass
 	replace [com_declaration]
 		ComDec [com_declaration]
 	deconstruct ComDec
@@ -261,18 +265,11 @@ function findClass path [stringlit]
 	construct Type [type_declaration]
 		Comments ClassDec
 	construct TagType [type_declaration]
-		Type [class_comment_tagger path]
+		Type [class_comment_tagger]
 	deconstruct TagType
 		TagComment [comment_block_NL] class_dec [class_declaration]
 	by 
 		TagComment Dec
-end function
-
-function PlaceSelf
-	replace [com_declaration]
-		CD [com_declaration]
-	by
-		CD
 end function
 
 function createPath path [id]

@@ -32,6 +32,7 @@ public class forIn {
        * comment heree
        */
       public class innerClass {
+        //Set the default return value
         public static final boolean hello = true;
       };
         return hello;
