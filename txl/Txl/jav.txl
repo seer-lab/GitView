@@ -193,7 +193,8 @@ function method_body_block_tagger path [stringlit]
 	deconstruct MB
 		BL [block]
 	deconstruct BL
-		Comment [comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
+		Comment [opt comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
+	%Basically need to take DecORStat and use the new grammar to parser declaration or statement
 	%construct newPath [stringlit]
 	%	path [dec_or_statement  ]
 	%deconstruct Comment
@@ -206,22 +207,22 @@ function method_body_block_tagger path [stringlit]
 		MB
 end function
 
-%function dec_or_statement Comment [comment_block_NL]
-%	replace [repeat declaration_or_statement]
-%		decOrStat [repeat declaration_or_statement]
-%	deconstruct decOrStat
-%		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statements]
-%	construct newDec [declaration_or_statement]
-%		firstStat
-%	deconstruct Comment
-%		FirstComment [comment_NL] OtherComments [repeat comment_NL]
-%	construct newPath [stringlit]
-%		path [buildPath name]
-%	construct tag_string [stringlit]
-%		"statement"
-%	by
-%		newDec OtherStats
-%end function
+function dec_or_statement Comment [comment_block_NL]
+	replace [repeat declaration_or_statement]
+		decOrStat [repeat declaration_or_statement]
+	deconstruct decOrStat
+		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statements]
+	construct newDec [declaration_or_statement]
+		firstStat
+	deconstruct Comment
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	construct newPath [stringlit]
+		path [buildPath name]
+	construct tag_string [stringlit]
+		"statement"
+	by
+		newDec OtherStats
+end function
 
 
 

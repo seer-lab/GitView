@@ -105,6 +105,8 @@ redefine if_statement
 	[opt else_clause]   [NL]
 end redefine
 
+%Possible issue is that now a block could have a comment prior to it (as per statment) and then one before it as per the redefine of the comment grammar
+
 % Can have comments on a block
 redefine block
 	[opt comment_block_NL] ...
