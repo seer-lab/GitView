@@ -14,8 +14,23 @@ import finalLib;
 
 // For the each of the many 
 public class forIn {
+
+    // member declaration
+    public static final int numberOfRuns = 6;
     
-	// Method comment man
+    // Need to declare 2
+    static {
+      // a is defined to 2
+      int a = 2;
+    }
+
+    // defined just incase
+    {
+      //This is a program
+      boolean isProgram = true;
+    }
+
+	  // Method comment man
     public static void main(String args[]){
     	//Statement comment
        int primes[] = new int[] { 2,3,5,7,11};

@@ -22,6 +22,10 @@ redefine declaration_or_statement
     |   [com_statement]
 end redefine
 
+redefine instance_initializer
+    [NL] [opt comment_block_NL] [block]     [NL][NL]
+end redefine
+
 redefine static_initializer
     [NL] [opt comment_block_NL] 'static [block]     [NL][NL]
 end redefine

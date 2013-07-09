@@ -179,9 +179,129 @@ function class_body_tagging
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [class_comment_tagger] [method_comment_parser] rest [class_body_tagging]
-		% [instance_tagger] [static_tagger] [field_tagger] 
+		firstPart [class_comment_tagger] [instance_parser] [method_comment_parser] rest [class_body_tagging]
+		%[field_tagger] 
 end function
+
+function instance_parser
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	construct newII [class_body_declaration]
+		CBD [instance_tagger] [static_tagger] [block_instance_tagger] [block_static_tagger] [declaration_field_parser]
+	by
+		newII
+end function
+
+%No UUID
+rule instance_tagger
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD 
+		II [instance_initializer]
+	deconstruct II
+		Comments [comment_block_NL] Block [block]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	construct newPath [stringlit]
+		_ [+ "instance_init"]
+	construct tag_string [stringlit]
+		"instance_initializer"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Block
+end rule
+
+%No UUID
+rule static_tagger
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD 
+		SI [static_initializer]
+	deconstruct SI
+		Comments [comment_block_NL] 'static Block [block]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	construct newPath [stringlit]
+		_ [+ "static_init"]
+	construct tag_string [stringlit]
+		"static_initializer"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments 'static Block
+end rule
+
+%Should conider making instance_initializer and static_initializer have a single parent
+function block_instance_tagger
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD
+		II [instance_initializer]
+	deconstruct II
+		Comments [opt comment_block_NL] Block [block]
+	deconstruct Block
+		'{ body [repeat declaration_or_statement] '}
+	construct newBlock [block]
+		'{ body '}
+	construct newMethodBody [method_body]
+		newBlock
+	construct taggedMBody [method_body]
+		newMethodBody [method_body_block_tagger]
+	deconstruct taggedMBody
+		taggedBlock [block]
+	by
+		Comments taggedBlock
+end function
+
+function block_static_tagger
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD
+		SI [static_initializer]
+	deconstruct SI
+		Comments [opt comment_block_NL] 'static Block [block]
+	deconstruct Block
+		'{ body [repeat declaration_or_statement] '}
+	construct newBlock [block]
+		'{ body '}
+	construct newMethodBody [method_body]
+		newBlock
+	construct taggedMBody [method_body]
+		newMethodBody [method_body_block_tagger]
+	deconstruct taggedMBody
+		taggedBlock [block]
+	by
+		Comments taggedBlock
+end function
+
+rule declaration_field_parser
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD 
+		FD [field_declaration]
+	deconstruct FD
+		VD [variable_declaration]
+	deconstruct VD
+		Comments [comment_block_NL] M [repeat modifier] TS [type_specifier] varDec [variable_declarators] ';
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct * [variable_name] varDec
+		name [declared_name] dem [repeat dimension]
+	deconstruct name
+		id [id] GP [opt generic_parameter] 
+	construct newPath [stringlit]
+		_ [+ id]
+	construct tag_string [stringlit]
+		"var_declaration"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments M TS varDec ';
+end rule
 
 function method_comment_parser
 	replace [class_body_declaration]
