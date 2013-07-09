@@ -5,6 +5,14 @@
  */
 package com.test;
 
+// Library for important stuff
+import libstuff;
+
+// Other lib
+import otherLib;
+
+// last library
+import finalLib; 
 
 
 // For the each of the many 
@@ -41,6 +49,12 @@ public class forIn {
     // Other method
     public boolean isMethod()
     {
+      //Condition block
+      if (true)
+        return false;
+      else if (1 == 3)
+        return true;
+      else
         return true;
     }
 

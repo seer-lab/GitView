@@ -391,18 +391,18 @@ function decComParser
 	replace [declaration_or_statement]
 		dec_stat [declaration_or_statement]
 	deconstruct dec_stat
-		ComDec [com_declaration] 
-	construct newComDec [com_declaration]
+		ComDec [declaration] 
+	construct newComDec [declaration]
 		ComDec [findClass] [findVarName]
 	by
 		newComDec 
 end function
 
 function findVarName
-	replace [com_declaration]
-		comDec [com_declaration]
+	replace [declaration]
+		comDec [declaration]
 	deconstruct comDec
-		Comments [comment_block_NL] Dec [declaration]
+		Comments [comment_block_NL] Dec [com_declaration]
 	deconstruct Comments
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct * [variable_name] Dec
@@ -421,10 +421,10 @@ function findVarName
 end function
 
 function findClass
-	replace [com_declaration]
-		ComDec [com_declaration]
+	replace [declaration]
+		ComDec [declaration]
 	deconstruct ComDec
-		Comments [comment_block_NL] Dec [declaration]
+		Comments [comment_block_NL] Dec [com_declaration]
 	deconstruct Dec
 		ClassDec [class_declaration]
 	construct Type [type_declaration]
@@ -461,18 +461,18 @@ function statement_parser
 	replace [declaration_or_statement]
 		dec_stat [declaration_or_statement]
 	deconstruct dec_stat
-		statement [com_statement]
-	construct newStatement [com_statement]
-		statement [expression_tagger]
+		com_statement [statement]
+	construct newStatement [statement]
+		com_statement [expression_tagger]
 	by
 		newStatement
 end function
 
 rule expression_tagger
-	replace [com_statement]
-		CS [com_statement]
+	replace [statement]
+		CS [statement]
 	deconstruct CS
-		Comments [comment_block_NL] Statement [statement]
+		Comments [comment_block_NL] Statement [com_statement]
 	deconstruct Comments
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct Statement
@@ -488,18 +488,15 @@ rule expression_tagger
 		Tag_Comments Statement
 end rule
 
-%rule tag_class_comments class_name [id]
-%	replace [comment_block_NL]
-%		CB [comment_block_NL]
-%	deconstruct CB
-%		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
-%	%construct tag_value [tag_value_rep]
-%	%	\" class_name \"
-%	construct tag_string [stringlit]
-%		"class"
-%	construct Tag_Comments [comment_block_NL]
-%		<COMMENT 'type = tag_string 'value = "tag_value" > FirstComment OtherComments
-%		</COMMENT>
-%	by
-%		Tag_Comments		
-%end rule
+rule if_stat_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		if [if_statement]
+	by
+		CS
+end rule

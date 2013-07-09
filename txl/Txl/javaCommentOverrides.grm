@@ -9,18 +9,51 @@
 %end redefine
 
 % redefined the comments to be attached to statements rather then to be a statement of their own
+%define com_statement
+%	[opt comment_block_NL][statement]
+%end define
+
 define com_statement
-	[opt comment_block_NL][statement]
+	        [label_statement]        
+    |   [empty_statement]
+    |   [expression_statement]
+    |   [if_statement]
+    |   [switch_statement]
+    |   [while_statement]
+    |   [do_statement]
+    |   [for_statement]
+    |   [for_in_statement]    % T.D. Oct 2007
+    |   [break_statement]
+    |   [continue_statement]
+    |   [return_statement]
+    |   [throw_statement]
+    |   [synchronized_statement]
+    |   [try_statement]
+    |   [assert_statement]    % T.D. Oct 2007
+    |   [block]
 end define
+
+redefine statement
+	[opt comment_block_NL] [com_statement]
+end redefine
 
 define com_declaration
-	[opt comment_block_NL][declaration]
+	[local_variable_declaration] 
+    |   [class_declaration]
 end define
 
-redefine declaration_or_statement
-	[com_declaration]
-    |   [com_statement]
+redefine declaration
+	[opt comment_block_NL][com_declaration]
 end redefine
+
+%define com_declaration
+%	[opt comment_block_NL][declaration]
+%end define
+
+%redefine declaration_or_statement
+%	[com_declaration]
+%    |   [statement]
+%end redefine
 
 redefine instance_initializer
     [NL] [opt comment_block_NL] [block]     [NL][NL]
