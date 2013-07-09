@@ -5,12 +5,7 @@
  */
 package com.test;
 
-// Library for important stuff
-import libstuff;
-// Other lib
-import otherLib;
-// last library
-import finalLib; 
+
 
 // For the each of the many 
 public class forIn {
@@ -35,7 +30,10 @@ public class forIn {
     	//Statement comment
        int primes[] = new int[] { 2,3,5,7,11};
        for (String s : args)
-       	System.out.println(s);
+       {
+          //Prints out the args given
+       	  System.out.println(s);
+       }
        for (int i : primes)
        	System.out.println(i);
     }
@@ -43,13 +41,14 @@ public class forIn {
     // Other method
     public boolean isMethod()
     {
-      /**
-       * comment heree
-       */
-      public class innerClass {
-        //Set the default return value
-        public static final boolean hello = true;
-      };
-        return hello;
+        return true;
+    }
+
+    /**
+     * inner class comment
+     */
+    public class innerClass {
+      //Set the default return value
+      public static final boolean hello = true;
     }
 }

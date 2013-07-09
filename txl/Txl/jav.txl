@@ -127,11 +127,11 @@ function class_comment_parser
 	construct newTD [repeat type_declaration]
 		TD [class_comment_tagger]
 	deconstruct newTD 
-		Comments [opt comment_block_NL] CD [class_declaration]
+		Comments [opt comment_block_NL] CD [class_declaration] OtherTD [repeat type_declaration]
 	deconstruct CD
 		CH [class_header] CB [class_body]
 	by
-		Comments CH CB [class_body_parser] 
+		Comments CH CB [class_body_parser] OtherTD [class_comment_parser]
 end function
 
 rule class_comment_tagger
@@ -179,7 +179,7 @@ function class_body_tagging
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [class_comment_tagger] [instance_parser] [method_comment_parser] rest [class_body_tagging]
+		firstPart [innerClass_parser] [instance_parser] [method_comment_parser] rest [class_body_tagging]
 		%[field_tagger] 
 end function
 
@@ -190,6 +190,25 @@ function instance_parser
 		CBD [instance_tagger] [static_tagger] [block_instance_tagger] [block_static_tagger] [declaration_field_parser]
 	by
 		newII
+end function
+
+function innerClass_parser
+	replace [class_body_declaration]
+		CBD [class_body_declaration]
+	deconstruct CBD
+		MM [member_declaration]
+	deconstruct MM
+		TD [type_declaration]
+	construct newTD [repeat type_declaration]
+		TD
+	construct TaggedTD [repeat type_declaration]
+		newTD [class_comment_parser]
+	deconstruct TaggedTD
+		firstTD [type_declaration] other [repeat type_declaration]
+	construct newCBD [class_body_declaration]
+		firstTD
+	by
+		newCBD
 end function
 
 %No UUID
@@ -363,7 +382,7 @@ function dec_or_statement
 	deconstruct decOrStat
 		firstStat [declaration_or_statement] OtherStats [repeat declaration_or_statement]
 	construct TaggedFirst [declaration_or_statement]
-		firstStat [decComParser]
+		firstStat [decComParser] [statement_parser]
 	by
 		TaggedFirst OtherStats [dec_or_statement]
 end function
@@ -384,14 +403,14 @@ function findVarName
 		comDec [com_declaration]
 	deconstruct comDec
 		Comments [comment_block_NL] Dec [declaration]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct * [variable_name] Dec
 		name [declared_name] dem [repeat dimension]
 	deconstruct name
 		id [id] GP [opt generic_parameter] 
 	construct newPath [stringlit]
 		_ [+ id]
-	deconstruct Comments
-		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	construct tag_string [stringlit]
 		"declaration"
 	construct Tag_Comments [comment_block_NL]
@@ -438,18 +457,49 @@ function buildPath new_path [id]
 		full_path
 end function
 
-rule tag_class_comments class_name [id]
-	replace [comment_block_NL]
-		CB [comment_block_NL]
-	deconstruct CB
-		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
-	%construct tag_value [tag_value_rep]
-	%	\" class_name \"
+function statement_parser
+	replace [declaration_or_statement]
+		dec_stat [declaration_or_statement]
+	deconstruct dec_stat
+		statement [com_statement]
+	construct newStatement [com_statement]
+		statement [expression_tagger]
+	by
+		newStatement
+end function
+
+rule expression_tagger
+	replace [com_statement]
+		CS [com_statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		express [expression_statement]
 	construct tag_string [stringlit]
-		"class"
+		"expression_statement"
+	construct newPath [stringlit]
+		"expression"
 	construct Tag_Comments [comment_block_NL]
-		<COMMENT 'type = tag_string 'value = "tag_value" > FirstComment OtherComments
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments		
+		Tag_Comments Statement
 end rule
+
+%rule tag_class_comments class_name [id]
+%	replace [comment_block_NL]
+%		CB [comment_block_NL]
+%	deconstruct CB
+%		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
+%	%construct tag_value [tag_value_rep]
+%	%	\" class_name \"
+%	construct tag_string [stringlit]
+%		"class"
+%	construct Tag_Comments [comment_block_NL]
+%		<COMMENT 'type = tag_string 'value = "tag_value" > FirstComment OtherComments
+%		</COMMENT>
+%	by
+%		Tag_Comments		
+%end rule
