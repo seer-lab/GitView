@@ -9,9 +9,25 @@ include "java.grm"
 
 include "javaCommentOverrides.grm"
 
-%Need to fix rules so that if a class isnt commented the methods will still be checked and so on.
-redefine class_declaration
-    [attr 'checked] [class_header] [class_body]
+%define block_start_tag
+%	'<BLOCK>
+%end define
+
+%define block_end_tag
+%	'</BLOCK>
+%end define
+
+%redefine class_or_interface_body
+%	[opt block_start_tag] ...
+%end redefine
+
+%redefine class_or_interface_body
+%	... [opt block_end_tag]
+%end redefine
+
+%might remove..
+redefine statement
+    ... [opt comment_block] 
 end redefine
 
 function main 
@@ -552,7 +568,7 @@ function statement_parser
 	construct newStatement [statement]
 		com_statement [expression_tagger] [if_stat_parser] [switch_parser] [while_parser] [do_while_parser] [for_parser] [for_in_parser] [break_parser] 
 	construct newStatement2 [statement]
-		newStatement [continue_parser] [label_parser] [return_parser] [throw_parser] [synchronized_parser] [assert_parser] [try_parser]
+		newStatement [continue_parser] [label_parser] [return_parser] [throw_parser] [synchronized_parser] [assert_parser] [try_parser] [return_post_parser]
 	by
 		newStatement2
 end function
@@ -761,7 +777,7 @@ rule return_parser
 	replace [statement]
 		CS [statement]
 	deconstruct CS
-		Comments [comment_block_NL] Statement [com_statement]
+		Comments [comment_block_NL] Statement [com_statement] otherComment [opt comment_block]
 	deconstruct Comments
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct Statement
@@ -774,7 +790,27 @@ rule return_parser
 		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
 		</COMMENT>
 	by
-		Tag_Comments Statement
+		Tag_Comments Statement otherComment
+end rule
+
+rule return_post_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [opt comment_block_NL] Statement [com_statement] otherComments [comment_block]
+	deconstruct otherComments
+		FirstComment [comment_NL]
+	%	FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		RS [return_statement]
+	construct tag_string [stringlit]
+		"return_statement_after"
+	construct newPath [stringlit]
+		"return"
+	construct Tag_Comments [comment_block]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment </COMMENT>
+	by
+		Comments Statement Tag_Comments
 end rule
 
 rule throw_parser

@@ -175,6 +175,11 @@ define comment_block_NL
 	[opt comment_end_tag]
 end define
 
+define comment_block
+    [opt comment_start_tag] [comment_NL]
+    [opt comment_end_tag]
+end define
+
 define comment_start_tag
 	'< 'COMMENT [opt tag_type] [opt tag_value] '>
 end define
