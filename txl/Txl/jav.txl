@@ -29,7 +29,7 @@ function package_comment_parser
 	deconstruct newPD
 		com [opt comment_block_NL] PH [opt package_header] ID [repeat import_declaration] TD [repeat type_declaration]
 	by
-		com PH ID [import_comment_tagger] TD [class_comment_parser]
+		com PH ID [import_comment_tagger] TD [class_comment_parser] [interface_comment_parser]
 end function
 
 rule package_comment_tagger
@@ -119,8 +119,50 @@ function import_end_comment
 		CB
 end function
 
+function interface_comment_parser
+	replace [repeat type_declaration]
+		TD [repeat type_declaration]
+	construct newTD [repeat type_declaration]
+		TD [interface_comment_tagger]
+	deconstruct newTD 
+		Comments [opt comment_block_NL] ID [interface_declaration] OtherTD [repeat type_declaration]
+	deconstruct ID
+		IH [interface_header] IB [interface_body]
+	deconstruct IB
+		classORInterBody [class_or_interface_body]
+	by
+		Comments IH classORInterBody [class_body_parser] OtherTD [class_comment_parser]
+end function
+
+rule interface_comment_tagger
+	replace [repeat type_declaration]
+		TD [repeat type_declaration]
+	deconstruct TD
+		firstTD [type_declaration] otherTD [repeat type_declaration]
+	deconstruct firstTD 
+		Comments [comment_block_NL] ID [interface_declaration]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL] 
+	deconstruct ID
+		IH [interface_header] IB [interface_body]
+	deconstruct IH
+		M [repeat modifier] AM [opt annot_marker] 'interface N [interface_name] EC [opt extends_clause] IC [opt implements_clause]
+	deconstruct N
+		DB [declared_name]
+	deconstruct DB
+	    ClassName [id] GP [opt generic_parameter]
+	construct new_path [stringlit]
+		_ [+ ClassName]
+	construct tag_string [stringlit]
+		"interface"
+	construct TaggedClass [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = new_path > FirstComment OtherComments
+		</COMMENT>
+	by
+		TaggedClass IH IB otherTD
+end rule
+
 % TODO handle enum and interface
-% TODO extend to also handle inner classes (allow for a parameter to be passed (optional though))
 function class_comment_parser
 	replace [repeat type_declaration]
 		TD [repeat type_declaration]
@@ -130,8 +172,10 @@ function class_comment_parser
 		Comments [opt comment_block_NL] CD [class_declaration] OtherTD [repeat type_declaration]
 	deconstruct CD
 		CH [class_header] CB [class_body]
+	deconstruct CB
+		classORInterBody [class_or_interface_body]
 	by
-		Comments CH CB [class_body_parser] OtherTD [class_comment_parser]
+		Comments CH classORInterBody [class_body_parser] OtherTD [class_comment_parser]
 end function
 
 rule class_comment_tagger
@@ -163,9 +207,7 @@ rule class_comment_tagger
 end rule
 
 function class_body_parser
-	replace [class_body]
-		CB [class_body]
-    deconstruct CB
+	replace [class_or_interface_body]
     	classBody [class_or_interface_body]
     deconstruct classBody
 	    '{ Body [repeat class_body_declaration] '}                      
@@ -179,7 +221,7 @@ function class_body_tagging
 	deconstruct Body
 		firstPart [class_body_declaration] rest [repeat class_body_declaration]
 	by
-		firstPart [innerClass_parser] [instance_parser] [method_comment_parser] rest [class_body_tagging]
+		firstPart [innerClass_parser] [instance_parser] [method_comment_parser] [constructor_comment_parser] rest [class_body_tagging]
 		%[field_tagger] 
 end function
 
@@ -322,6 +364,49 @@ rule declaration_field_parser
 		Tag_Comments M TS varDec ';
 end rule
 
+function constructor_comment_parser
+	replace [class_body_declaration]
+		classBody [class_body_declaration]
+	deconstruct classBody
+		memDec [member_declaration]
+	deconstruct memDec
+		metOrCon [method_or_constructor_declaration]
+	deconstruct metOrCon
+		contDec [constructor_declaration]
+	construct constr [constructor_declaration]
+		contDec [constructor_comment_tagger]
+	deconstruct constr
+		Comment [opt comment_block_NL] modifier [repeat modifier] genPar [opt generic_parameter] CD [constructor_declarator] T [opt throws] CB [constructor_body]
+	deconstruct CB
+		Block [block]
+	by 
+		Comment modifier genPar CD T Block [method_body_block_tagger] 
+end function
+
+rule constructor_comment_tagger
+	replace [constructor_declaration]
+		constDec [constructor_declaration]
+	deconstruct constDec
+		Comment [comment_block_NL] modifier [repeat modifier] genPar [opt generic_parameter] CD [constructor_declarator] T [opt throws] CB [constructor_body]
+	deconstruct CD
+		ClassName [class_name] '( param [list formal_parameter] ')
+	deconstruct ClassName
+		decName [declared_name]
+	deconstruct decName
+		name [id] GP [opt generic_parameter]
+	deconstruct Comment
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	construct newPath [stringlit]
+		_ [+ name]
+	construct tag_string [stringlit]
+		"constructor"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments modifier genPar CD T CB 
+end rule
+
 function method_comment_parser
 	replace [class_body_declaration]
 		classBody [class_body_declaration]
@@ -331,12 +416,14 @@ function method_comment_parser
 		metOrCon [method_or_constructor_declaration]
 	deconstruct metOrCon
 		methodDec [method_declaration]
-	construct newBody [method_declaration]
+	construct Method [method_declaration]
 		methodDec [method_comment_tagger]
-	deconstruct newBody
+	deconstruct Method
 		Comment [opt comment_block_NL] modifier [repeat modifier] genPar [opt generic_parameter] TS [type_specifier] Mdec [method_declarator] THROW [opt throws] MB [method_body]
+	deconstruct MB
+		Block [block]
 	by 
-		Comment modifier genPar TS Mdec THROW MB [method_body_block_tagger] 
+		Comment modifier genPar TS Mdec THROW Block [method_body_block_tagger] 
 end function
 
 rule method_comment_tagger
@@ -364,10 +451,10 @@ rule method_comment_tagger
 end rule
 
 function method_body_block_tagger
-	replace [method_body]
-		MB [method_body]
-	deconstruct MB
+	replace [block]
 		BL [block]
+	%deconstruct MB
+	%	BL [block]
 	deconstruct BL
 		Comment [opt comment_block_NL] '{ DecORStat [repeat declaration_or_statement] '}
 	construct newDec [repeat declaration_or_statement]
@@ -463,9 +550,11 @@ function statement_parser
 	deconstruct dec_stat
 		com_statement [statement]
 	construct newStatement [statement]
-		com_statement [expression_tagger]
+		com_statement [expression_tagger] [if_stat_parser] [switch_parser] [while_parser] [do_while_parser] [for_parser] [for_in_parser] [break_parser] 
+	construct newStatement2 [statement]
+		newStatement [continue_parser] [label_parser] [return_parser] [throw_parser] [synchronized_parser] [assert_parser] [try_parser]
 	by
-		newStatement
+		newStatement2
 end function
 
 rule expression_tagger
@@ -497,6 +586,273 @@ rule if_stat_parser
 		FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct Statement
 		if [if_statement]
+	construct tag_string [stringlit]
+		"if_statement"
+	construct newPath [stringlit]
+		"if"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
 	by
-		CS
+		Tag_Comments Statement
+end rule
+
+rule switch_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		SS [switch_statement]
+	construct tag_string [stringlit]
+		"switch_statement"
+	construct newPath [stringlit]
+		"switch"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule while_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		WS [while_statement]
+	construct tag_string [stringlit]
+		"while_statement"
+	construct newPath [stringlit]
+		"while"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule do_while_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		DS [do_statement]
+	construct tag_string [stringlit]
+		"do_while_statement"
+	construct newPath [stringlit]
+		"do"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule for_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		FS [for_statement]
+	construct tag_string [stringlit]
+		"for_statement"
+	construct newPath [stringlit]
+		"for"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule for_in_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		FS [for_in_statement]
+	construct tag_string [stringlit]
+		"for_in_statement"
+	construct newPath [stringlit]
+		"for_in"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule break_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		BS [break_statement]
+	construct tag_string [stringlit]
+		"break_statement"
+	construct newPath [stringlit]
+		"break"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule continue_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		ContS [continue_statement]
+	construct tag_string [stringlit]
+		"continue_statement"
+	construct newPath [stringlit]
+		"continue"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule label_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		LS [label_statement]
+	construct tag_string [stringlit]
+		"label_statement"
+	construct newPath [stringlit]
+		"label"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule return_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		RS [return_statement]
+	construct tag_string [stringlit]
+		"return_statement"
+	construct newPath [stringlit]
+		"return"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule throw_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		TS [throw_statement]
+	construct tag_string [stringlit]
+		"throw_statement"
+	construct newPath [stringlit]
+		"throw"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule synchronized_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		SS [synchronized_statement]
+	construct tag_string [stringlit]
+		"synchronized_statement"
+	construct newPath [stringlit]
+		"synchronized"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule assert_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		AS [assert_statement]
+	construct tag_string [stringlit]
+		"assert_statement"
+	construct newPath [stringlit]
+		"assert"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
+end rule
+
+rule try_parser
+	replace [statement]
+		CS [statement]
+	deconstruct CS
+		Comments [comment_block_NL] Statement [com_statement]
+	deconstruct Comments
+		FirstComment [comment_NL] OtherComments [repeat comment_NL]
+	deconstruct Statement
+		AS [try_statement]
+	construct tag_string [stringlit]
+		"try_statement"
+	construct newPath [stringlit]
+		"try"
+	construct Tag_Comments [comment_block_NL]
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment OtherComments
+		</COMMENT>
+	by
+		Tag_Comments Statement
 end rule
