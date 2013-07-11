@@ -27,7 +27,7 @@ include "javaCommentOverrides.grm"
 
 %might remove..
 redefine statement
-    ... [opt comment_block] 
+    ... [opt comment_block]
 end redefine
 
 function main 
@@ -319,18 +319,10 @@ function block_instance_tagger
 		II [instance_initializer]
 	deconstruct II
 		Comments [opt comment_block_NL] Block [block]
-	deconstruct Block
-		'{ body [repeat declaration_or_statement] '}
-	construct newBlock [block]
-		'{ body '}
-	construct newMethodBody [method_body]
-		newBlock
-	construct taggedMBody [method_body]
-		newMethodBody [method_body_block_tagger]
-	deconstruct taggedMBody
-		taggedBlock [block]
+	construct taggedMBody [block]
+		Block [method_body_block_tagger]
 	by
-		Comments taggedBlock
+		Comments taggedMBody
 end function
 
 function block_static_tagger
@@ -340,18 +332,10 @@ function block_static_tagger
 		SI [static_initializer]
 	deconstruct SI
 		Comments [opt comment_block_NL] 'static Block [block]
-	deconstruct Block
-		'{ body [repeat declaration_or_statement] '}
-	construct newBlock [block]
-		'{ body '}
-	construct newMethodBody [method_body]
-		newBlock
-	construct taggedMBody [method_body]
-		newMethodBody [method_body_block_tagger]
-	deconstruct taggedMBody
-		taggedBlock [block]
+	construct taggedMBody [block]
+		Block [method_body_block_tagger]
 	by
-		Comments taggedBlock
+		Comments 'static taggedMBody
 end function
 
 rule declaration_field_parser
@@ -799,7 +783,7 @@ rule return_post_parser
 	deconstruct CS
 		Comments [opt comment_block_NL] Statement [com_statement] otherComments [comment_block]
 	deconstruct otherComments
-		FirstComment [comment_NL]
+		FirstComment [comment_NL] %New [newline]
 	%	FirstComment [comment_NL] OtherComments [repeat comment_NL]
 	deconstruct Statement
 		RS [return_statement]
@@ -808,9 +792,9 @@ rule return_post_parser
 	construct newPath [stringlit]
 		"return"
 	construct Tag_Comments [comment_block]
-		<COMMENT 'type = tag_string 'value = newPath > FirstComment </COMMENT>
+		<COMMENT 'type = tag_string 'value = newPath > FirstComment </COMMENT>%New
 	by
-		Comments Statement Tag_Comments
+		Comments Statement Tag_Comments 
 end rule
 
 rule throw_parser

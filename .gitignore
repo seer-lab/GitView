@@ -11,3 +11,6 @@ database
 .project
 .buildpath
 .settings
+
+# Ignore class files
+*.class

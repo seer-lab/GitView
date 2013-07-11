@@ -176,7 +176,7 @@ define comment_block_NL
 end define
 
 define comment_block
-    [opt comment_start_tag] [comment_NL]
+    [opt comment_start_tag] [comment_NL] 
     [opt comment_end_tag]
 end define
 
