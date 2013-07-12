@@ -1,6 +1,7 @@
+require_relative '../src/database_interface'
 
 #The pattern for finding comments
-COMMENT_FINDER = /< COMMENT type = "(.*?)" value = "(.*?)" > (.*?)< \/ COMMENT >(.*)/m
+COMMENT_FINDER = /(.*?)< COMMENT type = "(.*?)" value = "(.*?)" > (.*?)< \/ COMMENT >(.*)/m
 
 a = "< COMMENT type = \"class\" value = \"forIn\" > // For the each of the many 
 < / COMMENT >
@@ -135,10 +136,11 @@ public class forIn {
 
 result = a.scan(COMMENT_FINDER)
 
-type = result[0][0]
-value = result[0][1]
-comment = result[0][2]
-rest = result [0][3]
+before = result[0][0]
+type = result[0][1]
+value = result[0][2]
+comment = result[0][3]
+rest = result [0][4]
 
 #Store in db
 #parse #{rest} for end of code that is linked
