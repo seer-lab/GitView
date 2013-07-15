@@ -60,6 +60,8 @@ function plotChurn(data, repo, group) {
     statsArray[keys[2]] = new Array(dataLength);
     statsArray[keys[3]] = new Array(dataLength);
     statsArray[keys[4]] = new Array(dataLength);
+    statsArray[keys[5]] = new Array(dataLength);
+    statsArray[keys[6]] = new Array(dataLength);
 
     // Linearize the elements and add the date to them.
     for(var j = 0; j < dataLength; j++) {
@@ -67,10 +69,12 @@ function plotChurn(data, repo, group) {
         statsArray[keys[2]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[2]][j])];
         statsArray[keys[3]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[3]][j])];
         statsArray[keys[4]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[4]][j])];
+        statsArray[keys[5]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[5]][j])];
+        statsArray[keys[6]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[6]][j])];
     }
 
     console.log(statsArray)
-    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], repo, group);
+    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], statsArray[keys[5]], statsArray[keys[6]], repo, group);
     //var comments = new Array(data["comments"].length);
     //var code = new Array(data["code"].length);
 }
@@ -170,11 +174,11 @@ function areaPlot(id, comments, code) {
     });
 }
 
-function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, repo, group) {
+function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, totalComment, totalCode, repo, group) {
 
     var chart = $('#container').highcharts('StockChart', {
         chart: {
-            type: 'spline'//,
+            //,
             //zoomType: 'x'
             //xAxis: data["date"]
         },
@@ -203,6 +207,10 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             }
         },
 
+        navigator: {
+            enabled: true
+        },
+
         legend:{
             enabled: true
         },
@@ -211,12 +219,31 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         rangeSelector:{
             enabled:true,
             buttons: [{
+                type: 'month',
+                count: 1,
+                text: '1m'
+            }, {
+                type: 'month',
+                count: 3,
+                text: '3m'
+            }, {
+                type: 'month',
+                count: 6,
+                text: '6m'
+            }, {
+                type: 'ytd',
+                text: 'YTD'
+            }, {
+                type: 'year',
+                count: 1,
+                text: '1y'
+            }, {
                 type: 'all',
                 text: 'All'
             }]
         },
 
-        yAxis: {
+        yAxis: [{
             title: {
                 text: 'Number of Lines'
             },
@@ -225,7 +252,17 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
                     return this.value / 1000 +'k';
                 }
             }
-        },
+        },{ // Secondary yAxis
+            title: {
+                text: 'Total Number of Lines'
+            },
+            labels: {
+                formatter: function() {
+                    return this.value / 1000 +'k';
+                }
+            },
+            opposite: true
+        }],
         tooltip: {
             pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
             shared: true
@@ -246,22 +283,42 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             }
         },
         series: [{
+            type: 'spline',
             name: 'Comments Added',
             data: commentsAdded,
-            color: 'rgba(0, 255, 0, 0.8)'
+            color: 'rgba(0, 255, 0, 0.8)',
+            yAxis: 0
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
+            type: 'spline',
             name: 'Comments Deleted',
             data: commentsDeleted,
-            color: 'rgba(255, 0, 0, 0.8)'
+            color: 'rgba(255, 0, 0, 0.8)',
+            yAxis: 0
         }, {
+            type: 'spline',
             name: 'Code Added',
             data: codeAdded,
-            color: 'rgba(0, 0, 255, 0.8)'
+            color: 'rgba(0, 0, 255, 0.8)',
+            yAxis: 0
         }, {
+            type: 'spline',
             name: 'Code Deleted',
             data: codeDeleted,
-            color: 'rgba(125, 0, 255, 0.8)'
+            color: 'rgba(125, 0, 255, 0.8)',
+            yAxis: 0
+        }, {
+            type: 'column',
+            name: 'Total Comments',
+            data: totalComment,
+            color: 'rgba(0, 255, 0, 0.6)',
+            yAxis: 1
+        }, {
+            type: 'column',
+            name: 'Total Code',
+            data: totalCode,
+            color: 'rgba(0, 0, 255, 0.6)',
+            yAxis: 1
         }]
     }, function(chart){
 

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Get all of the repositories stored in the database
+ * @param $mysqli the mysql connection.
+ */
 function getAllRepos($mysqli)
 {
      $results = array(array('repo_name'   => "",
@@ -28,75 +32,21 @@ function getAllRepos($mysqli)
     return $results;
 }
 
-function getCommits($mysqli)
-{
-    $results = array(   'date'      => array(),
-                        'comments'  => array(),
-                        'code'      => array()
-                    );
-    // TODO change to use only 1 repo
-	if ($stmt = $mysqli->prepare("SELECT commit_date, total_comments, total_code FROM commits ORDER BY commit_date"))
-	{
-		/* execute query */
-		$stmt->execute();
-
-        /* bind result variables */
-        $stmt->bind_result($date, $comment, $code);
-
-        $i = 0;
-        while ($stmt->fetch())
-        {
-            $results['date'][$i] = $date;
-            $results['comments'][$i] = $comment;
-            $results['code'][$i] = $code;
-            $i++;
-        }
-
-		/* close statement */
-		$stmt->close();
-	}
-    
-    return $results;
-}
-
-function getCommitsMonths($mysqli)
-{
-    $results = array(   'date'      => array(),
-                        'comments'  => array(),
-                        'code'      => array()
-                    );
-    // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DATE(commit_date), SUM(total_comments), SUM(total_code) FROM commits GROUP BY DATE(commit_date) ORDER BY commit_date"))
-    {
-        /* execute query */
-        $stmt->execute();
-
-        /* bind result variables */
-        $stmt->bind_result($date, $comment, $code);
-
-        $i = 0;
-        while ($stmt->fetch())
-        {
-            $results['date'][$i] = $date;
-            $results['comments'][$i] = $comment;
-            $results['code'][$i] = $code;
-            $i++;
-        }
-
-        /* close statement */
-        $stmt->close();
-    }
-    
-    return $results;
-}
-
+/**
+ * Get the stats for comments and code added and deleted per commit
+ * @param $mysqli the mysql connection.
+ * @param $user the owner of the repository.
+ * @param $repo the repository to get the statistics for.
+ */
 function getChurn($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
                         'commentsDeleted'   => array(),
                         'codeAdded'         => array(),
-                        'codeDeleted'       => array()
+                        'codeDeleted'       => array(),
+                        'totalComments'     => array(),
+                        'totalCode'         => array()
                     );
     // TODO change to use only 1 repo
     if ($stmt = $mysqli->prepare("SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date"))
@@ -112,6 +62,8 @@ function getChurn($mysqli, $user, $repo)
         $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
 
         $i = 0;
+        $results['totalComments'][$i] = 0;
+        $results['totalCode'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
@@ -119,6 +71,15 @@ function getChurn($mysqli, $user, $repo)
             $results['commentsDeleted'][$i] = $commentsDeleted;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+
+            if ($i > 0)
+            {
+                $results['totalComments'][$i] = $results['totalComments'][$i - 1];
+                $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+            }
+
+            $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
+            $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
             $i++;
         }
 
@@ -130,13 +91,21 @@ function getChurn($mysqli, $user, $repo)
 
 }
 
+/**
+ * Get the stats for comments and code added and deleted per day
+ * @param $mysqli the mysql connection.
+ * @param $user the owner of the repository.
+ * @param $repo the repository to get the statistics for.
+ */
 function getChurnDays($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
                         'commentsDeleted'   => array(),
                         'codeAdded'         => array(),
-                        'codeDeleted'       => array()
+                        'codeDeleted'       => array(),
+                        'totalComments'     => array(),
+                        'totalCode'         => array()
                     );
 
     if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
@@ -151,6 +120,8 @@ function getChurnDays($mysqli, $user, $repo)
         $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
 
         $i = 0;
+        $results['totalComments'][$i] = 0;
+        $results['totalCode'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
@@ -158,6 +129,15 @@ function getChurnDays($mysqli, $user, $repo)
             $results['commentsDeleted'][$i] = $commentsDeleted;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+
+            if ($i > 0)
+            {
+                $results['totalComments'][$i] = $results['totalComments'][$i - 1];
+                $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+            }
+
+            $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
+            $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
             $i++;
         }
 
@@ -169,14 +149,21 @@ function getChurnDays($mysqli, $user, $repo)
 
 }
 
-
+/**
+ * Get the stats for comments and code added and deleted per month.
+ * @param $mysqli the mysql connection.
+ * @param $user the owner of the repository.
+ * @param $repo the repository to get the statistics for.
+ */
 function getChurnMonths($mysqli, $user, $repo)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
                         'commentsDeleted'   => array(),
                         'codeAdded'         => array(),
-                        'codeDeleted'       => array()
+                        'codeDeleted'       => array(),
+                        'totalComments'     => array(),
+                        'totalCode'         => array()
                     );
 
     if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
@@ -191,6 +178,8 @@ function getChurnMonths($mysqli, $user, $repo)
         $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
 
         $i = 0;
+        $results['totalComments'][$i] = 0;
+        $results['totalCode'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
@@ -198,6 +187,16 @@ function getChurnMonths($mysqli, $user, $repo)
             $results['commentsDeleted'][$i] = $commentsDeleted;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+
+            if ($i > 0)
+            {
+                $results['totalComments'][$i] = $results['totalComments'][$i - 1];
+                $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+            }
+
+            $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
+            $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
+
             $i++;
         }
 
