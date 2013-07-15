@@ -311,13 +311,13 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             type: 'column',
             name: 'Total Comments',
             data: totalComment,
-            color: 'rgba(0, 255, 0, 0.6)',
+            color: 'rgba(0, 100, 0, 0.5)',
             yAxis: 1
         }, {
             type: 'column',
             name: 'Total Code',
             data: totalCode,
-            color: 'rgba(0, 0, 255, 0.6)',
+            color: 'rgba(29, 41, 81, 0.5)',
             yAxis: 1
         }]
     }, function(chart){
