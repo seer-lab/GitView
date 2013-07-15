@@ -56,6 +56,28 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                 </select>
             </div>
         </div>
+      <div class="control-group">
+          <label for="package" class="control-label">Group</label>
+              <div class="controls">
+                <select id="package" name="package" class="input-xlarge">
+                    <?php
+                        /*
+                         * Options will be:
+                         * - Month
+                         * - Day
+                         * - Commit (None)
+                         */
+			$packages = getPackages($mysqli_stats);
+
+			
+                        echo '<option selected="selected">' . $packages['packages'][0] . '</option>';
+                        echo '<option>' . $DAY . '</option>';
+                        echo '<option>' . $COMMIT . '</option>';
+                        
+                    ?>
+                </select>
+            </div>
+        </div>
         <div class="control-group">
           <div class="controls">
             <button class="btn btn-primary" id='update' >Submit</button>

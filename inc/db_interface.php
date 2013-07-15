@@ -208,4 +208,53 @@ function getChurnMonths($mysqli, $user, $repo)
 
 }
 
+/**
+ * @param $mysqli the mysql connection.
+ * @param $user the owner of the repository.
+ * @param $repo the repository to get the statistics for.
+ */
+function getPackages($mysqli, $user, $repo)
+{
+    $results = array(   'date'              => array(),
+                        'packages'          => array()
+                    );
+
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date, f.name"))
+    {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($date, $package);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            
+            
+            preg_match('/(.*?\/)(.*?\.java)/', $package, $temp)
+
+            if (i > 0 && strcmp($temp, $results['packages'][$i - 1]) === 0)
+            {
+                $i--;
+            }
+            else
+            {
+                $results['packages'][$i] = $temp
+                $results['date'][$i] = $date;
+            }
+
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+
+}
 ?>
