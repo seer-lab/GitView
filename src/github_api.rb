@@ -17,8 +17,8 @@ HOUR = 3600
 repo_owner, repo_name, username, password = "", "", "", ""
 
 if ARGV.size == 4
-	repo_owner, repo_name = ARGV[0], ARGV[1]
-	username, password = ARGV[2], ARGV[3]
+    repo_owner, repo_name = ARGV[0], ARGV[1]
+    username, password = ARGV[2], ARGV[3]
 end
 
 
@@ -297,16 +297,21 @@ def setFiles(con, github, commitUrl, commit_id)
             patch.gsub(NEWLINE_FIXER,"\n")
         end
 
-	begin 
+    count = 0
+    begin
             waitOnRate(con, github, 2)
             # Get the file that was updated
             url = URI::encode(file["raw_url"].force_encoding('binary'))
             #puts url
-	rescue Exception => e
-	    puts e
-            retry
-	end
+    rescue Exception => e
+        count +=1
+        puts e
+        if count < 3
+                retry
+        end
+    end
 
+    count = 0
 
         #body = nil
 
@@ -362,7 +367,10 @@ def setFiles(con, github, commitUrl, commit_id)
                 # database it will be easier to tell that the there was a problem
                 # getting the file.
                 body = "#{e}\n#{url}"
-                retry
+                count += 1
+                if count < 3
+                    retry
+                end
             rescue SocketError => e
                 puts e
                 #puts github.ratelimit_remaining
