@@ -34,6 +34,7 @@ module Stats_db
     # File
     FILE_ID = 'file_id'
     COMMIT_REFERENCE = 'commit_reference'
+    PATH = 'path'
     NAME = 'name'
     #Depreciated
     #NUM_COMMENTS = 'num_comments'
@@ -139,11 +140,11 @@ module Stats_db
         return results
     end
 
-    def Stats_db.insertFile(con, commit_id, name, comments_added, comments_deleted, code_added, code_deleted)
+    def Stats_db.insertFile(con, commit_id,path, name, comments_added, comments_deleted, code_added, code_deleted)
 
-        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}) VALUES (?, ?, ?, ?, ?, ?)")
+        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?)")
 
-        pick.execute(commit_id, name, comments_added, comments_deleted, code_added, code_deleted)
+        pick.execute(commit_id, path, name, comments_added, comments_deleted, code_added, code_deleted)
 
         return Utility.toInteger(pick.insert_id)
     end

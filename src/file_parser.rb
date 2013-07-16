@@ -346,7 +346,7 @@ end
 
 def mergePatch(lines, patch, name, test)
 
-    if patch != nil
+    if patch != nil && !lines[0][0].match(/\d\d\d.*?/)
 
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
@@ -839,7 +839,7 @@ files.each { |file|
         if commit_id == nil
             commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
-        Stats_db.insertFile(stats_con, commit_id, file[1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
+        Stats_db.insertFile(stats_con, commit_id, package, name, comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
     end
     
     if prev_commit != current_commit
