@@ -209,6 +209,7 @@ function getChurnMonths($mysqli, $user, $repo)
 }
 
 /**
+ * Get all of the packages for the project (with repeat)
  * @param $mysqli the mysql connection.
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
@@ -245,6 +246,12 @@ function getPackages($mysqli, $user, $repo)
     return $results;
 }
 
+/**
+ * Get all the unique packages that are in the project
+ * @param $mysqli the mysql connection.
+ * @param $user the owner of the repository.
+ * @param $repo the repository to get the statistics for.
+ */
 function getUniquePackage($mysqli, $user, $repo)
 {
     $results = getPackages($mysqli, $user, $repo);
