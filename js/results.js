@@ -13,6 +13,32 @@ $(document).ready(function () {
     }
 });
 
+$('#repo').click(function(event) {
+    var repo = $('#repo').val(); 
+
+    var list = "<option selected=\"selected\">All Packages</option>";
+
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/packages/' + repo,
+        dataType: "json", // data type of response
+        success: function(data) {
+
+            length = data.length;
+
+            for (var i = 0; i < length; i++)
+            {
+                list += "<option>"+data[i]+"</option>";
+            }
+
+            //console.log(list);
+            $('#package').html(list);
+        }
+    });
+
+    
+});
+
 $('#update').click(function(event) {
         /* Get the unique session id and POST data */
         var repo = $('#repo').val();
@@ -22,7 +48,10 @@ $('#update').click(function(event) {
 
         /* Pass these values to the function that gets the data using
            REST and plots it */
-        getChurn(repo, group, pack)
+        //console.log(pack)
+        pack = pack.replace(/\//g, '!');
+        //console.log(pack)
+        getChurn(repo, group, pack);
 
         event.preventDefault();
     });
@@ -304,13 +333,19 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             name: 'Total Comments',
             data: totalComment,
             color: 'rgba(0, 100, 0, 0.5)',
-            yAxis: 1
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
         }, {
             type: 'column',
             name: 'Total Code',
             data: totalCode,
             color: 'rgba(29, 41, 81, 0.5)',
-            yAxis: 1
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
         }]
     }, function(chart){
 

@@ -49,11 +49,12 @@ function getChurn($mysqli, $user, $repo, $path)
                         'totalCode'         => array()
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
     
-{       
+    {       
+        $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('ss', $repo, $user);
+        $stmt->bind_param('sss', $repo, $user, $path);
 
         /* execute query */
         $stmt->execute();
@@ -97,7 +98,7 @@ function getChurn($mysqli, $user, $repo, $path)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getChurnDays($mysqli, $user, $repo)
+function getChurnDays($mysqli, $user, $repo, $path)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
@@ -108,10 +109,11 @@ function getChurnDays($mysqli, $user, $repo)
                         'totalCode'         => array()
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion)FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     {
+        $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('ss', $repo, $user);
+        $stmt->bind_param('sss', $repo, $user, $path);
 
         /* execute query */
         $stmt->execute();
@@ -155,7 +157,7 @@ function getChurnDays($mysqli, $user, $repo)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getChurnMonths($mysqli, $user, $repo)
+function getChurnMonths($mysqli, $user, $repo, $path)
 {
     $results = array(   'date'              => array(),
                         'commentsAdded'     => array(),
@@ -166,10 +168,11 @@ function getChurnMonths($mysqli, $user, $repo)
                         'totalCode'         => array()
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
     {
+        $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('ss', $repo, $user);
+        $stmt->bind_param('sss', $repo, $user, $path);
 
         /* execute query */
         $stmt->execute();
@@ -252,7 +255,7 @@ function getPackages($mysqli, $user, $repo)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getUniquePackage($mysqli, $user, $repo, $encode)
+function getUniquePackage($mysqli, $user, $repo)
 {
     $results = getPackages($mysqli, $user, $repo);
 
@@ -263,10 +266,6 @@ function getUniquePackage($mysqli, $user, $repo, $encode)
     {
         if ($i > 0 && $packages[$i-1] != $result[1])
         {
-            if($encode)
-            {
-                preg_replace('/\//', '!', $packages[$i-1]);
-            }
             $packages[$i] = $result[1];
         }
         else if ($i == 0)
@@ -279,11 +278,6 @@ function getUniquePackage($mysqli, $user, $repo, $encode)
         }
 
         $i++;
-    }
-
-    if($encode)
-    {
-        preg_replace('/\//', '!', $packages[$i]);
     }
 
     return $packages;

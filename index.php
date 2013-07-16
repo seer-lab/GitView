@@ -10,6 +10,8 @@ include 'templates/body.php';
 /* Connect to the databases */
 $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
+$_SESSION['first_load'] = true;
+
 //$repos = getAllRepos($mysqli_stats);
 
 /* Check that the post is set */

@@ -66,20 +66,21 @@ global $selectedOwner, $selectedRepo;
               <div class="controls">
                 <select id="package" name="package" class="input-xlarge">
                     <?php
-			global $selectedOwner, $selectedRepo;
-                        /*
-                         * Options will be:
-                         * - Month
-                         * - Day
-                         * - Commit (None)
-                         */
-			$packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo);
+                      global $selectedOwner, $selectedRepo;
+                    //SET TO load up only on first load
+                      if ($_SESSION['first_load'])
+                      {
+                        $_SESSION['first_load'] = false;
+			                  
 
+			                  $packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo);
                         echo '<option selected="selected">All Packages</option>';
+                       
                         foreach ($packages as $package)
                         {
                           echo '<option>' . $package . '</option>';
                         }
+                      }
                         
                     ?>
                 </select>
