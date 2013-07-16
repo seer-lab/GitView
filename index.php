@@ -10,7 +10,7 @@ include 'templates/body.php';
 /* Connect to the databases */
 $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
-$repos = getAllRepos($mysqli_stats);
+//$repos = getAllRepos($mysqli_stats);
 
 /* Check that the post is set */
 /*if (!isset($_POST['repo']) && !isset($_POST['group']) && isset($repos))

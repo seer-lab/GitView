@@ -215,11 +215,9 @@ function getChurnMonths($mysqli, $user, $repo)
  */
 function getPackages($mysqli, $user, $repo)
 {
-    $results = array(   'date'              => array(),
-                        'packages'          => array()
-                    );
+    $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date, f.name"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY f.path, c.commit_date"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('ss', $repo, $user);
@@ -233,20 +231,10 @@ function getPackages($mysqli, $user, $repo)
         $i = 0;
         while ($stmt->fetch())
         {
+            $results[$i] = array();
+            $results[$i][0] = $date;
+            $results[$i][1] = $package;
             
-            
-            preg_match('/(.*?\/)(.*?\.java)/', $package, $temp)
-
-            if (i > 0 && strcmp($temp, $results['packages'][$i - 1]) === 0)
-            {
-                $i--;
-            }
-            else
-            {
-                $results['packages'][$i] = $temp
-                $results['date'][$i] = $date;
-            }
-
             $i++;
         }
 
@@ -255,6 +243,35 @@ function getPackages($mysqli, $user, $repo)
     }
     
     return $results;
-
 }
+
+function getUniquePackage($mysqli, $user, $repo)
+{
+    $results = getPackages($mysqli, $user, $repo);
+
+    $packages = array();
+
+    $i = 0;
+    foreach ($results as $result)
+    {
+        if ($i > 0 && $packages[$i-1] != $result[1])
+        {
+            $packages[$i] = $result[1];
+        }
+        else if ($i == 0)
+        {
+            $packages[$i] = $result[1];
+        }
+        else
+        {
+            $i--;
+        }
+
+        $i++;
+    }
+
+    return $packages;
+}
+
+
 ?>
