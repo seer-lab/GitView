@@ -444,7 +444,9 @@ def mergePatch(lines, patch, name, test)
                     #end
                 else
                     if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
-                    else
+		    elsif patchLine[0] == nil && patchLine[2] == ""
+
+                    else 
                         #Context
                         #puts "context"
                         #Do nothing since the lines of code should alreay be there.

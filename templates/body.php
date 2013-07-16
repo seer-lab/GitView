@@ -3,6 +3,8 @@ require_once 'inc/auth.php';
 require_once 'inc/db_interface.php';
 
 $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
+
+global $selectedOwner, $selectedRepo;
 ?>
 
 <div class="row" id="container" style="width:100%; height:500px;"></div>
@@ -14,6 +16,7 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                 <select id="repo" name="repo" class="input-xlarge">
 
                     <?php
+			global $selectedOwner, $selectedRepo;
                         /** Create an entry for each repo */
                         $repos = getAllRepos($mysqli_stats);
 
@@ -24,6 +27,8 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                             if ($selected)
                             {
                                 $option = '<option selected="selected">';
+				$selectedOwner = $repo['repo_owner'];
+				$selectedRepo = $repo['repo_name'];
                                 $selected = false;
                             }
                             else
@@ -61,13 +66,14 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
               <div class="controls">
                 <select id="package" name="package" class="input-xlarge">
                     <?php
+			global $selectedOwner, $selectedRepo;
                         /*
                          * Options will be:
                          * - Month
                          * - Day
                          * - Commit (None)
                          */
-			                  $packages = getUniquePackage($mysqli_stats, 'ACRA', 'acra', TRUE);
+			$packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo);
 
                         echo '<option selected="selected">All Packages</option>';
                         foreach ($packages as $package)

@@ -54,6 +54,8 @@ SELECT c.commit_id FROM repositories AS r INNER JOIN commits AS c ON r.repo_id =
 SELECT f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE f.name LIKE 'luigi/hdfs.py' AND r.repo_name LIKE 'luigi' AND r.repo_owner LIKE 'spotify';
 
  # Get all the files that are in the database
+SELECT com.date, f.name, f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'android_frameworks_base' AND r.repo_owner LIKE 'ParanoidAndroid' AND f.name LIKE '%\.java' ORDER BY com.date;
+
 SELECT com.date, f.name, f.file FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.name LIKE '%\.java' ORDER BY com.date;
 
 # Get all the files that are in the database
