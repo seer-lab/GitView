@@ -46,9 +46,11 @@ CREATE TABLE file
     CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-DROP TABLE repositories;
-DROP TABLE commits;
 DROP TABLE file;
+DROP TABLE commits;
+DROP TABLE repositories;
+
+
 
 INSERT INTO commits (repo_reference, commit_date, body, total_comments, total_code) VALUES (1, '09-06-2013', "fdsjafdsjokfj", 1, 2)
 

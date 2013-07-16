@@ -3,6 +3,7 @@ testlog
 
 # Ignore back up files
 *~
+*.back
 
 # Ignore database backups
 database
