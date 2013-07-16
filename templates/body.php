@@ -67,7 +67,7 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
                          * - Day
                          * - Commit (None)
                          */
-			                  $packages = getUniquePackage($mysqli_stats, 'ACRA', 'acra');
+			                  $packages = getUniquePackage($mysqli_stats, 'ACRA', 'acra', TRUE);
 
                         echo '<option selected="selected">All Packages</option>';
                         foreach ($packages as $package)

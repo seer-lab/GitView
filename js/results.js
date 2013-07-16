@@ -8,7 +8,8 @@ $(document).ready(function () {
         //allCommits();
         var repo = $('#repo').val();
         var group = $('#group').val();
-        getChurn(repo, group);
+        var pack = $('#package').val();
+        getChurn(repo, group, pack);
     }
 });
 
@@ -16,39 +17,30 @@ $('#update').click(function(event) {
         /* Get the unique session id and POST data */
         var repo = $('#repo').val();
         var group = $('#group').val();
+        var pack = $('#package').val();
         //var quantity = $('#quantity').val();
 
         /* Pass these values to the function that gets the data using
            REST and plots it */
-        getChurn(repo, group)
+        getChurn(repo, group, pack)
 
         event.preventDefault();
     });
 
-
-function allCommits() {
+function getChurn(repo, group, pack) { //encodeURIComponent()
     $.ajax({
         type: 'GET',
-        url: rootURL + '/commits',
+        url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack),
         dataType: "json", // data type of response
         success: function(data) {
-            plotCommits(data);
+            plotChurn(data, repo, group, pack);
         }
     });
 }
 
-function getChurn(repo, group) { //encodeURIComponent()
-    $.ajax({
-        type: 'GET',
-        url: rootURL + '/commitsChurn/' + repo + "/" + group,
-        dataType: "json", // data type of response
-        success: function(data) {
-            plotChurn(data, repo, group);
-        }
-    });
-}
-
-function plotChurn(data, repo, group) {
+function plotChurn(data, repo, group, pack) {
+    console.log(pack);
+    //console.log(encodeURIComponent(pack));
     console.log(data);
 
     keys = Object.keys(data);

@@ -10,7 +10,7 @@ $app = new \Slim\Slim();
 
 // GET route
 $app->get('/commits', 'getCommitsAPI');
-$app->get('/commitsChurn/:user/:repo/:position', 'getCommitsChurnAPI');
+$app->get('/commitsChurn/:user/:repo/:group/:path', 'getCommitsChurnAPI');
 
 
 $app->run();
@@ -31,7 +31,7 @@ function getCommitsAPI()
 	echo json_encode(getCommitsMonths($mysqli_stats));
 }
 
-function getCommitsChurnAPI($user, $repo, $group)
+function getCommitsChurnAPI($user, $repo, $group, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	
@@ -42,7 +42,14 @@ function getCommitsChurnAPI($user, $repo, $group)
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
 	}
-	
+	$path = urldecode($path);
+
+	preg_replace('/!/', '/', $path);
+
+	if ($path == "All Packages")
+	{
+		$path = "";
+	}
 	#$user = urldecode($user);
 	#$repo = urldecode($repo);
 	#$group = urldecode($group);
@@ -54,17 +61,17 @@ function getCommitsChurnAPI($user, $repo, $group)
     	//$repo = explode('/', $repo);
 		if($group == $MONTH)
 		{
-			echo json_encode(getChurnMonths($mysqli_stats, $user, $repo));
+			echo json_encode(getChurnMonths($mysqli_stats, $user, $repo, $path));
 		}
 		elseif($group == $DAY)
 		{
-			echo json_encode(getChurnDays($mysqli_stats, $user, $repo));
+			echo json_encode(getChurnDays($mysqli_stats, $user, $repo, $path));
 		}
 		else
 		{
 
 			/* On a per commit basis */
-			echo json_encode(getChurn($mysqli_stats, $user, $repo));
+			echo json_encode(getChurn($mysqli_stats, $user, $repo, $path));
 		}
 	}
 }
