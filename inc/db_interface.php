@@ -221,7 +221,7 @@ function getPackages($mysqli, $user, $repo)
 {
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY f.path, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY f.path, c.commit_date"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('ss', $repo, $user);
@@ -230,14 +230,13 @@ function getPackages($mysqli, $user, $repo)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $package);
+        $stmt->bind_result( $package);
 
         $i = 0;
         while ($stmt->fetch())
         {
             $results[$i] = array();
-            $results[$i][0] = $date;
-            $results[$i][1] = $package;
+            $results[$i][0] = $package;
             
             $i++;
         }
@@ -246,6 +245,49 @@ function getPackages($mysqli, $user, $repo)
         $stmt->close();
     }
     
+    return $results;
+}
+
+/**
+ * Break down the list of packages to get the packages that are
+ * only expressed as part of another package.
+ * @param $package The list of packages for find more packages from
+ * @return the next list of packages, for example list main
+ * contain:
+ *  - /src/org/test
+ *  - /src/org/main
+ *  - /src/lists
+ * would return:
+ *  - /src/org/
+ *  - /src/
+ *  - /src/org/test
+ *  - /src/org/main
+ *  - /src/lists
+ */
+function getParentPackages($package)
+{
+    //$tempArray = $package;
+    $results = $package;
+
+    $i = 0;
+    while ($i < sizeof($results))
+    {
+        preg_match_all("/(.*\/).+\//", $results[$i], $list);
+        if (isset($list) && isset($list[1]) && isset($list[1][0]))
+        {
+            if (!in_array($list[1][0], $results))
+            {
+                //echo "<p>list " . $list[1][0] . "</p>";
+                array_splice($results, $i+1, 0, $list[1][0]);
+                
+                //echo "<p>results " . $results[$i+1] . "</p>";
+            }
+            //array_push($result, $list);
+        }
+        //echo "<p>" . $results[$i] . "</p>";
+        $i++;
+    }
+
     return $results;
 }
 
@@ -264,13 +306,13 @@ function getUniquePackage($mysqli, $user, $repo)
     $i = 0;
     foreach ($results as $result)
     {
-        if ($i > 0 && $packages[$i-1] != $result[1])
+        if ($i > 0 && $packages[$i-1] != $result[0])
         {
-            $packages[$i] = $result[1];
+            $packages[$i] = $result[0];
         }
         else if ($i == 0)
         {
-            $packages[$i] = $result[1];
+            $packages[$i] = $result[0];
         }
         else
         {
@@ -280,8 +322,38 @@ function getUniquePackage($mysqli, $user, $repo)
         $i++;
     }
 
-    return $packages;
+    return getParentPackages($packages);
 }
 
+function getClasses($mysqli, $user, $repo, $package)
+{
+    $results = array();
+
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY f.name, c.commit_date"))
+    {
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result( $package);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results[$i] = array();
+            $results[$i][0] = $package;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
 
 ?>
