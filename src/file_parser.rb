@@ -2,6 +2,21 @@ require_relative 'database_interface'
 require_relative 'regex'
 require_relative 'stats_db_interface'
 
+$NOT_FOUND = 0;
+
+#Command line arguements in order (default $test to true)
+repo_owner, repo_name, $test = "", "", true
+
+if ARGV.size == 3
+	repo_owner, repo_name = ARGV[0], ARGV[1]
+	
+	if ARGV[2] == "false"
+		$test = false
+	end
+else
+	abort("Invalid parameters")
+end
+
 class LineCounter
     def initialize()
         @singleLineComment = 0
@@ -344,14 +359,14 @@ def findMultiLineComments (lines)
     return [comments, codeLines, lineCounter, codeChurn]
 end
 
-def mergePatch(lines, patch, name, test)
+def mergePatch(lines, patch, name)
 
     if patch != nil && !lines[0][0].match(/\d\d\d.*?/)
 
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
 
-        if test
+        if $test
             puts "#{patch}"
         end
 
@@ -383,7 +398,7 @@ def mergePatch(lines, patch, name, test)
         patches.each { |patchLine|
             #begin
             
-                if test
+                if $test
                     puts "#{patchLine}"
                     #puts "patchDiff #{patchlines}"
 
@@ -425,7 +440,7 @@ def mergePatch(lines, patch, name, test)
                     check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
                 
                 
-                    if test
+                    if $test
                         if check[0] == nil
                             #Handle bad patch
                             puts "check #{check}"
@@ -454,7 +469,7 @@ def mergePatch(lines, patch, name, test)
                     end
                 end
 
-                if test
+                if $test
                     #puts lines[currentLine-1][0]
                     #a = gets
 
@@ -493,11 +508,18 @@ def mergePatch(lines, patch, name, test)
             #   end
             #end
         }
-    else
-        if test
+    elsif patch == nil
+        if $test
             # Patch is empty
             puts "nothing in patch!?"
         end
+    else 
+	$NOT_FOUND += 1
+	if $test
+	    puts "File request error"
+	    puts "This has happened #{$NOT_FOUND}"
+	    #a = $stdin.gets
+	end
     end
 
 
@@ -753,20 +775,6 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
-
-#Command line arguements in order (default test to true)
-repo_owner, repo_name, test = "", "", true
-
-if ARGV.size == 3
-	repo_owner, repo_name = ARGV[0], ARGV[1]
-	
-	if ARGV[2] == "false"
-		test = false
-	end
-else
-	abort("Invalid parameters")
-end
-
 con = Github_database.createConnection()
 stats_con = Stats_db.createConnection()
 
@@ -779,7 +787,7 @@ stats_con = Stats_db.createConnection()
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = getFile(con, JAVA, repo_name, repo_owner)
 
-if !test
+if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
 end
 
@@ -806,7 +814,7 @@ files.each { |file|
     
     current_commit = file[2]
 
-    if test
+    if $test
         puts "file: #{file[1]}"
         #a = gets
     end
@@ -819,7 +827,7 @@ files.each { |file|
 
     lines = file[0].scan(LINE_EXPR)
 
-    lines = mergePatch(lines, file[5], file[1], test)
+    lines = mergePatch(lines, file[5], file[1])
     #pass the lines of code and the related patch
 
     comments = findMultiLineComments(lines)
@@ -836,7 +844,7 @@ files.each { |file|
 
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
-    if !test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+    if !$test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
         
         if commit_id == nil
             commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
@@ -848,7 +856,7 @@ files.each { |file|
         #puts "finished commit"
         prev_commit = current_commit
 
-        if !test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+        if !$test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
             Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
         commit_id = nil
@@ -897,4 +905,5 @@ files.each { |file|
 =end
 }
 
+puts "Bad files count #{$NOT_FOUND}"
 #puts "hash table = #{fileHashTable}"

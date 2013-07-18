@@ -1,0 +1,57 @@
+ @@ -30,7 +30,6 @@
+ import org.elasticsearch.common.inject.Inject;
+ import org.elasticsearch.common.io.stream.CachedStreamOutput;
+ import org.elasticsearch.common.io.stream.StreamOutput;
+-import org.elasticsearch.common.io.stream.Streamable;
+ import org.elasticsearch.common.netty.NettyStaticSetup;
+ import org.elasticsearch.common.netty.OpenChannelsHandler;
+ import org.elasticsearch.common.network.NetworkService;
+--------------------------------------------------------------------------------------
+0 Line is modified
+0 Lines of new code
+
+1 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
+@@ -508,7 +507,7 @@ public long serverOpen() {
+     }
+
+     @Override
+-    public <T extends Streamable> void sendRequest(final DiscoveryNode node, final long requestId$
++    public void sendRequest(final DiscoveryNode node, final long requestId, final String action, $
+         Channel targetChannel = nodeChannel(node, options);
+
+         if (compress) {
+--------------------------------------------------------------------------------------
+1 Line is modified
+0 Lines of new code
+
+0 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
+@@ -526,14 +525,14 @@ public long serverOpen() {
+             StreamOutput stream = cachedEntry.handles(CompressorFactory.defaultCompressor());
+             stream.setVersion(node.version());
+             stream.writeString(action);
+-            message.writeTo(stream);
++            request.writeTo(stream);
+             stream.close();
+         } else {
+             StreamOutput stream = cachedEntry.handles();
+             cachedEntry.bytes().skip(NettyHeader.HEADER_SIZE);
+             stream.setVersion(node.version());
+             stream.writeString(action);
+-            message.writeTo(stream);
++            request.writeTo(stream);
+             stream.close();
+         }
+         ChannelBuffer buffer = cachedEntry.bytes().bytes().toChannelBuffer(); 
+--------------------------------------------------------------------------------------
+2 Line is modified
+0 Lines of new code
+
+0 lines of deleted code*
+
+*prob. shouldnt keep track of for this section

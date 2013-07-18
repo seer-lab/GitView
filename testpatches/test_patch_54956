@@ -1,0 +1,15 @@
+ @@ -240,6 +240,10 @@ public void setExecutedMojos(List<ExecutedMojo> executedMojos) {
+             core.setExecutedMojos(executedMojos);
+         }
+
++        public MavenBuildInformation getMavenBuildInformation() {
++            return core.getMavenBuildInformation();
++        }
++
+         private static final long serialVersionUID = 1L;
+
+         /** 
+
+--------------------------------------------------------------------------------------
+0 Line is modified
+4 Lines of new code

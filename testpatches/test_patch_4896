@@ -1,0 +1,131 @@
+ @@ -54,40 +54,20 @@ public AnalyzeToken(String term, int position, int startOffset, int endOffse$
+             this.type = type;
+         }
+
+-        public String term() {				| Deleted line
+-            return this.term;				| Deleted line
+-        }						| Deleted line
+-							| Deleted line
+         public String getTerm() {
+-            return term();				| Modified Line deleted
+-        }						| Deleted line
+-							| Deleted line
+-        public int startOffset() {			| Deleted line
+-            return this.startOffset;			| Deleted line
++            return this.term;				| Modified Line added
+         }
+
+         public int getStartOffset() {
+-            return startOffset();			| Modified Line deleted
+-        }						| Deleted line
+-							| Deleted line
+-        public int endOffset() {			| Deleted line
+-            return this.endOffset;			| Deleted line
++            return this.startOffset;			| Modified Line added
+         }
+
+         public int getEndOffset() {
+-            return endOffset();			| Modified Line deleted
+-        }						| Deleted line
+-							| Deleted line
+-        public int position() {			| Deleted line
+-            return this.position;			| Deleted line
++            return this.endOffset;			| Modified Line added
+         }
+
+         public int getPosition() {
+-            return position();				| Modified Line deleted
+-        }						| Deleted line
+-							| Deleted line
+-        public String type() {				| Deleted line
+-            return this.type;				| Deleted line
++            return this.position;			| Modified Line added
+         }
+
+         public String getType() {
+--------------------------------------------------------------------------------------
+4 Line is modified
+0 Lines of new code
+
+20 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
+@@ -128,12 +108,8 @@ public AnalyzeResponse(List<AnalyzeToken> tokens) {
+         this.tokens = tokens;
+     }
+
+-    public List<AnalyzeToken> tokens() {		| Deleted line
+-        return this.tokens;				| Deleted line
+-    }							| Deleted line
+-							| Deleted line
+     public List<AnalyzeToken> getTokens() {
+-        return tokens();				| Modified Line deleted
++        return this.tokens;				| Modified Line added
+     }
+
+     @Override
+--------------------------------------------------------------------------------------
+1 Line is modified
+0 Lines of new code
+
+4 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
+@@ -148,11 +124,11 @@ public XContentBuilder toXContent(XContentBuilder builder, Params params) th$
+             builder.startArray("tokens");
+             for (AnalyzeToken token : tokens) {
+                 builder.startObject();
+-                builder.field("token", token.term());			| Modified Line deleted
+-                builder.field("start_offset", token.startOffset());	| Modified Line deleted
+-                builder.field("end_offset", token.endOffset());	| Modified Line deleted
+-                builder.field("type", token.type());			| Modified Line deleted
+-                builder.field("position", token.position());		| Modified Line deleted
++                builder.field("token", token.getTerm());		| Modified Line added
++                builder.field("start_offset", token.getStartOffset());	| Modified Line added
++                builder.field("end_offset", token.getEndOffset());	| Modified Line added
++                builder.field("type", token.getType());		| Modified Line added
++                builder.field("position", token.getPosition());	| Modified Line added
+                 builder.endObject();
+             }
+             builder.endArray();
+--------------------------------------------------------------------------------------
+5 Line is modified
+0 Lines of new code
+
+0 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
+@@ -160,16 +136,16 @@ public XContentBuilder toXContent(XContentBuilder builder, Params params) th$
+             StringBuilder sb = new StringBuilder();
+             int lastPosition = 0;
+             for (AnalyzeToken token : tokens) {
+-                if (lastPosition != token.position()) {
++                if (lastPosition != token.getPosition()) {
+                     if (lastPosition != 0) {
+-                        sb.append("\n").append(token.position()).append(": \n");
++                        sb.append("\n").append(token.getPosition()).append(": \n");
+                     }
+-                    lastPosition = token.position();
++                    lastPosition = token.getPosition();
+                 }
+                 sb.append('[')
+-                        .append(token.term()).append(":")
+-                        .append(token.startOffset()).append("->").append(token.endOffset()).appen$
+-                        .append(token.type())
++                        .append(token.getTerm()).append(":")
++                        .append(token.getStartOffset()).append("->").append(token.getEndOffset())$
++                        .append(token.getType())
+                         .append("]\n");
+             }
+             builder.field("tokens", sb); 
+--------------------------------------------------------------------------------------
+6 Line is modified
+0 Lines of new code
+
+0 lines of deleted code*
+
+*prob. shouldnt keep track of for this section
+
