@@ -391,7 +391,7 @@ def findMultiLineComments (lines)
                 puts "Number of modifications #{linesModified}"
                 patchNegStreak, patchPosStreak = 0, 0
             end
-            a = $stdin.gets 
+            #a = $stdin.gets 
         end
         #puts "Comment #{grouped.getComment}"
         #puts "Code #{grouped.getSourceCode}"
@@ -427,7 +427,7 @@ def mergePatch(lines, patch, name)
         end
 
         patch = patch.gsub(NEWLINE_FIXER,"\n")
-        flag = false
+        #flag = false
         #if patch.match(/\\ No newline at end of file\n.+/)
         #    puts "no new line!"
         #    a = gets
@@ -571,7 +571,7 @@ def mergePatch(lines, patch, name)
         end
     else 
     	$NOT_FOUND += 1
-        $BAD_FILE_ARRAY.push(lines)
+        $BAD_FILE_ARRAY.push([lines, patch])
     	if $test
     	    puts "File request error"
     	    puts "This has happened #{$NOT_FOUND}"
@@ -758,10 +758,14 @@ files.each { |file|
 puts "Bad files count #{$NOT_FOUND}"
 puts ""
 
-$BAD_FILE_ARRAY.each { |file|
-    a = $stdin.gets 
-    puts file
-    puts ""
+$BAD_FILE_ARRAY.each { |info|
+
+    info.each { |elements|
+        a = $stdin.gets 
+        puts elements
+        puts ""
+    }
+    
 }
 
 #puts "hash table = #{fileHashTable}"
