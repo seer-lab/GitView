@@ -575,7 +575,10 @@ def mergePatch(lines, patch, name)
     	if $test
     	    puts "File request error"
     	    puts "This has happened #{$NOT_FOUND}"
-    	    #a = $stdin.gets
+
+            puts patch != nil
+            puts !lines[0][0].match(/\d\d\d.*?/)
+    	    a = $stdin.gets
     	end
     end
 
