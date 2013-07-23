@@ -1,6 +1,7 @@
 require_relative 'database_interface'
 require_relative 'regex'
 require_relative 'stats_db_interface'
+require_relative 'matchLines'
 
 # Possible reasons for negative files
 # - Files that could not be retreived (404/403 etc)
@@ -123,7 +124,6 @@ def findMultiLineComments (lines)
     multiLine = false
     index = 0
     lineCounter = LineCounter.new
-    comments = Array.new
     codeLines = Array.new
     codeChurn = CodeChurn.new
     grouped = Linker.new
@@ -131,6 +131,9 @@ def findMultiLineComments (lines)
     commentLookingForChild = false
 
     linesModified = Array.new
+    linesStreak = Hash.new
+    linesStreak["-"] = Array.new
+    linesStreak["+"] = Array.new
     patchNegStreak = 0
     patchPosStreak = 0
     patchPosPrev = 0
@@ -151,7 +154,7 @@ def findMultiLineComments (lines)
         end
 
         puts line[0]
-        #puts ""
+        puts ""
 
         if multiLine
             result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
@@ -176,10 +179,14 @@ def findMultiLineComments (lines)
             if line[0][0] == "+"
                 patchPosStreak += 1
                 puts "patch add streak #{patchPosStreak}"
+                linesStreak["+"].push(line[0][1..-1])
+
                 codeChurn.commentAdded(1)
             elsif line[0][0] == "-"
                 patchNegStreak += 1
                 puts "patch neg streak #{patchNegStreak}"
+                linesStreak["-"].push(line[0][1..-1])
+
                 codeChurn.commentDeleted(1)
             end
 
@@ -188,14 +195,14 @@ def findMultiLineComments (lines)
             
             #Set the grouping to the comment
             grouped.setComment("\n#{result[0]}")
-            comments[index] += "\n#{result[0]}"
+            #comments[index] += "\n#{result[0]}"
         else
             #Java
             result = line[0].scan(JAVA_MULTI_LINE_FULL)
             
             result = result[0]
             if result != nil
-                #$0 is whether it is addition or deletion
+                #$0 is the code before
                 #$1 is single line comment
                 #$2 is multi-line comment
                 #$3 is the code after the comment
@@ -203,90 +210,59 @@ def findMultiLineComments (lines)
                 comment = nil
                 if result[1] != nil || result[2] != nil
 
+                    # Determine whether the line was added or deleted
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         puts "patch add streak #{patchPosStreak}"
+                        linesStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         puts "patch neg streak #{patchNegStreak}"
+                        linesStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
                     
-                    if result[1] != nil # Single Comment 'In-line'
+                    # Single Comment 'In-line'
+                    if result[1] != nil 
                         lineCounter.singleLineComment(1)
                         comment = result[1]
-                        
-                        #Set the grouping to the comment
-                        if commentLookingForChild
-                            grouped.setComment("\n#{comment}")
-                        else
-                            grouped.setComment("#{comment}")
-                        end
-                        
+                       
                         #Start looking for the code that this comment is talking about
                         commentLookingForChild = true
 
-                        #puts "In Line Single"
-                    elsif result[2] != nil # Multi Comment 'In-line'
+                    # Multi Comment 'In-line'
+                    elsif result[2] != nil
                         lineCounter.multiLineCommentInLine(1)
                         comment = result[2]
-                        #puts "In Line Multi"
 
-                        #Set the grouping to the comment
-                        if commentLookingForChild
-                            grouped.setComment("\n#{comment}")
-                        else
-                            grouped.setComment("#{comment}")
-                        end
                         #Start looking for the code that this comment is talking about
-                        commentLookingForChild = true        
+                        commentLookingForChild = true
+
+                    #Comment after code
                     end
 
-                    if result[0] != nil && result[0].match(WHITE_SPACE) == nil
-                        #puts "with Source code"
-                        if result[1] != nil # Signle inline comment that has source code prior to it
-                            lineCounter.inLineSingle(1)
-                            
-                            #Code found store it in the grouping
-                            grouped.setSourceCode(result[0])
-                            #Stop looking for the code
-                            commentLookingForChild = false
-                        elsif result[2] != nil # Multi inline comment that has source code prior to it
-                            lineCounter.inLineMulti(1)
+                    # Check whether there is source code at the beginning or the end of the line.
+                    if (result[3] != nil && result[3][1..-1] != nil && result[3][1..-1].match(WHITE_SPACE) == nil) || (result[0] != nil && result[0][1..-1] != nil && result[0][1..-1].match(WHITE_SPACE) == nil)
 
-                            #Code found store it in the grouping
-                            grouped.setSourceCode(result[1])
-                            #Stop looking for the code
-                            commentLookingForChild = false
-                        end
-                        # CommentInline with code
-                        lineCounter.linesOfCode(1)
-                        codeLines.push(result[0])
-                    end
-
-                    if result[3] != nil && result[3].match(WHITE_SPACE) == nil
                         if line[0][0] == "+"
-                            patchPosStreak += 1
-                            puts "patch add streak #{patchPosStreak}"
+                            #patchPosStreak += 1
+                            #puts "patch add streak #{patchPosStreak}"
                             codeChurn.codeAdded(1)
                         elsif line[0][0] == "-"
-                            patchNegStreak += 1
-                            puts "patch neg streak #{patchNegStreak}"
+                            #patchNegStreak += 1
+                            #puts "patch neg streak #{patchNegStreak}"
                             codeChurn.codeDeleted(1)
                         end
 
-                        if result[2] != nil # Multi inline comment that has source code prior to it
-                            lineCounter.inLineMulti(1)
-                        end
                         #Code found store it in the grouping
-                        grouped.setSourceCode(result[3])
-                        #Stop looking for the code
+                        #grouped.setSourceCode(result[3])
+                        #Stop looking for the code                        
                         commentLookingForChild = false
                     end
 
                     # Add the comment to the list of comments
-                    comments.push(comment)
+                    #comments.push(comment)
                 end
 
             else
@@ -296,28 +272,30 @@ def findMultiLineComments (lines)
                 if result[0] != nil
                     #There is a multi-line comment starting here
                     multiLine = true
-                    index = comments.size
-                    comments.push(result[0][0])
+                    #index = comments.size
+                    #comments.push(result[0][0])
                     lineCounter.multiLineComment(1)
 
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         puts "patch add streak #{patchPosStreak}"
+                        linesStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         puts "patch neg streak #{patchNegStreak}"
+                        linesStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
 
                     #Set the grouping to the comment
-                    grouped.setComment(result[0][0])
+                    #grouped.setComment(result[0][0])
                     #Start looking for the code that this comment is talking about
-                    commentLookingForMultiChild = true
+                    #commentLookingForMultiChild = true
                     #puts "multi line "
                 else
 
-                    if line[0].match(WHITE_SPACE) == nil
+                    if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
 
                         #puts "codes if nothing else"
                         #This line is not a comment
@@ -326,47 +304,22 @@ def findMultiLineComments (lines)
                         if line[0][0] == "+"
                             patchPosStreak += 1
                             puts "patch add streak #{patchPosStreak}"
+                            linesStreak["+"].push(line[0][1..-1])
                             codeChurn.codeAdded(1)
                         elsif line[0][0] == "-"
                             patchNegStreak += 1
                             puts "patch neg streak #{patchNegStreak}"
+                            linesStreak["-"].push(line[0][1..-1])
                             codeChurn.codeDeleted(1)
                         end
 
-                        codeLines.push(line[0])
+                        #codeLines.push(line[0])
                         
                         if commentLookingForChild
                             #Code found store it in the grouping
-                            grouped.setSourceCode(line[0])
+                            #grouped.setSourceCode(line[0])
                             #Stop looking for the code
                             commentLookingForChild = false
-
-                        elsif commentLookingForMultiChild
-
-                            #Remove strings 
-                            #statements = line[0].gsub(/\".*?\"/, '')
-
-                            # Check if it is a single line terminator
-                            result = line[0].scan(JAVA_CODE_LINE_BLOCK)
-
-                            commentLookingForMultiChild = false
-
-                            if result[0] == nil
-                                result = line[0].scan(JAVA_CODE_BLOCK)
-                                
-                                if result[0] == nil
-                                    result = line[0].scan(JAVA_CODE_TERMINATOR)
-                                   
-                                    if result[0] == nil
-                                        result = line
-                                        commentLookingForMultiChild = true
-                                    end
-                                else
-                                    commentLookingForMultiChild = true
-                                end
-                            end
-                            
-                            grouped.setSourceCode("\n#{result[0]}")                            
 
                         end
                     end
@@ -374,24 +327,26 @@ def findMultiLineComments (lines)
             end
         end
 
-        if patchNegStreak > 0 || patchPosStreak > 0
+        if patchNegStreak > 0 && patchPosStreak > 0
             if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
                 puts "streak over"
 
-                if patchPosStreak > 0 && patchNegStreak > 0
-                    if patchPosStreak >= patchNegStreak
-                        linesModified = patchNegStreak
-                    else
-                        linesModified = patchPosStreak
-                    end
-                else
-                    linesModified = 0
-                end
+                linesStreak["-"].each { |negLine|
+                    puts "- #{negLine}"
+                }
+                linesStreak["+"].each { |posLine|
+                    puts "+ #{posLine}"
 
-                puts "Number of modifications #{linesModified}"
+                }            
+                mod = findShortestDistance(linesStreak["+"], linesStreak["-"])
+                size = mod.length
+
+                puts "Number of calc mods #{size}"
+                #puts "mods = #{mods}"
                 patchNegStreak, patchPosStreak = 0, 0
+                a = $stdin.gets 
             end
-            #a = $stdin.gets 
+            
         end
         #puts "Comment #{grouped.getComment}"
         #puts "Code #{grouped.getSourceCode}"
@@ -408,16 +363,15 @@ def findMultiLineComments (lines)
         #puts "codeAdded = #{codeChurn.codeAdded(0)}"
         #puts "codeDeleted = #{codeChurn.codeDeleted(0)}"
         #puts ""
-
         
-        #a = gets
+        #a = $stdin.gets
     }
-    return [comments, codeLines, lineCounter, codeChurn]
+    return ["", codeLines, lineCounter, codeChurn]
 end
 
 def mergePatch(lines, patch, name)
 
-    if patch != nil && !lines[0][0].match(/\d\d\d.*?/)
+    if patch != nil && !lines[0][0].match(/^\d\d\d.*?/)
 
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
@@ -577,7 +531,8 @@ def mergePatch(lines, patch, name)
     	    puts "This has happened #{$NOT_FOUND}"
 
             puts patch != nil
-            puts !lines[0][0].match(/\d\d\d.*?/)
+            puts !lines[0][0].match(/^\d\d\d.*?/)
+            puts lines[0][0].scan(/^\d\d\d(.+)/)
     	    a = $stdin.gets
     	end
     end
@@ -662,8 +617,6 @@ fileHashTable = Hash.new
 #Map file name to the array of stats about that file.
 files.each { |file|
     #file = files[0][0]
-
-    
     
     current_commit = file[2]
 
@@ -695,9 +648,10 @@ files.each { |file|
     #puts "CodeAdded = #{churn["CodeAdded"]}"
     #puts "CodeDeleted = #{churn["CodeDeleted"]}"
 
+    sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
-    if !$test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+    if !$test && sum > 0
         
         if commit_id == nil
             commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
@@ -709,7 +663,7 @@ files.each { |file|
         #puts "finished commit"
         prev_commit = current_commit
 
-        if !$test && (comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)) > 0
+        if !$test && sum > 0
             Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
         end
         commit_id = nil
