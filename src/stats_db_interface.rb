@@ -28,10 +28,10 @@ module Stats_db
     #TOTAL_CODE = 'total_code'
     TOTAL_ADDED_COMMENTS = 'total_comment_addition'
     TOTAL_DELETED_COMMENTS = 'total_comment_deletion'
-    TOTAL_COMMENT_MODIFIED = 'total_comment_modified'
+    TOTAL_MODIFIED_COMMENT = 'total_comment_modified'
     TOTAL_ADDED_CODE = 'total_code_addition'
     TOTAL_DELETED_CODE = 'total_code_deletion'
-    TOTAL_CODE_MODIFIED = 'total_code_modified'
+    TOTAL_MODIFIED_CODE = 'total_code_modified'
     
 
     # File
@@ -108,7 +108,7 @@ module Stats_db
     # +code+:: the number of lines of code in the commit
     def Stats_db.insertCommit(con, repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
-        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_COMMENT_MODIFIED} #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_CODE_MODIFIED}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
         pick.execute(repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return Utility.toInteger(pick.insert_id)
