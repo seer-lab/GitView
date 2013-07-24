@@ -28,8 +28,11 @@ module Stats_db
     #TOTAL_CODE = 'total_code'
     TOTAL_ADDED_COMMENTS = 'total_comment_addition'
     TOTAL_DELETED_COMMENTS = 'total_comment_deletion'
+    TOTAL_COMMENT_MODIFIED = 'total_comment_modified'
     TOTAL_ADDED_CODE = 'total_code_addition'
     TOTAL_DELETED_CODE = 'total_code_deletion'
+    TOTAL_CODE_MODIFIED = 'total_code_modified'
+    
 
     # File
     FILE_ID = 'file_id'
@@ -41,8 +44,10 @@ module Stats_db
     #NUM_CODE = 'num_code'
     ADDED_COMMENTS = 'comment_addition'
     DELETED_COMMENTS = 'comment_deletion'
+    MODIFIED_COMMENTS = 'comment_modified'
     ADDED_CODE = 'code_addition'
     DELETED_CODE = 'code_deletion'
+    MODIFIED_CODE = 'code_modified'
 
     def Stats_db.createConnection()
         Mysql.new(HOST, USERNAME, PASSWORD, DATABASE)
@@ -101,10 +106,10 @@ module Stats_db
     # +body+:: the commit message
     # +comments+:: the number of lines of comments in the commit
     # +code+:: the number of lines of code in the commit
-    def Stats_db.insertCommit(con, repo_id, date, body, comments_added, comments_deleted, code_added, code_deleted)
+    def Stats_db.insertCommit(con, repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
-        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        pick.execute(repo_id, date, body, comments_added, comments_deleted, code_added, code_deleted)
+        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_COMMENT_MODIFIED} #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_CODE_MODIFIED}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return Utility.toInteger(pick.insert_id)
     end
@@ -116,10 +121,10 @@ module Stats_db
     # +author+:: the +User+ that wrote the code that is part of this commit
     # +body+:: the commit message
     # +sha+:: the uuid for the commit
-    def Stats_db.updateCommit(con, commit_id, comments_added, comments_deleted, code_added, code_deleted)
+    def Stats_db.updateCommit(con, commit_id, comments_added, comments_deleted, comment_modified,code_added, code_deleted, code_modified)
 
-        pick = con.prepare("UPDATE #{COMMITS} SET #{TOTAL_ADDED_COMMENTS}=?, #{TOTAL_DELETED_COMMENTS}=?, #{TOTAL_ADDED_CODE}=?, #{TOTAL_DELETED_CODE}=? WHERE #{COMMIT_ID} = ?")
-        pick.execute(comments_added, comments_deleted, code_added, code_deleted, commit_id)
+        pick = con.prepare("UPDATE #{COMMITS} SET #{TOTAL_ADDED_COMMENTS}=?, #{TOTAL_DELETED_COMMENTS}=?, #{TOTAL_MODIFIED_COMMENT}=?, #{TOTAL_ADDED_CODE}=?, #{TOTAL_DELETED_CODE}=?, #{TOTAL_MODIFIED_CODE}=? WHERE #{COMMIT_ID} = ?")
+        pick.execute(comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, commit_id)
 
         nil
         #return Utility.toInteger(commit_id)
@@ -140,11 +145,11 @@ module Stats_db
         return results
     end
 
-    def Stats_db.insertFile(con, commit_id,path, name, comments_added, comments_deleted, code_added, code_deleted)
+    def Stats_db.insertFile(con, commit_id, path, name, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
-        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?)")
+        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{MODIFIED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}, #{MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        pick.execute(commit_id, path, name, comments_added, comments_deleted, code_added, code_deleted)
+        pick.execute(commit_id, path, name, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return Utility.toInteger(pick.insert_id)
     end

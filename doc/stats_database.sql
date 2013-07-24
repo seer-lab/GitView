@@ -23,8 +23,10 @@ CREATE TABLE commits
     total_code INT,*/
     total_comment_addition INT,
     total_comment_deletion INT,
+    total_code_modified INT,
     total_code_addition INT,
     total_code_deletion INT,
+    total_code_modified INT,
     PRIMARY KEY(commit_id),
     CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
     /*Might be useful to have the body and the sha of the commit as well */
@@ -40,8 +42,10 @@ CREATE TABLE file
     num_code INT,*/
     comment_addition INT,
     comment_deletion INT,
+    comment_modified INT,
     code_addition INT,
-    code_deletion INT, 
+    code_deletion INT,
+    code_modified INT,
     PRIMARY KEY(file_id),
     CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );

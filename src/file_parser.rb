@@ -63,8 +63,10 @@ class CodeChurn
     def initialize()
         @commentAdded = 0
         @commentDeleted = 0
+        @commentModified = 0
         @codeAdded = 0
         @codeDeleted = 0
+        @codeModified = 0
     end
 
     def commentAdded(value)
@@ -75,12 +77,24 @@ class CodeChurn
         @commentDeleted +=value        
     end
 
+    def commentModified(value)
+        @commentAdded-=value
+        @commentDeleted-=value 
+        @commentModified +=value       
+    end
+
     def codeAdded(value)
         @codeAdded +=value        
     end
 
     def codeDeleted(value)
         @codeDeleted += value
+    end
+
+    def codeModified(value)
+        @codeAdded -= value
+        @codeDeleted -= value
+        @codeModified += value
     end
 end
 
@@ -281,7 +295,6 @@ def findMultiLineComments (lines)
                     #index = comments.size
                     #comments.push(result[0][0])
                     #lineCounter.multiLineComment(1)
-                    puts "mult"
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         #puts "patch add streak #{patchPosStreak}"
@@ -370,6 +383,10 @@ def findMultiLineComments (lines)
                     puts "Number of calc code modifications #{codeModLength}"
                     puts "Number of calc comment modifications #{commentModLength}"
                 end
+
+                codeChurn.codeModified(codeModLength)
+                codeChurn.commentModified(commentModLength)
+
                 #puts "mods = #{mods}"
                 patchNegStreak, patchPosStreak = 0, 0
 
@@ -689,8 +706,10 @@ commit_id = nil
 churn = Hash.new()
 churn["CommentAdded"] = 0
 churn["CommentDeleted"] = 0
+churn["CommentModified"] = 0
 churn["CodeAdded"] = 0
 churn["CodeDeleted"] = 0
+churn["CodeModified"] = 0
 
 fileHashTable = Hash.new
 
@@ -720,23 +739,25 @@ files.each { |file|
 
     churn["CommentAdded"] += comments[3].commentAdded(0)
     churn["CommentDeleted"] += comments[3].commentDeleted(0)
+    churn["CommentModified"] += comments[3].commentModified(0)
     churn["CodeAdded"] += comments[3].codeAdded(0)
     churn["CodeDeleted"] += comments[3].codeDeleted(0)
+    churn["CodeModified"] += comments[3].codeModified(0)
 
     #puts "CommentAdded = #{churn["CommentAdded"]}"
     #puts "CommentDeleted = #{churn["CommentDeleted"]}"
     #puts "CodeAdded = #{churn["CodeAdded"]}"
     #puts "CodeDeleted = #{churn["CodeDeleted"]}"
 
-    sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0)
+    sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0) + comments[3].commentModified(0)  + comments[3].codeModified(0)
     #Get the path and the name of the file.
     package, name = parsePackages(file[1])
     if !$test && sum > 0
         
         if commit_id == nil
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
         end
-        Stats_db.insertFile(stats_con, commit_id, package, name, comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].codeAdded(0), comments[3].codeDeleted(0))
+        Stats_db.insertFile(stats_con, commit_id, package, name, comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
     end
     
     if prev_commit != current_commit
@@ -744,13 +765,15 @@ files.each { |file|
         prev_commit = current_commit
 
         if !$test && sum > 0
-            Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CodeAdded"], churn["CodeDeleted"])
+            Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
         end
         commit_id = nil
         churn["CommentAdded"] = 0
         churn["CommentDeleted"] = 0
+        churn["CommentModified"] = 0
         churn["CodeAdded"] = 0
-        churn["CodeDeleted"] = 0 
+        churn["CodeDeleted"] = 0        
+        churn["CodeModified"] = 0
         #commit_comments = 0
         #commit_code = 0
     end
