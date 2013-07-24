@@ -120,9 +120,13 @@ class Linker
     end
 end
 
+
+# Identifies lines that have been added, deleted (and soon modified)
+# Also the line is classified as a comment or code. 
+# Note: the regular expression to identify comments and code require that the code
+# is changed (eg. removing the blocks of quoted text) inorder to be accurate
 def findMultiLineComments (lines)
     multiLine = false
-    index = 0
     lineCounter = LineCounter.new
     codeLines = Array.new
     codeChurn = CodeChurn.new
@@ -354,6 +358,13 @@ def findMultiLineComments (lines)
                     puts "+ #{posLine}"
                 }
 
+                # Please Note:
+                # Code modifications may be influenced by the comments being modified
+                # As well as comment modifications being influenced by the code being modified
+                # Example:
+                # - System.out.println("Hello World!"); //This line tells the world hello really loud
+                # + System.out.println("Hello World!"); //This prints out Hello World
+                # Currently this will show up as a modificiation for both code and comment
                 codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"])
                 commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"])
 
@@ -370,7 +381,7 @@ def findMultiLineComments (lines)
                 linesStreak["-"] = Array.new
                 linesCommentStreak["+"] = Array.new
                 linesCommentStreak["-"] = Array.new
-                
+
                 a = $stdin.gets 
             end
             

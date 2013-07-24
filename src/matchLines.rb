@@ -34,8 +34,16 @@ def findSimilarLines(posLines, negLines)
         negLines.each { |negLine|
 
             similarityIndex[i][j] = levenshtein(posLine, negLine)
+
+            # Pick the the length of the longest line.
+            # So additions that are smaller than the negative counter part are not favoured. 
+            largeLength = posLine.length
+            if negLine.length > largeLength
+                largeLength = negLine.length
+            end
+
             #Check if it is above threshold
-            if similarityIndex[i][j] < getThreshold(posLine.length)
+            if similarityIndex[i][j] < getThreshold(largeLength)
 
                 #similarityIndex[i][j] = levenshtein(posLine, negLine)
                 shortest[i][j] = similarityIndex[i][j]
@@ -76,6 +84,7 @@ end
 
 # Determine which positive lines have the shortest exclusive distance a negative line
 # As part of this no 2 positive lines can be related in similarity to a single negative line
+# Note: white spaces can be removed, but by default are kept
 # 
 # It however does not use a stable sorting algorithm and thus could
 # provide different pairings for lines that tie. Details given here:
