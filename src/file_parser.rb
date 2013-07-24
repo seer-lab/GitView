@@ -163,11 +163,14 @@ def findMultiLineComments (lines)
         end
 
         quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
-        puts "line = #{line[0]}"
-        puts "quot = #{quoteLessLine}"
-        puts "open = #{openQuote}"
-        puts "multi = #{multiLine}"
-        #puts ""
+
+        if $test
+            puts "line = #{line[0]}"
+            puts "quot = #{quoteLessLine}"
+            puts "open = #{openQuote}"
+            puts "multi = #{multiLine}"
+            #puts ""
+        end
 
         if multiLine
             result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
@@ -191,13 +194,13 @@ def findMultiLineComments (lines)
             end
             if line[0][0] == "+"
                 patchPosStreak += 1
-                puts "patch add streak #{patchPosStreak}"
+                #puts "patch add streak #{patchPosStreak}"
                 linesCommentStreak["+"].push(line[0][1..-1])
 
                 codeChurn.commentAdded(1)
             elsif line[0][0] == "-"
                 patchNegStreak += 1
-                puts "patch neg streak #{patchNegStreak}"
+                #puts "patch neg streak #{patchNegStreak}"
                 linesCommentStreak["-"].push(line[0][1..-1])
 
                 codeChurn.commentDeleted(1)
@@ -222,15 +225,14 @@ def findMultiLineComments (lines)
                 if result[1] != nil || result[2] != nil
 
                     # Determine whether the line was added or deleted
-                    puts "here"
                     if line[0][0] == "+"
                         patchPosStreak += 1
-                        puts "patch add streak #{patchPosStreak}"
+                        #puts "patch add streak #{patchPosStreak}"
                         linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
-                        puts "patch neg streak #{patchNegStreak}"
+                        #puts "patch neg streak #{patchNegStreak}"
                         linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
@@ -282,12 +284,12 @@ def findMultiLineComments (lines)
                     puts "mult"
                     if line[0][0] == "+"
                         patchPosStreak += 1
-                        puts "patch add streak #{patchPosStreak}"
+                        #puts "patch add streak #{patchPosStreak}"
                         linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
-                        puts "patch neg streak #{patchNegStreak}"
+                        #puts "patch neg streak #{patchNegStreak}"
                         linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
@@ -302,12 +304,12 @@ def findMultiLineComments (lines)
 
                         if line[0][0] == "+"
                             patchPosStreak += 1
-                            puts "patch add streak #{patchPosStreak}"
+                            #puts "patch add streak #{patchPosStreak}"
                             linesStreak["+"].push(line[0][1..-1])
                             codeChurn.codeAdded(1)
                         elsif line[0][0] == "-"
                             patchNegStreak += 1
-                            puts "patch neg streak #{patchNegStreak}"
+                            #puts "patch neg streak #{patchNegStreak}"
                             linesStreak["-"].push(line[0][1..-1])
                             codeChurn.codeDeleted(1)
                         end
@@ -330,23 +332,26 @@ def findMultiLineComments (lines)
             #puts "neg #{patchNegStreak}"
             #puts "pos #{patchPosStreak}"
             if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
-                puts "streak over"
+                
+                if $test
+                    puts "streak over"
 
-                puts "Code Modified:"
-                linesStreak["-"].each { |negLine|
-                    puts "- #{negLine}"
-                }
-                linesStreak["+"].each { |posLine|
-                    puts "+ #{posLine}"
-                }
+                    puts "Code Modified:"
+                    linesStreak["-"].each { |negLine|
+                        puts "- #{negLine}"
+                    }
+                    linesStreak["+"].each { |posLine|
+                        puts "+ #{posLine}"
+                    }
 
-                puts "Comment Modified:"
-                linesCommentStreak["-"].each { |negLine|
-                    puts "- #{negLine}"
-                }
-                linesCommentStreak["+"].each { |posLine|
-                    puts "+ #{posLine}"
-                }
+                    puts "Comment Modified:"
+                    linesCommentStreak["-"].each { |negLine|
+                        puts "- #{negLine}"
+                    }
+                    linesCommentStreak["+"].each { |posLine|
+                        puts "+ #{posLine}"
+                    }
+                end
 
                 # Please Note:
                 # Code modifications may be influenced by the comments being modified
@@ -360,9 +365,11 @@ def findMultiLineComments (lines)
 
                 codeModLength = codeMod.length
                 commentModLength = commentMod.length
-
-                puts "Number of calc code modifications #{codeModLength}"
-                puts "Number of calc comment modifications #{commentModLength}"
+                
+                if $test
+                    puts "Number of calc code modifications #{codeModLength}"
+                    puts "Number of calc comment modifications #{commentModLength}"
+                end
                 #puts "mods = #{mods}"
                 patchNegStreak, patchPosStreak = 0, 0
 
@@ -372,7 +379,7 @@ def findMultiLineComments (lines)
                 linesCommentStreak["+"] = Array.new
                 linesCommentStreak["-"] = Array.new
 
-                a = $stdin.gets 
+                #a = $stdin.gets 
             end
             
         end
