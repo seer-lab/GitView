@@ -73,129 +73,51 @@ function plotChurn(data, repo, group, pack) {
     console.log(data);
 
     keys = Object.keys(data);
+    console.log(keys.length)
     dataLength = data[keys[0]].length;
 
     // Start from index one since the first is the date.
     var statsArray = {};
-    statsArray[keys[1]] = new Array(dataLength);
-    statsArray[keys[2]] = new Array(dataLength);
-    statsArray[keys[3]] = new Array(dataLength);
-    statsArray[keys[4]] = new Array(dataLength);
-    statsArray[keys[5]] = new Array(dataLength);
-    statsArray[keys[6]] = new Array(dataLength);
+
+    for (var i = 0; i < keys.length; i++) {
+        statsArray[keys[i]] = new Array(dataLength);
+    }
+    //statsArray[keys[2]] = new Array(dataLength);
+    //statsArray[keys[3]] = new Array(dataLength);
+    //statsArray[keys[4]] = new Array(dataLength);
+    //statsArray[keys[5]] = new Array(dataLength);
+    //statsArray[keys[6]] = new Array(dataLength);
 
     // Linearize the elements and add the date to them.
     for(var j = 0; j < dataLength; j++) {
-        statsArray[keys[1]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[1]][j])];
-        statsArray[keys[2]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[2]][j])];
-        statsArray[keys[3]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[3]][j])];
-        statsArray[keys[4]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[4]][j])];
-        statsArray[keys[5]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[5]][j])];
-        statsArray[keys[6]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[6]][j])];
+
+        for (var k = 0; k < keys.length; k++) {
+            if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
+            {
+                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[k]][j])];
+            }
+            else
+            {
+                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[k]][j])];
+            }
+            
+        }
+        //statsArray[keys[1]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[1]][j])];
+        //statsArray[keys[2]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[2]][j])];
+        //statsArray[keys[3]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[3]][j])];
+        //statsArray[keys[4]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[4]][j])];
+        //statsArray[keys[5]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[5]][j])];
+        //statsArray[keys[6]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[6]][j])];
     }
 
     console.log(statsArray)
-    areaPlotChurn("container", statsArray[keys[1]], statsArray[keys[2]], statsArray[keys[3]], statsArray[keys[4]], statsArray[keys[5]], statsArray[keys[6]], repo, group);
+    areaPlotChurn("container", statsArray, repo, group);
     //var comments = new Array(data["comments"].length);
     //var code = new Array(data["code"].length);
 }
 
-function plotCommits(data) {
+function areaPlotChurn(id, stats, repo, group) {
 
-    //var results = value == null ? [] : (value instanceof Array ? value : [value]);
-
-    //console.log(data)
-    var comments = new Array(data["comments"].length);
-    var code = new Array(data["code"].length);
-    for (var i = 0; i < data["date"].length; i++) {
-
-        //comments[i] = [moment(data["date"][i], "YYYY-MM-DD HH:mm:ss").toDate(), data["comments"][i]];
-        //code[i] = [moment(data["date"][i], "YYYY-MM-DD HH:mm:ss").toDate(), data["code"][i]];
-
-        comments[i] = [moment(data["date"][i], "YYYY-MM-DD").valueOf(), parseInt(data["comments"][i])];
-        code[i] = [moment(data["date"][i], "YYYY-MM-DD").valueOf(), parseInt(data["code"][i])];
-        //console.log(comments[i])
-
-        //Do something
-    }
-
-    console.log(comments);
-    console.log(code);
-
-    areaPlot("container", comments, code)
-    //plotPieChart(position, results);
-    
-}
-
-function areaPlot(id, comments, code) {
-
-    var chart = $('#container').highcharts({
-        chart: {
-            type: 'area'
-            //xAxis: data["date"]
-        },
-        title: {
-            text: 'Total Comments and Code Per day'
-        },
-        subtitle: {
-            //TODO set to db query
-            text: "nostra13" + "/" + "Android-Universal-Image-Loader"
-        },
-        xAxis: {
-            type: 'datetime',
-            labels: {
-            formatter: function () {
-                return Highcharts.dateFormat('%b %Y', this.value);
-            },
-            dateTimeLabelFormats: {
-                month: '%b \'%y',
-                year: '%Y'
-            }
-        }
-        },
-        yAxis: {
-            title: {
-                text: 'Number of Lines'
-            },
-            labels: {
-                formatter: function() {
-                    return this.value / 1000 +'k';
-                }
-            }
-        },
-        tooltip: {
-            pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
-            shared: true
-        },
-        plotOptions: {
-            area: {
-                
-                marker: {
-                    enabled: false,
-                    symbol: 'circle',
-                    radius: 2,
-                    states: {
-                        hover: {
-                            enabled: true
-                        }
-                    }
-                }
-            }
-        },
-        series: [{
-            name: 'Code',
-            data: code,
-            color: 'rgba(0, 0, 255, 0.7)'
-            //color: 'rgba(255, 255, 255, 0.7)'
-        }, {
-            name: 'Comments',
-            data: comments,
-            color: 'rgba(0, 255, 0, 0.7)'
-        }]
-    });
-}
-
-function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDeleted, totalComment, totalCode, repo, group) {
 
     var chart = $('#container').highcharts('StockChart', {
         chart: {
@@ -274,10 +196,10 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
                 }
             },
             height: 700*0.45,
-                lineWidth: 2
+            lineWidth: 2
         },{ // Secondary yAxis
             title: {
-                text: 'Total # of Lines'
+                text: 'Total Number of Lines'
             },
             labels: {
                 formatter: function() {
@@ -287,7 +209,7 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             top: 700*0.59,
             height: 700*0.20,
             offset: 0,
-                lineWidth: 2
+            lineWidth: 2
         }],
         tooltip: {
             pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
@@ -311,32 +233,44 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         series: [{
             type: 'spline',
             name: 'Comments Added',
-            data: commentsAdded,
+            data: stats["commentsAdded"],
             color: 'rgba(0, 255, 0, 0.8)',
             yAxis: 0
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
             type: 'spline',
             name: 'Comments Deleted',
-            data: commentsDeleted,
+            data: stats["commentsDeleted"],
             color: 'rgba(255, 0, 0, 0.8)',
             yAxis: 0
         }, {
             type: 'spline',
+            name: 'Comments Modified',
+            data: stats["commentsModified"],
+            color: 'rgba(0, 0, 0, 0.8)',
+            yAxis: 0
+        }, {
+            type: 'spline',
             name: 'Code Added',
-            data: codeAdded,
+            data: stats["codeAdded"],
             color: 'rgba(0, 0, 255, 0.8)',
             yAxis: 0
         }, {
             type: 'spline',
             name: 'Code Deleted',
-            data: codeDeleted,
+            data: stats["codeDeleted"],
             color: 'rgba(125, 0, 255, 0.8)',
+            yAxis: 0
+        }, {
+            type: 'spline',
+            name: 'Code Modified',
+            data: stats["codeModified"],
+            color: 'rgba(125, 125, 125, 0.8)',
             yAxis: 0
         }, {
             type: 'column',
             name: 'Total Comments',
-            data: totalComment,
+            data: stats["totalComment"],
             color: 'rgba(0, 100, 0, 0.5)',
             yAxis: 1,
             dataGrouping: {
@@ -345,7 +279,7 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
         }, {
             type: 'column',
             name: 'Total Code',
-            data: totalCode,
+            data: stats["totalCode"],
             color: 'rgba(29, 41, 81, 0.5)',
             yAxis: 1,
             dataGrouping: {

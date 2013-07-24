@@ -40,16 +40,20 @@ function getAllRepos($mysqli)
  */
 function getChurn($mysqli, $user, $repo, $path)
 {
-    $results = array(   'date'              => array(),
-                        'commentsAdded'     => array(),
-                        'commentsDeleted'   => array(),
-                        'codeAdded'         => array(),
-                        'codeDeleted'       => array(),
-                        'totalComments'     => array(),
-                        'totalCode'         => array()
+    $results = array(   'date'                  => array(),
+                        'commentsAdded'         => array(),
+                        'commentsDeleted'       => array(),
+                        'commentsModified'      => array(),
+                        'codeAdded'             => array(),
+                        'codeDeleted'           => array(),
+                        'codeModified'          => array(),
+                        'totalComments'         => array(),
+                        'totalCommentsModified' => array(),
+                        'totalCode'             => array(),
+                        'totalCodeModified'     => array(),
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_code_addition, c.total_code_deletion FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -60,27 +64,36 @@ function getChurn($mysqli, $user, $repo, $path)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
+        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified);
 
         $i = 0;
         $results['totalComments'][$i] = 0;
         $results['totalCode'][$i] = 0;
+        $results['totalCommentsModified'][$i] = 0;
+        $results['totalCodeModified'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
             $results['commentsAdded'][$i] = $commentsAdded;
             $results['commentsDeleted'][$i] = $commentsDeleted;
+            $results['commentsModified'][$i] = $commentsModified;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+            $results['codeModified'][$i] = $codeModified;
 
             if ($i > 0)
             {
                 $results['totalComments'][$i] = $results['totalComments'][$i - 1];
                 $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+
+                $results['totalCommentsModified'][$i] = $results['totalCommentsModified'][$i - 1];
+                $results['totalCodeModified'][$i] = $results['totalCodeModified'][$i - 1];
             }
 
             $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
             $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
+            $results['totalCommentsModified'][$i] += $results['commentsModified'][$i];
+            $results['totalCodeModified'][$i] += $results['codeModified'][$i];
             $i++;
         }
 
@@ -100,16 +113,20 @@ function getChurn($mysqli, $user, $repo, $path)
  */
 function getChurnDays($mysqli, $user, $repo, $path)
 {
-    $results = array(   'date'              => array(),
-                        'commentsAdded'     => array(),
-                        'commentsDeleted'   => array(),
-                        'codeAdded'         => array(),
-                        'codeDeleted'       => array(),
-                        'totalComments'     => array(),
-                        'totalCode'         => array()
+    $results = array(   'date'                  => array(),
+                        'commentsAdded'         => array(),
+                        'commentsDeleted'       => array(),
+                        'commentsModified'      => array(),
+                        'codeAdded'             => array(),
+                        'codeDeleted'           => array(),
+                        'codeModified'          => array(),
+                        'totalComments'         => array(),
+                        'totalCommentsModified' => array(),
+                        'totalCode'             => array(),
+                        'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion)FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
@@ -119,27 +136,36 @@ function getChurnDays($mysqli, $user, $repo, $path)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
+        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified);
 
         $i = 0;
         $results['totalComments'][$i] = 0;
         $results['totalCode'][$i] = 0;
+        $results['totalCommentsModified'][$i] = 0;
+        $results['totalCodeModified'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
             $results['commentsAdded'][$i] = $commentsAdded;
             $results['commentsDeleted'][$i] = $commentsDeleted;
+            $results['commentsModified'][$i] = $commentsModified;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+            $results['codeModified'][$i] = $codeModified;
 
             if ($i > 0)
             {
                 $results['totalComments'][$i] = $results['totalComments'][$i - 1];
                 $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+
+                $results['totalCommentsModified'][$i] = $results['totalCommentsModified'][$i - 1];
+                $results['totalCodeModified'][$i] = $results['totalCodeModified'][$i - 1];
             }
 
             $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
             $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
+            $results['totalCommentsModified'][$i] += $results['commentsModified'][$i];
+            $results['totalCodeModified'][$i] += $results['codeModified'][$i];
             $i++;
         }
 
@@ -159,16 +185,20 @@ function getChurnDays($mysqli, $user, $repo, $path)
  */
 function getChurnMonths($mysqli, $user, $repo, $path)
 {
-    $results = array(   'date'              => array(),
-                        'commentsAdded'     => array(),
-                        'commentsDeleted'   => array(),
-                        'codeAdded'         => array(),
-                        'codeDeleted'       => array(),
-                        'totalComments'     => array(),
-                        'totalCode'         => array()
+    $results = array(   'date'                  => array(),
+                        'commentsAdded'         => array(),
+                        'commentsDeleted'       => array(),
+                        'commentsModified'      => array(),
+                        'codeAdded'             => array(),
+                        'codeDeleted'           => array(),
+                        'codeModified'          => array(),
+                        'totalComments'         => array(),
+                        'totalCommentsModified' => array(),
+                        'totalCode'             => array(),
+                        'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_code_addition), SUM(c.total_code_deletion) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
@@ -178,28 +208,36 @@ function getChurnMonths($mysqli, $user, $repo, $path)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $codeAdded, $codeDeleted);
+        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified);
 
         $i = 0;
         $results['totalComments'][$i] = 0;
         $results['totalCode'][$i] = 0;
+        $results['totalCommentsModified'][$i] = 0;
+        $results['totalCodeModified'][$i] = 0;
         while ($stmt->fetch())
         {
             $results['date'][$i] = $date;
             $results['commentsAdded'][$i] = $commentsAdded;
             $results['commentsDeleted'][$i] = $commentsDeleted;
+            $results['commentsModified'][$i] = $commentsModified;
             $results['codeAdded'][$i] = $codeAdded;
             $results['codeDeleted'][$i] = $codeDeleted;
+            $results['codeModified'][$i] = $codeModified;
 
             if ($i > 0)
             {
                 $results['totalComments'][$i] = $results['totalComments'][$i - 1];
                 $results['totalCode'][$i] = $results['totalCode'][$i - 1];
+
+                $results['totalCommentsModified'][$i] = $results['totalCommentsModified'][$i - 1];
+                $results['totalCodeModified'][$i] = $results['totalCodeModified'][$i - 1];
             }
 
             $results['totalComments'][$i] += ($results['commentsAdded'][$i] - $results['commentsDeleted'][$i]);
             $results['totalCode'][$i] += ($results['codeAdded'][$i] - $results['codeDeleted'][$i]);
-
+            $results['totalCommentsModified'][$i] += $results['commentsModified'][$i];
+            $results['totalCodeModified'][$i] += $results['codeModified'][$i];
             $i++;
         }
 
