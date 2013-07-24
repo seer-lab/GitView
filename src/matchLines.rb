@@ -1,9 +1,17 @@
 require_relative 'levenshtein'
 
+$removeWhiteSpaces = false
+
+# Threshold of 50%
+THRESHOLD = 0.5
+
+
+# The threshold is to simplistic to work perfectly
+# 
+
 # Get the threshold for determining if a line is a possible modification
-# Currently it is the length of the line divided by 2
 def getThreshold (lineLength)
-    return (lineLength/2.0).round()
+    return (lineLength*THRESHOLD).round()
 end
 
 # Using levenshtein's calculation for string similarity the list of similar lines is calculated
@@ -34,10 +42,13 @@ def findSimilarLines(posLines, negLines)
             end
             j+=1
         }
+        #puts "shortest = #{shortest[i]}"
         shortest[i] = constructHash(shortest[i].sort_by { |k,v| v })
+        #puts "a shortest = #{shortest[i]}"
         i+=1
         j=0
     }
+    #puts "bf shortest = #{shortest}"
     return constructHash(shortest.sort_by { |h,v| v.keys && v.values })
 end
 
@@ -54,13 +65,27 @@ def constructHash(sortedArray)
     return newHash
 end
 
+def replaceWhiteSpaces(lines)
+    if $removeWhiteSpaces
+        for i in 0..lines.length-1
+            lines[i] = lines[i].gsub(/\s/, '')
+        end
+    end
+    return lines
+end
+
 # Determine which positive lines have the shortest exclusive distance a negative line
 # As part of this no 2 positive lines can be related in similarity to a single negative line
 # 
 # It however does not use a stable sorting algorithm and thus could
 # provide different pairings for lines that tie. Details given here:
 # http://stackoverflow.com/questions/15442298/is-sort-in-ruby-stable
-def findShortestDistance(posLines, negLines)
+def findShortestDistance(posLines, negLines, whiteSpaces = false)
+
+    $removeWhiteSpaces = whiteSpaces
+
+    posLines = replaceWhiteSpaces(posLines)
+    negLines = replaceWhiteSpaces(negLines)
 
     used = Hash.new
     
@@ -68,9 +93,10 @@ def findShortestDistance(posLines, negLines)
 
     similarityIndex.each { |i, v|
         if i != nil && !v.empty?
-            v.each { |k, e| 
+            v.each { |k, e|
                 if used[k] == nil 
                     used[k] = {i => e}
+                    break
                 end
             }
             

@@ -130,10 +130,15 @@ def findMultiLineComments (lines)
     commentLookingForMultiChild = false
     commentLookingForChild = false
 
-    linesModified = Array.new
+    openQuote = false
+
+    #linesModified = Array.new
     linesStreak = Hash.new
     linesStreak["-"] = Array.new
     linesStreak["+"] = Array.new
+    linesCommentStreak = Hash.new
+    linesCommentStreak["-"] = Array.new
+    linesCommentStreak["+"] = Array.new
     patchNegStreak = 0
     patchPosStreak = 0
     patchPosPrev = 0
@@ -153,8 +158,12 @@ def findMultiLineComments (lines)
             grouped.push
         end
 
-        puts line[0]
-        puts ""
+        quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
+        puts "line = #{line[0]}"
+        puts "quot = #{quoteLessLine}"
+        puts "open = #{openQuote}"
+        puts "multi = #{multiLine}"
+        #puts ""
 
         if multiLine
             result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
@@ -179,13 +188,13 @@ def findMultiLineComments (lines)
             if line[0][0] == "+"
                 patchPosStreak += 1
                 puts "patch add streak #{patchPosStreak}"
-                linesStreak["+"].push(line[0][1..-1])
+                linesCommentStreak["+"].push(line[0][1..-1])
 
                 codeChurn.commentAdded(1)
             elsif line[0][0] == "-"
                 patchNegStreak += 1
                 puts "patch neg streak #{patchNegStreak}"
-                linesStreak["-"].push(line[0][1..-1])
+                linesCommentStreak["-"].push(line[0][1..-1])
 
                 codeChurn.commentDeleted(1)
             end
@@ -197,29 +206,28 @@ def findMultiLineComments (lines)
             grouped.setComment("\n#{result[0]}")
             #comments[index] += "\n#{result[0]}"
         else
-            #Java
-            result = line[0].scan(JAVA_MULTI_LINE_FULL)
+
+            #Remove the quotes prior to checking it
+            #quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
+            result = quoteLessLine.scan(JAVA_MULTI_LINE_FULL)
             
             result = result[0]
             if result != nil
-                #$0 is the code before
-                #$1 is single line comment
-                #$2 is multi-line comment
-                #$3 is the code after the comment
-                
+
                 comment = nil
                 if result[1] != nil || result[2] != nil
 
                     # Determine whether the line was added or deleted
+                    puts "here"
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         puts "patch add streak #{patchPosStreak}"
-                        linesStreak["+"].push(line[0][1..-1])
+                        linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         puts "patch neg streak #{patchNegStreak}"
-                        linesStreak["-"].push(line[0][1..-1])
+                        linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
                     
@@ -248,15 +256,14 @@ def findMultiLineComments (lines)
                         if line[0][0] == "+"
                             #patchPosStreak += 1
                             #puts "patch add streak #{patchPosStreak}"
+                            linesStreak["+"].push(line[0][1..-1])
                             codeChurn.codeAdded(1)
                         elsif line[0][0] == "-"
                             #patchNegStreak += 1
                             #puts "patch neg streak #{patchNegStreak}"
+                            linesStreak["-"].push(line[0][1..-1])
                             codeChurn.codeDeleted(1)
                         end
-
-                        #Code found store it in the grouping
-                        #grouped.setSourceCode(result[3])
                         #Stop looking for the code                        
                         commentLookingForChild = false
                     end
@@ -267,32 +274,28 @@ def findMultiLineComments (lines)
 
             else
 
+                #quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
                 #Check for part of multi line comment
-                result = line[0].scan(JAVA_MULTI_LINE_FIRST_HALF)
+                result = quoteLessLine.scan(JAVA_MULTI_LINE_FIRST_HALF)
                 if result[0] != nil
                     #There is a multi-line comment starting here
                     multiLine = true
                     #index = comments.size
                     #comments.push(result[0][0])
                     lineCounter.multiLineComment(1)
-
+                    puts "mult"
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         puts "patch add streak #{patchPosStreak}"
-                        linesStreak["+"].push(line[0][1..-1])
+                        linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         puts "patch neg streak #{patchNegStreak}"
-                        linesStreak["-"].push(line[0][1..-1])
+                        linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
                     end
 
-                    #Set the grouping to the comment
-                    #grouped.setComment(result[0][0])
-                    #Start looking for the code that this comment is talking about
-                    #commentLookingForMultiChild = true
-                    #puts "multi line "
                 else
 
                     if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
@@ -327,23 +330,47 @@ def findMultiLineComments (lines)
             end
         end
 
+        #TODO add Comment and code churn
+
         if patchNegStreak > 0 && patchPosStreak > 0
+            #puts "neg #{patchNegStreak}"
+            #puts "pos #{patchPosStreak}"
             if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
                 puts "streak over"
 
+                puts "Code Modified:"
                 linesStreak["-"].each { |negLine|
                     puts "- #{negLine}"
                 }
                 linesStreak["+"].each { |posLine|
                     puts "+ #{posLine}"
+                }
 
-                }            
-                mod = findShortestDistance(linesStreak["+"], linesStreak["-"])
-                size = mod.length
+                puts "Comment Modified:"
+                linesCommentStreak["-"].each { |negLine|
+                    puts "- #{negLine}"
+                }
+                linesCommentStreak["+"].each { |posLine|
+                    puts "+ #{posLine}"
+                }
 
-                puts "Number of calc mods #{size}"
+                codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"])
+                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"])
+
+                codeModLength = codeMod.length
+                commentModLength = commentMod.length
+
+                puts "Number of calc code modifications #{codeModLength}"
+                puts "Number of calc comment modifications #{commentModLength}"
                 #puts "mods = #{mods}"
                 patchNegStreak, patchPosStreak = 0, 0
+
+                # Reset arrays 
+                linesStreak["+"] = Array.new
+                linesStreak["-"] = Array.new
+                linesCommentStreak["+"] = Array.new
+                linesCommentStreak["-"] = Array.new
+                
                 a = $stdin.gets 
             end
             
@@ -367,6 +394,51 @@ def findMultiLineComments (lines)
         #a = $stdin.gets
     }
     return ["", codeLines, lineCounter, codeChurn]
+end
+
+# Determines if a quote needs to be added at the beginning or at the end of the line
+def checkQuote(line, prevOpen)
+    numComments = line.scan(/[^\\]"/).length
+    #Special case when it is just two quotes side by side
+    specialCase = line.scan(/[^\\]""/).length
+    numComments += specialCase
+    beginning = false
+    ending = false
+
+    if numComments % 2 == 0 && !prevOpen
+        # Quote not open
+    elsif numComments % 2 == 0 && prevOpen
+        beginning = true
+        ending = true
+    elsif numComments % 2 == 1 && !prevOpen
+        #Quote is now open
+        ending = true
+    elsif numComments % 2 == 1 && prevOpen
+        #Quote is now closed
+        beginning = true
+        prevOpen = false
+    end
+
+    return beginning, ending
+end
+
+# Removes the quotes for the line 
+def stripLine(line, beginning, ending)
+    if beginning
+        line = "line[0]\"#{line[1..-1]}"
+    end
+    if ending
+        line = "#{line}\""
+    end
+    return line.gsub(/"([^"]*)"/,'')
+end
+
+# Facilitates the removal of the quoted text.
+def removeQuotes(line, prevOpen)
+    beginning, ending = checkQuote(line, prevOpen)
+    newLine = stripLine(line, beginning, ending)
+
+    return newLine, ending
 end
 
 def mergePatch(lines, patch, name)
