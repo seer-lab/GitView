@@ -7,7 +7,7 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 global $selectedOwner, $selectedRepo;
 ?>
 
-<div class="row" id="container" style="width:100%; height:500px;"></div>
+<div class="row" id="container" style="width:100%; height:700px;"></div>
 
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">

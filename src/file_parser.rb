@@ -380,6 +380,18 @@ def findMultiLineComments (lines)
                 commentModLength = commentMod.length
                 
                 if $test
+                    codeMod.each { |n, v|
+                        v.each{ |p, d|
+                            puts "PosLine = #{posLines[p]} => NegLine = #{negLines[n]} => distance = #{d}"
+                        }
+                    }
+
+                    commentMod.each { |n, v|
+                        v.each{ |p, d|
+                            puts "PosLine = #{posLines[p]} => NegLine = #{negLines[n]} => distance = #{d}"
+                        }
+                    }
+
                     puts "Number of calc code modifications #{codeModLength}"
                     puts "Number of calc comment modifications #{commentModLength}"
                 end

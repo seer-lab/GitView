@@ -236,7 +236,6 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             enabled: true
         },
 
-
         rangeSelector:{
             enabled:true,
             buttons: [{
@@ -264,6 +263,7 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
             }]
         },
 
+        //TODO get the height of the container and store is as a varaible to use here
         yAxis: [{
             title: {
                 text: 'Number of Lines'
@@ -272,17 +272,22 @@ function areaPlotChurn(id, commentsAdded, commentsDeleted, codeAdded, codeDelete
                 formatter: function() {
                     return this.value / 1000 +'k';
                 }
-            }
+            },
+            height: 700*0.45,
+                lineWidth: 2
         },{ // Secondary yAxis
             title: {
-                text: 'Total Number of Lines'
+                text: 'Total # of Lines'
             },
             labels: {
                 formatter: function() {
                     return this.value / 1000 +'k';
                 }
             },
-            opposite: true
+            top: 700*0.59,
+            height: 700*0.20,
+            offset: 0,
+                lineWidth: 2
         }],
         tooltip: {
             pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',

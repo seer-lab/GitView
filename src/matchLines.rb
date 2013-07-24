@@ -120,11 +120,6 @@ def findShortestDistance(posLines, negLines, whiteSpaces = false)
         end
     }
 
-    used.each { |n, v|
-        v.each{ |p, d|
-            puts "PosLine = #{posLines[p]} => NegLine = #{negLines[n]} => distance = #{d}"
-        }
-    }
     #Negative Line Number => {Positive Line Number => distance}
     #puts "used = #{used}"
     return used
