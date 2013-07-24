@@ -73,10 +73,18 @@ def constructHash(sortedArray)
     return newHash
 end
 
-def replaceWhiteSpaces(lines)
+# Removes all white spaces within the lines
+# @return the lines without white spaces
+def replaceWhiteSpaces(lines, type = 0)
     if $removeWhiteSpaces
         for i in 0..lines.length-1
-            lines[i] = lines[i].gsub(/\s/, '')
+            if type == 0
+                lines[i] = lines[i].gsub(/\s/, '')
+            elsif type == 1
+                lines[i].strip!
+            elsif type == 2
+                lines[i].lstrip!
+            end
         end
     end
     return lines

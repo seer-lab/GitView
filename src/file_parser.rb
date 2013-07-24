@@ -237,21 +237,13 @@ def findMultiLineComments (lines)
                     
                     # Single Comment 'In-line'
                     if result[1] != nil 
-                        lineCounter.singleLineComment(1)
+                        #lineCounter.singleLineComment(1)
                         comment = result[1]
-                       
-                        #Start looking for the code that this comment is talking about
-                        commentLookingForChild = true
 
                     # Multi Comment 'In-line'
                     elsif result[2] != nil
-                        lineCounter.multiLineCommentInLine(1)
+                        #lineCounter.multiLineCommentInLine(1)
                         comment = result[2]
-
-                        #Start looking for the code that this comment is talking about
-                        commentLookingForChild = true
-
-                    #Comment after code
                     end
 
                     # Check whether there is source code at the beginning or the end of the line.
@@ -286,7 +278,7 @@ def findMultiLineComments (lines)
                     multiLine = true
                     #index = comments.size
                     #comments.push(result[0][0])
-                    lineCounter.multiLineComment(1)
+                    #lineCounter.multiLineComment(1)
                     puts "mult"
                     if line[0][0] == "+"
                         patchPosStreak += 1
@@ -306,7 +298,7 @@ def findMultiLineComments (lines)
 
                         #puts "codes if nothing else"
                         #This line is not a comment
-                        lineCounter.linesOfCode(1)
+                        #lineCounter.linesOfCode(1)
 
                         if line[0][0] == "+"
                             patchPosStreak += 1
@@ -333,8 +325,6 @@ def findMultiLineComments (lines)
                 end
             end
         end
-
-        #TODO add Comment and code churn
 
         if patchNegStreak > 0 && patchPosStreak > 0
             #puts "neg #{patchNegStreak}"
