@@ -26,7 +26,7 @@ CREATE TABLE commits
     total_code_modified INT,
     total_code_addition INT,
     total_code_deletion INT,
-    total_code_modified INT,
+    total_comment_modified INT,
     PRIMARY KEY(commit_id),
     CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
     /*Might be useful to have the body and the sha of the commit as well */
