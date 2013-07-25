@@ -29,7 +29,6 @@ if (isset($_POST['repo']) && isset($_POST['group']))
 {
     
 }*/
-//echo $getUniquePackage($mysqli_stats, "junit-team", "junit");
 
 //echo $_POST['repo'];
 //echo $_POST['group'];

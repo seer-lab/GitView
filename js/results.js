@@ -270,7 +270,7 @@ function areaPlotChurn(id, stats, repo, group) {
         }, {
             type: 'column',
             name: 'Total Comments',
-            data: stats["totalComment"],
+            data: stats["totalComments"],
             color: 'rgba(0, 100, 0, 0.5)',
             yAxis: 1,
             dataGrouping: {

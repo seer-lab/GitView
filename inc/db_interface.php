@@ -296,37 +296,69 @@ function getPackages($mysqli, $user, $repo)
  *  - /src/org/main
  *  - /src/lists
  * would return:
- *  - /src/org/
  *  - /src/
+ *  - /src/org/
  *  - /src/org/test
  *  - /src/org/main
  *  - /src/lists
  */
-function getParentPackages($package)
+function getParentPackages($packages)
 {
     //$tempArray = $package;
-    $results = $package;
+    $results = $packages;
 
     $i = 0;
     while ($i < sizeof($results))
     {
-        preg_match_all("/(.*\/).+\//", $results[$i], $list);
-        if (isset($list) && isset($list[1]) && isset($list[1][0]))
+        $newList = checkForMore($results, $results[$i], $i);
+
+        if ($newList != NULL)
         {
-            if (!in_array($list[1][0], $results))
-            {
-                //echo "<p>list " . $list[1][0] . "</p>";
-                array_splice($results, $i+1, 0, $list[1][0]);
-                
-                //echo "<p>results " . $results[$i+1] . "</p>";
-            }
-            //array_push($result, $list);
+            array_splice($results, $i, 0, $newList);
+
+            $i += sizeof($newList);
         }
-        //echo "<p>" . $results[$i] . "</p>";
-        $i++;
+        else
+        {
+            $i++;
+        }        
     }
 
     return $results;
+}
+
+/**
+ * Recursively searches the given package for parent packages
+ * Once the package is the highest package in its tree or is
+ * already contained in the list of packages null will be returned
+ * @param $packages the list of packages already known
+ * @param $package the package currently being parsed
+ * @return The new list of packages contaning packages found or NULL if no packages were found
+ */
+function checkForMore($packages, $package)
+{
+    preg_match_all("/(.*\/).+\//", $package, $list);
+    if (isset($list) && isset($list[1]) && isset($list[1][0]))
+    {
+        if (!in_array($list[1][0], $packages))
+        {
+            //echo "<p>newList " . $list[1][0] . "</p>";
+            $secondPart = $list[1][0];
+            $returnList = checkForMore($packages, $list[1][0]);
+
+            if ($returnList != NULL)
+            {
+                //echo "<p>val " . $secondPart . "</p>";
+                return array_merge($returnList, (array)$secondPart);
+            }
+            else
+            {
+                //echo "<p>valE " . $secondPart . "</p>";
+                return array($secondPart);
+            }
+        }
+    }
+    return NULL;
 }
 
 /**
@@ -347,10 +379,12 @@ function getUniquePackage($mysqli, $user, $repo)
         if ($i > 0 && $packages[$i-1] != $result[0])
         {
             $packages[$i] = $result[0];
+            echo "<p>actual " . $result[0] . "</p>";
         }
         else if ($i == 0)
         {
             $packages[$i] = $result[0];
+            echo "<p>actual " . $result[0] . "</p>";
         }
         else
         {
