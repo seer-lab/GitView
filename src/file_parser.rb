@@ -180,9 +180,9 @@ def findMultiLineComments (lines)
 
         if $test
             puts "line = #{line[0]}"
-            puts "quot = #{quoteLessLine}"
-            puts "open = #{openQuote}"
-            puts "multi = #{multiLine}"
+            #puts "quot = #{quoteLessLine}"
+            #puts "open = #{openQuote}"
+            #puts "multi = #{multiLine}"
             #puts ""
         end
 
@@ -342,8 +342,8 @@ def findMultiLineComments (lines)
         end
 
         if patchNegStreak > 0 && patchPosStreak > 0
-            #puts "neg #{patchNegStreak}"
-            #puts "pos #{patchPosStreak}"
+            puts "neg #{patchNegStreak}"
+            puts "pos #{patchPosStreak}"
             if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
                 
                 if $test
@@ -382,13 +382,13 @@ def findMultiLineComments (lines)
                 if $test
                     codeMod.each { |n, v|
                         v.each{ |p, d|
-                            puts "PosLine = #{posLines[p]} => NegLine = #{negLines[n]} => distance = #{d}"
+                            puts "PosLine = #{linesStreak["+"][p]} => NegLine = #{linesStreak["-"][n]} => distance = #{d}"
                         }
                     }
 
                     commentMod.each { |n, v|
                         v.each{ |p, d|
-                            puts "PosLine = #{posLines[p]} => NegLine = #{negLines[n]} => distance = #{d}"
+                            puts "PosLine = #{linesCommentStreak["+"][p]} => NegLine = #{linesCommentStreak["+"][n]} => distance = #{d}"
                         }
                     }
 
@@ -400,6 +400,23 @@ def findMultiLineComments (lines)
                 codeChurn.commentModified(commentModLength)
 
                 #puts "mods = #{mods}"
+                #patchNegStreak, patchPosStreak = 0, 0
+
+                # Reset arrays 
+                #linesStreak["+"] = Array.new
+                #linesStreak["-"] = Array.new
+                #linesCommentStreak["+"] = Array.new
+                #linesCommentStreak["-"] = Array.new
+
+                a = $stdin.gets 
+            end
+            
+        end
+
+        if patchNegStreak > 0 || patchPosStreak > 0
+            #puts "neg #{patchNegStreak}"
+            #puts "pos #{patchPosStreak}"
+            if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
                 patchNegStreak, patchPosStreak = 0, 0
 
                 # Reset arrays 
@@ -407,10 +424,7 @@ def findMultiLineComments (lines)
                 linesStreak["-"] = Array.new
                 linesCommentStreak["+"] = Array.new
                 linesCommentStreak["-"] = Array.new
-
-                #a = $stdin.gets 
             end
-            
         end
         #puts "Comment #{grouped.getComment}"
         #puts "Code #{grouped.getSourceCode}"
