@@ -7,7 +7,7 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 global $selectedOwner, $selectedRepo;
 ?>
 
-<div class="row" id="container" style="width:100%; height:700px;"></div>
+<div class="row" id="container" style="width:100%; height:500px;"></div>
 
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
@@ -62,7 +62,7 @@ global $selectedOwner, $selectedRepo;
             </div>
         </div>
       <div class="control-group">
-          <label for="package" class="control-label">Group</label>
+          <label for="package" class="control-label">Package</label>
               <div class="controls">
                 <select id="package" name="package" class="input-xlarge">
                     <?php

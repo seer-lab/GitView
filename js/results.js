@@ -82,11 +82,6 @@ function plotChurn(data, repo, group, pack) {
     for (var i = 0; i < keys.length; i++) {
         statsArray[keys[i]] = new Array(dataLength);
     }
-    //statsArray[keys[2]] = new Array(dataLength);
-    //statsArray[keys[3]] = new Array(dataLength);
-    //statsArray[keys[4]] = new Array(dataLength);
-    //statsArray[keys[5]] = new Array(dataLength);
-    //statsArray[keys[6]] = new Array(dataLength);
 
     // Linearize the elements and add the date to them.
     for(var j = 0; j < dataLength; j++) {
@@ -99,15 +94,8 @@ function plotChurn(data, repo, group, pack) {
             else
             {
                 statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[k]][j])];
-            }
-            
+            }   
         }
-        //statsArray[keys[1]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[1]][j])];
-        //statsArray[keys[2]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[2]][j])];
-        //statsArray[keys[3]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[3]][j])];
-        //statsArray[keys[4]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[4]][j])];
-        //statsArray[keys[5]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[5]][j])];
-        //statsArray[keys[6]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[6]][j])];
     }
 
     console.log(statsArray)
@@ -115,10 +103,19 @@ function plotChurn(data, repo, group, pack) {
     //var comments = new Array(data["comments"].length);
     //var code = new Array(data["code"].length);
 }
+var PageHeight
+$(document).ready(function(){
+    if ($(window).height()*0.8 > 600)
+    {
+        $('#container').height($(window).height()*0.8);
+    }
+    PageHeight = $('#container').height();
+    console.log(PageHeight);
+});
 
 function areaPlotChurn(id, stats, repo, group) {
 
-
+    //
     var chart = $('#container').highcharts('StockChart', {
         chart: {
             //,
@@ -138,8 +135,9 @@ function areaPlotChurn(id, stats, repo, group) {
             //maxZoom: 14 * 24 * 3600000,
 
             labels: {
+                enabled: false,
                 //step: 2,
-                staggerLines: 2,
+                //staggerLines: 2,
                 formatter: function () {
                     return Highcharts.dateFormat('%b %d %Y', this.value);
                 },
@@ -151,7 +149,8 @@ function areaPlotChurn(id, stats, repo, group) {
         },
 
         navigator: {
-            enabled: true
+            enabled: true, 
+            height: 20
         },
 
         legend:{
@@ -195,7 +194,7 @@ function areaPlotChurn(id, stats, repo, group) {
                     return this.value / 1000 +'k';
                 }
             },
-            height: 700*0.45,
+            height: PageHeight*0.45,
             lineWidth: 2
         },{ // Secondary yAxis
             title: {
@@ -206,8 +205,8 @@ function areaPlotChurn(id, stats, repo, group) {
                     return this.value / 1000 +'k';
                 }
             },
-            top: 700*0.59,
-            height: 700*0.20,
+            top: PageHeight*0.57,
+            height: PageHeight*0.20,
             offset: 0,
             lineWidth: 2
         }],
