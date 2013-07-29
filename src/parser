@@ -1,0 +1,32 @@
+#/bin/bash
+
+# The repo to be scraped and then parsed.
+REPO_OWNER=aptana
+REPO_NAME=Pydev
+THRESHOLD=1.0
+TEST=false
+
+# The directory where the log files will go
+LOGDIR=../parse_log/$THRESHOLD/
+
+# The file that the log will be saved to. Format: O_R_t.t_mmddyyyy_HHMM
+# O = Repo Owner, R = Repo name, t.t = threshold value (in decimal)
+LOGFILE=$REPO_OWNER\_$REPO_NAME\_$THRESHOLD\_$(date +"%m%d%Y_%H%M")
+
+# Full path of the file
+FULLPATH=$LOGDIR$LOGFILE
+
+# Make the directory if it doesnt already exist
+mkdir -p $LOGDIR
+
+ruby file_parser.rb $REPO_OWNER $REPO_NAME $TEST $FULLPATH $THRESHOLD
+
+RESULT=$?
+
+if [[ $RESULT == 0 ]]; then
+	echo file_parser.rb finished successfully
+else
+	echo file_parser.rb with exit code $RESULT
+fi
+
+echo log file: $FULLPATH
