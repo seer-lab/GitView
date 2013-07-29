@@ -107,13 +107,18 @@ def findShortestDistance(posLines, negLines, threshold = 0.5, whiteSpaces = fals
 
     used = Hash.new
     
+    # Positive Line Number => {Negative Line Number => distance}
     similarityIndex = findSimilarLines(posLines, negLines)
 
+    # i = current Positive Line Number
+    # v = the pairs of {Negative Line Number => distance} that the current i maps to
+    # k = the current Negative Line Number (one of, if any, that i maps to)
+    # e 
     similarityIndex.each { |i, v|
         if i != nil && !v.empty?
-            v.each { |k, e|
+            v.each { |k, d|
                 if used[k] == nil 
-                    used[k] = {i => e}
+                    used[k] = {i => d}
                     break
                 end
             }
