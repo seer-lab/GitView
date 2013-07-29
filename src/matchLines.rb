@@ -3,7 +3,7 @@ require_relative 'levenshtein'
 $removeWhiteSpaces = false
 
 # Threshold of 50%
-THRESHOLD = 0.5
+$THRESHOLD = 1.0
 
 
 # The threshold is to simplistic to work perfectly
@@ -11,7 +11,7 @@ THRESHOLD = 0.5
 
 # Get the threshold for determining if a line is a possible modification
 def getThreshold (lineLength)
-    return (lineLength*THRESHOLD).round()
+    return (lineLength*$THRESHOLD).round()
 end
 
 # Using levenshtein's calculation for string similarity the list of similar lines is calculated
@@ -97,8 +97,9 @@ end
 # It however does not use a stable sorting algorithm and thus could
 # provide different pairings for lines that tie. Details given here:
 # http://stackoverflow.com/questions/15442298/is-sort-in-ruby-stable
-def findShortestDistance(posLines, negLines, whiteSpaces = false)
+def findShortestDistance(posLines, negLines, threshold = 0.5, whiteSpaces = false)
 
+    $THRESHOLD = threshold.to_f
     $removeWhiteSpaces = whiteSpaces
 
     posLines = replaceWhiteSpaces(posLines)

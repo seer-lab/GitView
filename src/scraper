@@ -30,7 +30,7 @@ ruby github_api.rb $REPO_OWNER $REPO_NAME $USERNAME $password 2>&1 | tee $FULLPA
 RESULT=$?
 
 # Show the location of the log file for the scraping
-echo log file: $LOGDIR$LOGFILE
+echo log file: $FULLPATH
 
 # If the github scrap was successful move on to parsing the file
 if [[ $RESULT == 0 ]]; then

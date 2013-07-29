@@ -12,17 +12,25 @@ $NOT_FOUND = 0
 $BAD_FILE_ARRAY = Array.new
 
 #Command line arguements in order (default $test to true)
-repo_owner, repo_name, $test = "", "", true
+repo_owner, repo_name, $test, outputFile, $threshold = "", "", true, "", 0.5
 
-if ARGV.size == 3
+$log = true
+
+if ARGV.size == 5
 	repo_owner, repo_name = ARGV[0], ARGV[1]
 	
 	if ARGV[2] == "false"
 		$test = false
 	end
+    outputFile, $threshold = ARGV[3], ARGV[4]
+
 else
 	abort("Invalid parameters")
 end
+
+# Set the output file to the given parameter
+$stdout.reopen(outputFile, "a")
+$stderr.reopen(outputFile, "a")
 
 class LineCounter
     def initialize()
@@ -309,7 +317,8 @@ def findMultiLineComments (lines)
 
                 else
 
-                    if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                    #
+                    
 
                         #puts "codes if nothing else"
                         #This line is not a comment
@@ -319,12 +328,17 @@ def findMultiLineComments (lines)
                             patchPosStreak += 1
                             #puts "patch add streak #{patchPosStreak}"
                             linesStreak["+"].push(line[0][1..-1])
-                            codeChurn.codeAdded(1)
+
+                            if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                                codeChurn.codeAdded(1)
+                            end
                         elsif line[0][0] == "-"
                             patchNegStreak += 1
                             #puts "patch neg streak #{patchNegStreak}"
                             linesStreak["-"].push(line[0][1..-1])
-                            codeChurn.codeDeleted(1)
+                            if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                                codeChurn.codeDeleted(1)
+                            end
                         end
 
                         #codeLines.push(line[0])
@@ -336,18 +350,18 @@ def findMultiLineComments (lines)
                             commentLookingForChild = false
 
                         end
-                    end
+                    
                 end
             end
         end
 
         if patchNegStreak > 0 && patchPosStreak > 0
-            puts "neg #{patchNegStreak}"
-            puts "pos #{patchPosStreak}"
+            #puts "neg #{patchNegStreak}"
+            #puts "pos #{patchPosStreak}"
             if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
                 
-                if $test
-                    puts "streak over"
+                if $test || $log
+                    #puts "streak over"
 
                     puts "Code Modified:"
                     linesStreak["-"].each { |negLine|
@@ -373,13 +387,26 @@ def findMultiLineComments (lines)
                 # - System.out.println("Hello World!"); //This line tells the world hello really loud
                 # + System.out.println("Hello World!"); //This prints out Hello World
                 # Currently this will show up as a modificiation for both code and comment
-                codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"])
-                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"])
+                codeMod = Hash.new
+                commentMod = Hash.new
+                
+                code_pid = Thread.new do
+                    codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], $threshold)
+                end
+
+                #comment_pid = fork do
+                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], $threshold)
+                #end
+
+                # Wait for the results
+                code_pid.join
+                #Process.wait code_pid
+                #Process.wait comment_pid
 
                 codeModLength = codeMod.length
                 commentModLength = commentMod.length
                 
-                if $test
+                if $test || $log
                     codeMod.each { |n, v|
                         v.each{ |p, d|
                             puts "PosLine = #{linesStreak["+"][p]} => NegLine = #{linesStreak["-"][n]} => distance = #{d}"
@@ -388,7 +415,7 @@ def findMultiLineComments (lines)
 
                     commentMod.each { |n, v|
                         v.each{ |p, d|
-                            puts "PosLine = #{linesCommentStreak["+"][p]} => NegLine = #{linesCommentStreak["+"][n]} => distance = #{d}"
+                            puts "PosLine = #{linesCommentStreak["+"][p]} => NegLine = #{linesCommentStreak["-"][n]} => distance = #{d}"
                         }
                     }
 
@@ -408,7 +435,7 @@ def findMultiLineComments (lines)
                 #linesCommentStreak["+"] = Array.new
                 #linesCommentStreak["-"] = Array.new
 
-                a = $stdin.gets 
+                #a = $stdin.gets 
             end
             
         end
@@ -707,7 +734,7 @@ def getFile(con, extension, repo_name, repo_owner)
 end
 
 con = Github_database.createConnection()
-stats_con = Stats_db.createConnection()
+stats_con = Stats_db.createConnection($threshold)
 
 #username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'
@@ -841,17 +868,18 @@ files.each { |file|
 =end
 }
 
-puts "Bad files count #{$NOT_FOUND}"
-puts ""
+puts "filesize = #{files.length}"
+#puts "Bad files count #{$NOT_FOUND}"
+#puts ""
 
-$BAD_FILE_ARRAY.each { |info|
+#$BAD_FILE_ARRAY.each { |info|
 
-    info.each { |elements|
-        a = $stdin.gets 
-        puts elements
-        puts ""
-    }
+#    info.each { |elements|
+#        a = $stdin.gets 
+#        puts elements
+#        puts ""
+#    }
     
-}
+#}
 
 #puts "hash table = #{fileHashTable}"

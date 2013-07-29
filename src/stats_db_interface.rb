@@ -3,7 +3,7 @@ require 'mysql'
 module Stats_db
     require_relative 'utility'
 
-    DATABASE = 'project_stats'
+    $DATABASE = 'project_stats'
     HOST = 'localhost'
     USERNAME = 'git_miner'
     PASSWORD = 'pickaxe'
@@ -50,7 +50,18 @@ module Stats_db
     MODIFIED_CODE = 'code_modified'
 
     def Stats_db.createConnection()
-        Mysql.new(HOST, USERNAME, PASSWORD, DATABASE)
+        Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
+    end
+
+    def Stats_db.createConnection(threshold)
+        threshold = (($threshold.to_f*10).to_i).to_s
+        if threshold.length == 1 
+            threshold = "0#{threshold}"
+        end
+
+        $DATABASE = "#{$DATABASE}#{threshold}"
+
+        Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
     end
 
 
@@ -69,7 +80,7 @@ module Stats_db
         end
         #There should be only 1 id return anyways.
         return Utility.toInteger(result)
-    end    
+    end
 
     # Insert the given repository to the database
     # +con+:: the database connection used. 
@@ -153,4 +164,38 @@ module Stats_db
 
         return Utility.toInteger(pick.insert_id)
     end
+
+
+    # Get the repositories stored in the database
+    def Stats_db.getRepos(con)
+        pick = con.prepare("SELECT #{REPO_OWNER}, #{REPO_NAME} FROM #{REPO}")
+        pick.execute()
+    
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        #There should be only 1 id return anyways.
+        return results
+    end 
+
+    # Get the commit totals stored in the database
+    # TODO add constants to SQL statement
+    def Stats_db.getCommitStats(con, repo, user)
+        pick = con.prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date")
+        pick.execute(repo, user)
+    
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        #There should be only 1 id return anyways.
+        return results
+    end 
 end
