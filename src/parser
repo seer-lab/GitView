@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # The repo to be scraped and then parsed.
-REPO_OWNER=jenkinsci
-REPO_NAME=jenkins
+REPO_OWNER=nathanmarz
+REPO_NAME=storm
 THRESHOLD=1.0
 TEST=false
 MUL=true
@@ -22,9 +22,7 @@ mkdir -p $LOGDIR
 
 ruby file_parser.rb $REPO_OWNER $REPO_NAME $TEST $FULLPATH $THRESHOLD $MUL
 
-RESULT=$?
-
-if [[ $RESULT == 0 ]]; then
+if [[ $? == 0 ]]; then
 	echo file_parser.rb finished successfully
 else
 	echo file_parser.rb with exit code $RESULT
