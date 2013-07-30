@@ -4,6 +4,7 @@ $removeWhiteSpaces = false
 
 # Threshold of 50%
 $THRESHOLD = 1.0
+$ONE_TO_MANY = true
 
 
 # The threshold is to simplistic to work perfectly
@@ -97,9 +98,10 @@ end
 # It however does not use a stable sorting algorithm and thus could
 # provide different pairings for lines that tie. Details given here:
 # http://stackoverflow.com/questions/15442298/is-sort-in-ruby-stable
-def findShortestDistance(posLines, negLines, threshold = 0.5, whiteSpaces = false)
+def findShortestDistance(posLines, negLines, threshold = 0.5, one_to_many = false, whiteSpaces = false)
 
     $THRESHOLD = threshold.to_f
+    $ONE_TO_MANY = one_to_many
     $removeWhiteSpaces = whiteSpaces
 
     posLines = replaceWhiteSpaces(posLines)
@@ -113,14 +115,22 @@ def findShortestDistance(posLines, negLines, threshold = 0.5, whiteSpaces = fals
     # i = current Positive Line Number
     # v = the pairs of {Negative Line Number => distance} that the current i maps to
     # k = the current Negative Line Number (one of, if any, that i maps to)
-    # e 
+    # d = the distance calculated between posLines[i] and negLines[k]
+    # used = the hash of values mapped by Negative Line Number => {Postive Line Number => distance}
+    # it also indicates which mappings between positive and negative lines 
     similarityIndex.each { |i, v|
         if i != nil && !v.empty?
             v.each { |k, d|
-                if used[k] == nil 
+                if used[k] == nil
                     used[k] = {i => d}
-                    break
+                    if !$ONE_TO_MANY
+                        break
+                    end
+                elsif $ONE_TO_MANY && used[k][used[k].keys[0]] > d
+                    used[k].delete(used[k].keys[0])
+                    used[k] = {i => d}
                 end
+
             }
             
         end

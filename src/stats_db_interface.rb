@@ -53,13 +53,17 @@ module Stats_db
         Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
     end
 
-    def Stats_db.createConnection(threshold)
+    def Stats_db.createConnectionThreshold(threshold, multi)
         threshold = (($threshold.to_f*10).to_i).to_s
         if threshold.length == 1 
             threshold = "0#{threshold}"
         end
 
         $DATABASE = "#{$DATABASE}#{threshold}"
+
+        if multi
+            $DATABASE = "#{$DATABASE}_M"
+        end
 
         Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
     end

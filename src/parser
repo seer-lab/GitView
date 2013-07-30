@@ -1,25 +1,26 @@
-#/bin/bash
+#!/bin/bash
 
 # The repo to be scraped and then parsed.
-REPO_OWNER=aptana
-REPO_NAME=Pydev
+REPO_OWNER=jenkinsci
+REPO_NAME=jenkins
 THRESHOLD=1.0
 TEST=false
+MUL=true
 
 # The directory where the log files will go
-LOGDIR=../parse_log/$THRESHOLD/
+LOGDIR=../parse_log/${THRESHOLD}\_M${MUL}/
 
 # The file that the log will be saved to. Format: O_R_t.t_mmddyyyy_HHMM
 # O = Repo Owner, R = Repo name, t.t = threshold value (in decimal)
-LOGFILE=$REPO_OWNER\_$REPO_NAME\_$THRESHOLD\_$(date +"%m%d%Y_%H%M")
+LOGFILE=${REPO_OWNER}\_${REPO_NAME}\_${THRESHOLD}\_$(date +"%m%d%Y_%H%M")
 
 # Full path of the file
-FULLPATH=$LOGDIR$LOGFILE
+FULLPATH=${LOGDIR}${LOGFILE}
 
 # Make the directory if it doesnt already exist
 mkdir -p $LOGDIR
 
-ruby file_parser.rb $REPO_OWNER $REPO_NAME $TEST $FULLPATH $THRESHOLD
+ruby file_parser.rb $REPO_OWNER $REPO_NAME $TEST $FULLPATH $THRESHOLD $MUL
 
 RESULT=$?
 

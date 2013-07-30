@@ -1,12 +1,15 @@
 require_relative 'stats_db_interface'
 
 $threshold = 0.5
-
+$multi = false
+puts "threshold"
 $threshold = gets.chomp!
+puts "mulit"
+$multi = gets.chomp!
 
-con = Stats_db.createConnection($threshold)
+con = Stats_db.createConnection($threshold, $multi)
 
-PATH = "../parse_log/stats_#{$threshold}/"
+PATH = "../parse_log/stats_#{$threshold}_M#{$multi}/"
 Dir.mkdir(PATH) unless File.exists?(PATH)
 
 repos = Stats_db.getRepos(con)

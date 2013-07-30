@@ -12,17 +12,17 @@ $NOT_FOUND = 0
 $BAD_FILE_ARRAY = Array.new
 
 #Command line arguements in order (default $test to true)
-repo_owner, repo_name, $test, outputFile, $threshold = "", "", true, "", 0.5
+repo_owner, repo_name, $test, outputFile, $threshold, $ONE_TO_MANY = "", "", true, "", 0.5, false
 
 $log = true
 
-if ARGV.size == 5
+if ARGV.size == 6
 	repo_owner, repo_name = ARGV[0], ARGV[1]
 	
 	if ARGV[2] == "false"
 		$test = false
 	end
-    outputFile, $threshold = ARGV[3], ARGV[4]
+    outputFile, $threshold, $ONE_TO_MANY = ARGV[3], ARGV[4], ARGV[5]
 
 else
 	abort("Invalid parameters")
@@ -391,11 +391,11 @@ def findMultiLineComments (lines)
                 commentMod = Hash.new
                 
                 code_pid = Thread.new do
-                    codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], $threshold)
+                    codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], $threshold, $ONE_TO_MANY)
                 end
 
                 #comment_pid = fork do
-                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], $threshold)
+                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], $threshold, $ONE_TO_MANY)
                 #end
 
                 # Wait for the results
@@ -734,7 +734,7 @@ def getFile(con, extension, repo_name, repo_owner)
 end
 
 con = Github_database.createConnection()
-stats_con = Stats_db.createConnection($threshold)
+stats_con = Stats_db.createConnectionThreshold($threshold, $ONE_TO_MANY)
 
 #username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'

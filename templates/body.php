@@ -11,12 +11,60 @@ global $selectedOwner, $selectedRepo;
 
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
+          <label for="threshold" class="control-label">Threshold</label>
+              <div class="controls">
+                <select id="threshold" name="threshold" class="input-xlarge">
+
+                    <?php
+                        $thresholds = array();
+                        $thresholds[0] = "05";
+                        $thresholds[1] = "05_M";
+                        $thresholds[2] = "10";
+                        $thresholds[3] = "10_M";
+
+                        $selected = true;
+                        $option = '';
+                        foreach ($thresholds as $threshold)
+                        {
+                            if ($selected)
+                            {
+                                $option = '<option selected="selected">';
+                                $selected = false;
+                            }
+                            else
+                            {
+                                $option = '<option>';
+                            }
+
+                            if ($threshold == "05")
+                            {
+                              $value = "0.5";
+                            }
+                            elseif ($threshold == "05_M")
+                            {
+                              $value = "0.5 M";
+                            }                            
+                            elseif ($threshold == "10")
+                            {
+                              $value = "1.0";
+                            }
+                            elseif ($threshold == "10_M")
+                            {
+                              $value = "1.0 M";
+                            }
+                            echo $option . $value . '</option>';
+                        }
+                    ?>
+                </select>
+            </div>
+        </div> 
+      <div class="control-group">
           <label for="repo" class="control-label">Repository</label>
               <div class="controls">
                 <select id="repo" name="repo" class="input-xlarge">
 
                     <?php
-			global $selectedOwner, $selectedRepo;
+			                  global $selectedOwner, $selectedRepo;
                         /** Create an entry for each repo */
                         $repos = getAllRepos($mysqli_stats);
 
@@ -27,8 +75,8 @@ global $selectedOwner, $selectedRepo;
                             if ($selected)
                             {
                                 $option = '<option selected="selected">';
-				$selectedOwner = $repo['repo_owner'];
-				$selectedRepo = $repo['repo_name'];
+                        				$selectedOwner = $repo['repo_owner'];
+                        				$selectedRepo = $repo['repo_name'];
                                 $selected = false;
                             }
                             else
@@ -67,7 +115,7 @@ global $selectedOwner, $selectedRepo;
                 <select id="package" name="package" class="input-xlarge">
                     <?php
                       global $selectedOwner, $selectedRepo;
-                    //SET TO load up only on first load
+                      //SET TO load up only on first load
                       if ($_SESSION['first_load'])
                       {
                         $_SESSION['first_load'] = false;

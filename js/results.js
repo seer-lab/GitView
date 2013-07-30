@@ -9,7 +9,26 @@ $(document).ready(function () {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
-        getChurn(repo, group, pack);
+        var thre = $('#threshold').val();
+
+        exten = "";
+        if (thre == "0.5")
+        {
+            exten = "05";
+        }
+        else if (thre == "0.5 M")
+        {
+            exten = "05_M";
+        }
+        else if (thre == "1.0")
+        {
+            exten = "10";
+        }
+        else if (thre == "1.0 M")
+        {
+            exten = "10_M";
+        }
+        getChurn(repo, group, pack, exten);
     }
 });
 
@@ -44,22 +63,40 @@ $('#update').click(function(event) {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
-        //var quantity = $('#quantity').val();
+        var thre = $('#threshold').val();
 
+        exten = "";
+        if (thre == "0.5")
+        {
+            exten = "05";
+        }
+        else if (thre == "0.5 M")
+        {
+            exten = "05_M";
+        }
+        else if (thre == "1.0")
+        {
+            exten = "10";
+        }
+        else if (thre == "1.0 M")
+        {
+            exten = "10_M";
+        }
+        
         /* Pass these values to the function that gets the data using
            REST and plots it */
         //console.log(pack)
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
-        getChurn(repo, group, pack);
+        getChurn(repo, group, pack, exten);
 
         event.preventDefault();
     });
 
-function getChurn(repo, group, pack) { //encodeURIComponent()
+function getChurn(repo, group, pack, thre) {
     $.ajax({
         type: 'GET',
-        url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack),
+        url: rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack),
         dataType: "json", // data type of response
         success: function(data) {
             plotChurn(data, repo, group, pack);

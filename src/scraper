@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # The directory where the log files will go
 LOGDIR=../testlog/
