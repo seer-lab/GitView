@@ -54,8 +54,6 @@ $('#repo').click(function(event) {
             $('#package').html(list);
         }
     });
-
-    
 });
 
 $('#update').click(function(event) {
@@ -126,7 +124,7 @@ function plotChurn(data, repo, group, pack) {
         for (var k = 0; k < keys.length; k++) {
             if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
             {
-                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[k]][j])];
+                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), /*(-1) * */ parseInt(data[keys[k]][j])];
             }
             else
             {
@@ -252,6 +250,12 @@ function areaPlotChurn(id, stats, repo, group) {
             shared: true
         },
         plotOptions: {
+            column: {
+                stacking: 'normal'/*,
+                dataLabels: {
+                        enabled: true
+                }*/
+            },
             spline: {
                 
                 marker: {
@@ -267,56 +271,98 @@ function areaPlotChurn(id, stats, repo, group) {
             }
         },
         series: [{
-            type: 'spline',
+            type: 'column',
             name: 'Comments Added',
             data: stats["commentsAdded"],
-            color: 'rgba(0, 255, 0, 0.8)',
-            yAxis: 0
+            color: 'rgba(205,92,92, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                approximation: "average"
+            }
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Comments Deleted',
             data: stats["commentsDeleted"],
-            color: 'rgba(255, 0, 0, 0.8)',
-            yAxis: 0
-        }, {
-            type: 'spline',
-            name: 'Comments Modified',
-            data: stats["commentsModified"],
-            color: 'rgba(0, 0, 0, 0.8)',
-            yAxis: 0
-        }, {
-            type: 'spline',
-            name: 'Code Added',
-            data: stats["codeAdded"],
-            color: 'rgba(0, 0, 255, 0.8)',
-            yAxis: 0
-        }, {
-            type: 'spline',
-            name: 'Code Deleted',
-            data: stats["codeDeleted"],
-            color: 'rgba(125, 0, 255, 0.8)',
-            yAxis: 0
-        }, {
-            type: 'spline',
-            name: 'Code Modified',
-            data: stats["codeModified"],
-            color: 'rgba(125, 125, 125, 0.8)',
-            yAxis: 0
-        }, {
-            type: 'column',
-            name: 'Total Comments',
-            data: stats["totalComments"],
-            color: 'rgba(0, 100, 0, 0.5)',
-            yAxis: 1,
+            color: 'rgba(220,20,60, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
             dataGrouping: {
                 approximation: "average"
             }
         }, {
             type: 'column',
+            name: 'Comments Modified',
+            data: stats["commentsModified"],
+            color: 'rgba(139,0,0, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'column',
+            name: 'Code Added',
+            data: stats["codeAdded"],
+            color: 'rgba(135,206,235, 0.9)',
+            yAxis: 0,
+            stack: 'code',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'column',
+            name: 'Code Deleted',
+            data: stats["codeDeleted"],
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 0,
+            stack: 'code',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'column',
+            name: 'Code Modified',
+            data: stats["codeModified"],
+            color: 'rgba(0,0,128, 0.9)',
+            yAxis: 0,
+            stack: 'code',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Total Comments',
+            data: stats["totalComments"],
+            color: 'rgba(205,92,92, 0.9)',
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Total Comments Modified',
+            data: stats["totalCommentsModified"],
+            color: 'rgba(139,0,0, 0.9)',
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
             name: 'Total Code',
             data: stats["totalCode"],
-            color: 'rgba(29, 41, 81, 0.5)',
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
+        },  {
+            type: 'spline',
+            name: 'Total Code Modified',
+            data: stats["totalCodeModified"],
+            color: 'rgba(0,0,128, 0.9)',
             yAxis: 1,
             dataGrouping: {
                 approximation: "average"
