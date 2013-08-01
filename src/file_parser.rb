@@ -12,18 +12,19 @@ $NOT_FOUND = 0
 $BAD_FILE_ARRAY = Array.new
 
 #Command line arguements in order (default $test to true)
-repo_owner, repo_name, $test, outputFile, $threshold, $ONE_TO_MANY = "", "", true, "", 0.5, false
-
+repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, false
+$low_threshold, $size_threshold = 0.8, 20
 $log = true
 
-if ARGV.size == 6
+if ARGV.size == 8
 	repo_owner, repo_name = ARGV[0], ARGV[1]
 	
 	if ARGV[2] == "false"
 		$test = false
 	end
-    outputFile, $threshold, $ONE_TO_MANY = ARGV[3], ARGV[4], ARGV[5]
+    outputFile, $ONE_TO_MANY = ARGV[3], ARGV[4]
 
+    $high_threshold, $low_threshold, $size_threshold = ARGV[5], ARGV[6], ARGV[7]
 else
 	abort("Invalid parameters")
 end
@@ -86,8 +87,6 @@ class CodeChurn
     end
 
     def commentModified(value)
-        @commentAdded-=value
-        @commentDeleted-=value 
         @commentModified +=value       
     end
 
@@ -100,8 +99,6 @@ class CodeChurn
     end
 
     def codeModified(value)
-        @codeAdded -= value
-        @codeDeleted -= value
         @codeModified += value
     end
 end
@@ -389,22 +386,45 @@ def findMultiLineComments (lines)
                 # Currently this will show up as a modificiation for both code and comment
                 codeMod = Hash.new
                 commentMod = Hash.new
+                codeModLength = 0
                 
                 code_pid = Thread.new do
-                    codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], $threshold, $ONE_TO_MANY)
+                    codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
+
+                    found = Hash.new
+                    codeMod.each {|i,v|
+                        v.each {|k, d|
+                            if found[k] ==nil
+                                found[k] = true
+                            end
+                        }
+                    }
+                    codeModLength = found.length
                 end
 
                 #comment_pid = fork do
-                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], $threshold, $ONE_TO_MANY)
+                commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
                 #end
+
+                found = Hash.new
+                commentMod.each {|i,v|
+                    v.each {|k, d|
+                        if found[k] ==nil
+                            found[k] = true
+                        end
+                    }
+                }
+                commentModLength = found.length
 
                 # Wait for the results
                 code_pid.join
                 #Process.wait code_pid
                 #Process.wait comment_pid
 
-                codeModLength = codeMod.length
-                commentModLength = commentMod.length
+
+
+                #codeModLength = codeMod.length
+                #commentModLength = commentMod.length
                 
                 if $test || $log
                     codeMod.each { |n, v|
@@ -423,8 +443,16 @@ def findMultiLineComments (lines)
                     puts "Number of calc comment modifications #{commentModLength}"
                 end
 
-                codeChurn.codeModified(codeModLength)
-                codeChurn.commentModified(commentModLength)
+                codeChurn.codeModified(codeMod.length)
+                codeChurn.commentModified(commentMod.length)
+
+                #comments added = comments added - # of positive lines modified
+                codeChurn.commentAdded(commentModLength)
+                #comments deleted = comments deleted - # of lines modified(since the mapping is 1 Negative to many Positve lines)
+                codeChurn.commentDeleted(commentMod.length)
+
+                codeChurn.codeAdded(codeModLength)
+                codeChurn.codeDeleted(codeMod.length)
 
                 #puts "mods = #{mods}"
                 #patchNegStreak, patchPosStreak = 0, 0
@@ -582,15 +610,8 @@ def mergePatch(lines, patch, name)
                     #Deletion
                     #puts "deletion"
                     #line should not be in the file.
-                    #TODO remove carrage return from patch
                     lines.insert(currentLine, ["-" + patchLine[2]])
                     deletions += 1
-                #if lines[currentLine].class == Array
-                #    puts "Is an array"
-                #    a = gets
-                #    puts "lines = #{lines[currentLine]}"
-                #    a = gets
-                #end
                     currentLine+=1
                 elsif patchLine[0] == "@@"
                     #Patch start
@@ -598,7 +619,6 @@ def mergePatch(lines, patch, name)
                     patchOffset = patchLine[2].scan(PATCH_LINE_NUM)
 
                     check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
-                
                 
                     if $test
                         if check[0] == nil
@@ -611,12 +631,6 @@ def mergePatch(lines, patch, name)
                     #puts "lines #{lines}"
                     lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1 + deletions, currentLine)
                     deletions = 0
-
-                    #while deletions > 0 
-                    #    lines[currentLine][0] = " " + lines[currentLine][0]
-                    #    currentLine+=1
-                    #    deletions -= 1
-                    #end
                 else
                     if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
 		    elsif patchLine[0] == nil && patchLine[2] == ""
@@ -637,36 +651,6 @@ def mergePatch(lines, patch, name)
                     puts "deletions #{deletions}"
                     puts ""
                 end
-=begin
-            rescue Exception => e
-                puts e
-                a = gets
-                puts "patchstart\n#{patch}\npatchend"
-
-                lines.each { |line| 
-                    puts line
-                    a = gets
-                }
-                a = gets
-                puts "flag #{flag}"
-                puts "deletions = #{deletions}"
-                puts "currentLine = #{currentLine}"
-                puts "patchlines #{patches.length}"
-                #a = gets
-
-                puts "lines #{lines.length}"
-                a = gets
-                
-
-                puts "name #{name}"
-                a = gets
-            end
-=end
-            #if lines[currentLine-1][0] == patchLine[2]
-            #    if a != "s" 
-            #        a = gets.chomp!
-            #   end
-            #end
         }
     elsif patch == nil
         if $test
@@ -686,14 +670,7 @@ def mergePatch(lines, patch, name)
     	    a = $stdin.gets
     	end
     end
-
-
-#    file = ""
-    # TODO make apart of the main loop (divide iterations in half)
-#    lines.each{ |line|
-#        file += "#{line}\n"
-#   }
-
+    
     return lines
 end
 
@@ -733,8 +710,18 @@ def getFile(con, extension, repo_name, repo_owner)
     return results
 end
 
+def mergeThreshold(threshold)
+    threshold = ((threshold.to_f*10).to_i).to_s
+    if threshold.length == 1 
+        threshold = "0#{threshold}"
+    end
+    return threshold
+end
+
 con = Github_database.createConnection()
-stats_con = Stats_db.createConnectionThreshold($threshold, $ONE_TO_MANY)
+
+
+stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
 #username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
 #username, repo_name = 'SpringSource', 'spring-framework'

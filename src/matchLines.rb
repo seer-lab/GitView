@@ -2,17 +2,23 @@ require_relative 'levenshtein'
 
 $removeWhiteSpaces = false
 
-# Threshold of 50%
-$THRESHOLD = 1.0
+# HIGH_THRESHOLD of 50%
+$HIGH_THRESHOLD = 0.5
+$LOW_THRESHOLD = 0.8
+$SIZE_TRESHOLD = 20
 $ONE_TO_MANY = true
 
 
-# The threshold is to simplistic to work perfectly
+# The HIGH_THRESHOLD is to simplistic to work perfectly
 # 
 
-# Get the threshold for determining if a line is a possible modification
-def getThreshold (lineLength)
-    return (lineLength*$THRESHOLD).round()
+# Get the HIGH_THRESHOLD for determining if a line is a possible modification
+def getTreshold (lineLength)
+    if lineLength < $SIZE_TRESHOLD
+        return (lineLength*$LOW_THRESHOLD).round()
+    else
+        return (lineLength*$HIGH_THRESHOLD).round()
+    end
 end
 
 # Using levenshtein's calculation for string similarity the list of similar lines is calculated
@@ -43,8 +49,8 @@ def findSimilarLines(posLines, negLines)
                 largeLength = negLine.length
             end
 
-            #Check if it is above threshold
-            if similarityIndex[i][j] < getThreshold(largeLength)
+            #Check if it is above HIGH_THRESHOLD
+            if similarityIndex[i][j] < getTreshold(largeLength)
 
                 #similarityIndex[i][j] = levenshtein(posLine, negLine)
                 shortest[i][j] = similarityIndex[i][j]
@@ -98,9 +104,11 @@ end
 # It however does not use a stable sorting algorithm and thus could
 # provide different pairings for lines that tie. Details given here:
 # http://stackoverflow.com/questions/15442298/is-sort-in-ruby-stable
-def findShortestDistance(posLines, negLines, threshold = 0.5, one_to_many = false, whiteSpaces = false)
+def findShortestDistance(posLines, negLines, high_threshold = 0.5, low_threshold = 0.8, size_threshold = 0.5, one_to_many = false, whiteSpaces = false)
 
-    $THRESHOLD = threshold.to_f
+    $HIGH_THRESHOLD = high_threshold.to_f
+    $LOW_THRESHOLD = low_threshold.to_f
+    $SIZE_TRESHOLD = size_threshold.to_i
     $ONE_TO_MANY = one_to_many
     $removeWhiteSpaces = whiteSpaces
 

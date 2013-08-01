@@ -33,6 +33,11 @@ module Stats_db
     TOTAL_DELETED_CODE = 'total_code_deletion'
     TOTAL_MODIFIED_CODE = 'total_code_modified'
     
+    # User
+    USER = 'user'
+    USER_ID = 'user_id'
+    #COMMIT_REFERENCE = 'commit_reference'
+    #NAME = 'name'
 
     # File
     FILE_ID = 'file_id'
@@ -49,18 +54,22 @@ module Stats_db
     DELETED_CODE = 'code_deletion'
     MODIFIED_CODE = 'code_modified'
 
+    # Tag
+    TAG = 'tag'
+    TAG_ID = 'tag_id'
+    #COMMIT_REFERENCE = 'commit_reference'
+    TAG_NAME = 'tag_name'
+    TAG_DESC = 'tag_description'
+    TAG_DATE = 'tag_date'
+
     def Stats_db.createConnection()
         Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
     end
 
     def Stats_db.createConnectionThreshold(threshold, multi)
-        threshold = (($threshold.to_f*10).to_i).to_s
-        if threshold.length == 1 
-            threshold = "0#{threshold}"
-        end
-
+        
         $DATABASE = "#{$DATABASE}#{threshold}"
-
+        puts "#{$DATABASE}"
         if multi
             $DATABASE = "#{$DATABASE}_M"
         end
@@ -164,11 +173,25 @@ module Stats_db
 
         pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{MODIFIED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}, #{MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        pick.execute(commit_id, path, name, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return Utility.toInteger(pick.insert_id)
     end
 
+    def Stats_db.insertUser(con, commit_reference, name)
+        pick = con.prepare("INSERT INTO #{USER} (#{COMMIT_REFERENCE}, #{NAME}) VALUES (?, ?)")
+
+        pick.execute(commit_reference, name)
+
+        return Utility.toInteger(pick.insert_id)
+    end
+
+    def Stats_db.insertTag(con, commit_reference, name, tag_description, tag_date)
+        pick = con.prepare("INSERT INTO #{USER} (#{COMMIT_REFERENCE}, #{NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
+
+        pick.execute(commit_reference, name, tag_description, tag_date)
+
+        return Utility.toInteger(pick.insert_id)
+    end
 
     # Get the repositories stored in the database
     def Stats_db.getRepos(con)
@@ -201,5 +224,5 @@ module Stats_db
 
         #There should be only 1 id return anyways.
         return results
-    end 
+    end
 end

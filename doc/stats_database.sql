@@ -18,9 +18,7 @@ CREATE TABLE commits
     commit_id BIGINT UNSIGNED AUTO_INCREMENT,
     repo_reference INTEGER UNSIGNED,
     commit_date DATETIME,
-    body TEXT,/*
-    total_comments INT,
-    total_code INT,*/
+    body TEXT,
     total_comment_addition INT,
     total_comment_deletion INT,
     total_comment_modified INT,
@@ -32,14 +30,21 @@ CREATE TABLE commits
     /*Might be useful to have the body and the sha of the commit as well */
 );
 
+CREATE TABLE user
+(
+    user_id BIGINT UNSIGNED AUTO_INCREMENT,
+    commit_reference BIGINT UNSIGNED,
+    name VARCHAR(64),
+    PRIMARY KEY(user_id),
+    CONSTRAINT fkey_user_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE file
 (
     file_id BIGINT UNSIGNED AUTO_INCREMENT,
     commit_reference BIGINT UNSIGNED,
     path TEXT,
-    name TEXT,/*
-    num_comments INT,
-    num_code INT,*/
+    name TEXT,
     comment_addition INT,
     comment_deletion INT,
     comment_modified INT,
@@ -50,7 +55,19 @@ CREATE TABLE file
     CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE tags
+(
+    tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    commit_reference BIGINT UNSIGNED,
+    tag_name TEXT,
+    tag_description TEXT,
+    tag_date DATETIME, 
+    CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 DROP TABLE file;
+DROP TABLE user;
+DROP TABLE tags;
 DROP TABLE commits;
 DROP TABLE repositories;
 
