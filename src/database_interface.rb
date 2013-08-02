@@ -347,6 +347,17 @@ module Github_database
         return Utility.toInteger(pick.insert_id)
     end
 
+    # Insert the given tag into the database
+    # +con+:: the database connection used. 
+    # +tag+:: the +Tag+ containing all the relatvent information about the tag.
+    def Github_database.insertTagWithId(con, commit_id, tag_name, tag_desc, tag_date)
+
+        pick = con.prepare("INSERT INTO #{TAGS} (#{COMMIT_REFERENCE}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
+        pick.execute(commit_id, tag_name, tag_description, tag_date)
+     
+        return Utility.toInteger(pick.insert_id)
+    end
+
     # Get all the tags in the database
     # +con+:: the database connection used. 
     def Github_database.getTags(con)
@@ -417,94 +428,94 @@ class User
         def date()
             @date
         end
+end
+
+class Commit
+    def initialize(repo, commiter, author, body, sha)
+        @repo = repo
+        @commiter = commiter
+        @author = author
+        @body = body
+        @sha = sha
     end
 
-    class Commit
-        def initialize(repo, commiter, author, body, sha)
-            @repo = repo
-            @commiter = commiter
-            @author = author
-            @body = body
-            @sha = sha
-        end
-
-        def repo()
-            @repo
-        end
-
-        def commiter()
-            @commiter
-        end
-
-        def author()
-            @author
-        end
-
-        def body()
-            @body
-        end
-
-        def sha()
-            @sha
-        end
+    def repo()
+        @repo
     end
 
-    class Sourcefile
-        def initialize(commit, name, addition, deletion, patch, file)
-            @commit = commit
-            @name = name
-            @addition = addition
-            @deletion = deletion
-            @patch = patch
-            @file = file
-        end
-
-        def commit ()
-            @commit
-        end
-
-        def name ()
-            @name
-        end
-
-        def addition ()
-            @addition
-        end
-
-        def deletion ()
-            @deletion
-        end
-
-        def patch ()
-            @patch
-        end
-
-        def file ()
-            @file
-        end
+    def commiter()
+        @commiter
     end
 
-    class Tag
-        def initialize(commit, tag_name, tag_description, tag_date)
-            @commit = commit
-            @tag_name = tag_name
-            @tag_description = tag_description
-            @tag_date = tag_date
-        end
-
-        def commit()
-            @commit        
-        end
-
-        def tag_name()
-            @tag_name
-        end
-
-        def tag_description()
-            @tag_description
-        end
-
-        def tag_date()
-            @tag_date        
-        end
+    def author()
+        @author
     end
+
+    def body()
+        @body
+    end
+
+    def sha()
+        @sha
+    end
+end
+
+class Sourcefile
+    def initialize(commit, name, addition, deletion, patch, file)
+        @commit = commit
+        @name = name
+        @addition = addition
+        @deletion = deletion
+        @patch = patch
+        @file = file
+    end
+
+    def commit ()
+        @commit
+    end
+
+    def name ()
+        @name
+    end
+
+    def addition ()
+        @addition
+    end
+
+    def deletion ()
+        @deletion
+    end
+
+    def patch ()
+        @patch
+    end
+
+    def file ()
+        @file
+    end
+end
+
+class Tag
+    def initialize(commit, tag_name, tag_description, tag_date)
+        @commit = commit
+        @tag_name = tag_name
+        @tag_description = tag_description
+        @tag_date = tag_date
+    end
+
+    def commit()
+        @commit        
+    end
+
+    def tag_name()
+        @tag_name
+    end
+
+    def tag_description()
+        @tag_description
+    end
+
+    def tag_date()
+        @tag_date        
+    end
+end

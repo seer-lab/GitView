@@ -110,3 +110,18 @@ SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletio
 SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY f.name, c.commit_date
 
 SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.path LIKE '%' ORDER BY f.name, c.commit_date
+
+SELECT f.file_id, f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'junit' AND r.repo_owner LIKE 'junit-team' AND f.name LIKE '%\.java' ORDER BY com.date;
+
+SELECT f.file_id, f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'hadoop-common' AND r.repo_owner LIKE 'apache' AND f.name LIKE '%\.java' AND f.file LIKE '404%' ORDER BY com.date;
+
+SELECT f.file, f.name, c.commit_id, com.date, c.body, f.patch, com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'storm' AND r.repo_owner LIKE 'nathanmarz' AND f.name LIKE '%\.java' ORDER BY com.date;
+
+
+/*
+ * Only storing the commit date*
+ * Left join for tags (since the project may not have tags)
+ */
+SELECT t.tag_name, com.name, aut.name, f.file, f.name, c.commit_id, com.date, c.body, f.patch FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN tags AS t ON c.commit_id = t.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.name LIKE '%\.java' ORDER BY com.date;
+
+SELECT t.tag_name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN tags AS t ON c.commit_id = t.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'

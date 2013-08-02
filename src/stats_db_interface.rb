@@ -69,7 +69,7 @@ module Stats_db
     def Stats_db.createConnectionThreshold(threshold, multi)
         
         $DATABASE = "#{$DATABASE}#{threshold}"
-        puts "#{$DATABASE}"
+        
         if multi
             $DATABASE = "#{$DATABASE}_M"
         end

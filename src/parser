@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # The repo to be scraped and then parsed.
-REPO_OWNER=ACRA
-REPO_NAME=acra
+REPO_OWNER=jenkinsci
+REPO_NAME=jenkins
 HIGH_THRESHOLD=0.5
 LOW_THRESHOLD=0.8
 SIZE_THRESHOLD=20
