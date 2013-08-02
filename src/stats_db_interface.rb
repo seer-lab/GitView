@@ -22,10 +22,9 @@ module Stats_db
     COMMIT_ID = 'commit_id'
     REPO_REFERENCE ='repo_reference'
     COMMIT_DATE = 'commit_date'
+    COMMITTER_ID = 'committer_id'
+    AUTHOR_ID = 'author_id'
     BODY = 'body'
-    #Depreciated
-    #TOTAL_COMMENTS = 'total_comments'
-    #TOTAL_CODE = 'total_code'
     TOTAL_ADDED_COMMENTS = 'total_comment_addition'
     TOTAL_DELETED_COMMENTS = 'total_comment_deletion'
     TOTAL_MODIFIED_COMMENT = 'total_comment_modified'
@@ -44,9 +43,6 @@ module Stats_db
     COMMIT_REFERENCE = 'commit_reference'
     PATH = 'path'
     NAME = 'name'
-    #Depreciated
-    #NUM_COMMENTS = 'num_comments'
-    #NUM_CODE = 'num_code'
     ADDED_COMMENTS = 'comment_addition'
     DELETED_COMMENTS = 'comment_deletion'
     MODIFIED_COMMENTS = 'comment_modified'
@@ -55,9 +51,10 @@ module Stats_db
     MODIFIED_CODE = 'code_modified'
 
     # Tag
-    TAG = 'tag'
+    TAG = 'tags'
     TAG_ID = 'tag_id'
     #COMMIT_REFERENCE = 'commit_reference'
+    TAG_SHA = 'tag_sha'
     TAG_NAME = 'tag_name'
     TAG_DESC = 'tag_description'
     TAG_DATE = 'tag_date'
@@ -130,10 +127,10 @@ module Stats_db
     # +body+:: the commit message
     # +comments+:: the number of lines of comments in the commit
     # +code+:: the number of lines of code in the commit
-    def Stats_db.insertCommit(con, repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
+    def Stats_db.insertCommit(con, repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
-        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        pick.execute(repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
+        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(repo_id, date, body, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
         return Utility.toInteger(pick.insert_id)
     end
@@ -177,19 +174,18 @@ module Stats_db
         return Utility.toInteger(pick.insert_id)
     end
 
-    def Stats_db.insertUser(con, commit_reference, name)
-        pick = con.prepare("INSERT INTO #{USER} (#{COMMIT_REFERENCE}, #{NAME}) VALUES (?, ?)")
+    def Stats_db.insertUser(con, name)
+        pick = con.prepare("INSERT INTO #{USER} (#{NAME}) VALUES (?)")
 
-        pick.execute(commit_reference, name)
+        pick.execute(name)
 
         return Utility.toInteger(pick.insert_id)
     end
 
-    def Stats_db.insertTag(con, commit_reference, name, tag_description, tag_date)
-        pick = con.prepare("INSERT INTO #{USER} (#{COMMIT_REFERENCE}, #{NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
-
-        pick.execute(commit_reference, name, tag_description, tag_date)
-
+    def Stats_db.insertTag(con, repo_id, sha, name, description, date)
+        pick = con.prepare("INSERT INTO #{TAG} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?, ?)")
+        pick.execute(repo_id, sha, name, description, date)
+     
         return Utility.toInteger(pick.insert_id)
     end
 

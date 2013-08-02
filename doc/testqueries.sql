@@ -124,4 +124,4 @@ SELECT f.file, f.name, c.commit_id, com.date, c.body, f.patch, com.name FROM rep
  */
 SELECT t.tag_name, com.name, aut.name, f.file, f.name, c.commit_id, com.date, c.body, f.patch FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN tags AS t ON c.commit_id = t.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.name LIKE '%\.java' ORDER BY com.date;
 
-SELECT t.tag_name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN tags AS t ON c.commit_id = t.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'
+SELECT t.* FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'

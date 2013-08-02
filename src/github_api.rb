@@ -241,7 +241,7 @@ def getAllCommits(con, github, username, repo_name)
             #sha = tag["commit"]["sha"]
             #test the actual command
             #tagMore = github.git_data.tags.get username, repo_name, sha
-            Github_database.insertTag(con, Tag.new(sha, name, message, date))
+            Github_database.insertTag(con, Tag.new(repo_id, sha, name, message, date))
         }
     rescue Github::Error::GithubError => e
         puts e.message

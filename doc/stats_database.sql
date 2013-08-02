@@ -18,7 +18,9 @@ CREATE TABLE commits
     commit_id BIGINT UNSIGNED AUTO_INCREMENT,
     repo_reference INTEGER UNSIGNED,
     commit_date DATETIME,
-    body TEXT,
+    committer_id BIGINT UNSIGNED,
+    author_id BIGINT UNSIGNED,
+    body TEXT, 
     total_comment_addition INT,
     total_comment_deletion INT,
     total_comment_modified INT,
@@ -26,17 +28,16 @@ CREATE TABLE commits
     total_code_deletion INT,
     total_code_modified INT,
     PRIMARY KEY(commit_id),
-    CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
-    /*Might be useful to have the body and the sha of the commit as well */
+    CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_commits_2 FOREIGN KEY (committer_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_commits_3 FOREIGN KEY (author_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE user
 (
     user_id BIGINT UNSIGNED AUTO_INCREMENT,
-    commit_reference BIGINT UNSIGNED,
     name VARCHAR(64),
-    PRIMARY KEY(user_id),
-    CONSTRAINT fkey_user_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
+    PRIMARY KEY(user_id)
 );
 
 CREATE TABLE file
@@ -58,11 +59,12 @@ CREATE TABLE file
 CREATE TABLE tags
 (
     tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    commit_reference BIGINT UNSIGNED,
+    repo_reference INTEGER UNSIGNED,
+    tag_sha VARCHAR(64),
     tag_name TEXT,
     tag_description TEXT,
     tag_date DATETIME, 
-    CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fkey_tags_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 DROP TABLE file;

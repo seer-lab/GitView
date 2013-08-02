@@ -695,11 +695,8 @@ def parsePackages(path)
     return package[0]
 end
 
-
-
-
 def getFile(con, extension, repo_name, repo_owner)
-    pick = con.prepare("SELECT f.#{Github_database::FILE}, f.#{Github_database::NAME}, c.#{Github_database::COMMIT_ID}, com.#{Github_database::DATE}, c.#{Github_database::BODY}, f.#{Github_database::PATCH} FROM #{Github_database::FILE} AS f INNER JOIN #{Github_database::COMMITS} AS c ON f.#{Github_database::COMMIT_REFERENCE} = c.#{Github_database::COMMIT_ID} INNER JOIN #{Github_database::REPO} AS r ON c.#{Github_database::REPO_REFERENCE} = r.#{Github_database::REPO_ID} INNER JOIN #{Github_database::USERS} AS com ON c.#{Github_database::COMMITER_REFERENCE} = com.#{Github_database::USER_ID} WHERE r.#{Github_database::REPO_NAME} LIKE ? AND r.#{Github_database::REPO_OWNER} LIKE ? AND f.#{Github_database::NAME} LIKE ? ORDER BY com.#{Github_database::DATE}")
+    pick = con.prepare("SELECT f.#{Github_database::FILE}, f.#{Github_database::NAME}, c.#{Github_database::COMMIT_ID}, com.#{Github_database::DATE}, c.#{Github_database::BODY}, f.#{Github_database::PATCH}, com.#{Github_database::NAME}, aut.#{Github_database::NAME} FROM #{Github_database::FILE} AS f INNER JOIN #{Github_database::COMMITS} AS c ON f.#{Github_database::COMMIT_REFERENCE} = c.#{Github_database::COMMIT_ID} INNER JOIN #{Github_database::REPO} AS r ON c.#{Github_database::REPO_REFERENCE} = r.#{Github_database::REPO_ID} INNER JOIN #{Github_database::USERS} AS com ON c.#{Github_database::COMMITER_REFERENCE} = com.#{Github_database::USER_ID} INNER JOIN #{Github_database::USERS} AS aut ON c.#{Github_database::AUTHOR_REFERENCE} = aut.#{Github_database::USER_ID} WHERE r.#{Github_database::REPO_NAME} LIKE ? AND r.#{Github_database::REPO_OWNER} LIKE ? AND f.#{Github_database::NAME} LIKE ? ORDER BY com.#{Github_database::DATE}")
     pick.execute(repo_name, repo_owner, "#{Github_database::EXTENSION_EXPRESSION}#{extension}")
 
     rows = pick.num_rows
@@ -738,6 +735,19 @@ if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
 end
 
+tags = Github_database.getTags(con, repo_name, repo_owner)
+
+tags.each { |sha, tag_name, tag_desc, tag_date|
+    if !$test
+        Stats_db.insertTag(con, repo_id, sha, tag_name, tag_desc, tag_date)
+    else
+        puts "sha = #{sha}"
+        puts "tag_name = #{tag_name}"
+        puts "tag_desc = #{tag_desc}"
+        puts "tag_date = #{tag_date}"
+    end
+}
+
 prev_commit = files[0][2]
 current_commit = 0
 commit_comments = 0
@@ -756,25 +766,23 @@ churn["CodeModified"] = 0
 fileHashTable = Hash.new
 
 #Map file name to the array of stats about that file.
-files.each { |file|
+files.each { |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
     #file = files[0][0]
     
-    current_commit = file[2]
+    current_commit = current_commit_id
 
     if $test
-        puts "file: #{file[1]}"
+        puts "file: #{file_name}"
         #a = gets
     end
 
-    size = file[0].size
-
-    if file[0][size-1] != "\n"
-        file[0] += "\n"
+    if file[-1] != "\n"
+        file += "\n"
     end
 
-    lines = file[0].scan(LINE_EXPR)
+    lines = file.scan(LINE_EXPR)
 
-    lines = mergePatch(lines, file[5], file[1])
+    lines = mergePatch(lines, patch, file_name)
     #pass the lines of code and the related patch
 
     comments = findMultiLineComments(lines)
@@ -793,11 +801,15 @@ files.each { |file|
 
     sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0) + comments[3].commentModified(0)  + comments[3].codeModified(0)
     #Get the path and the name of the file.
-    package, name = parsePackages(file[1])
+    package, name = parsePackages(file_name)
     if !$test && sum > 0
         
         if commit_id == nil
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, file[3], file[4], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
+
+            committer_id = Stats_db.insertUser(stats_con, com_name)
+            author_id = Stats_db.insertUser(stats_con, com_name)
+
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)            
         end
         Stats_db.insertFile(stats_con, commit_id, package, name, comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
     end

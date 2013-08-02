@@ -39,6 +39,8 @@ NEWLINE_FIXER = /(\r?\n)|(\r)/
 
 PACKAGE_PARSER = /(.*\/)(.*?\.java)/
 
+TAG_REGEX = /refs\/tags\/(.*)/
+
 PYTHON = 'py'
 
 RUBY = 'rb'

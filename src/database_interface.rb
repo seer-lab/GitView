@@ -58,8 +58,10 @@ module Github_database
     PATCH = 'patch'
 
     # Tags
+    TAG = 'tags'
     TAG_ID = 'tag_id'
-    #COMMIT_REFERENCE = 'commit_reference'
+    #REPO_REFERENCE = 'repo_reference'
+    TAG_SHA = 'tag_sha'
     TAG_NAME = 'tag_name'
     TAG_DESC = 'tag_description'
     TAG_DATE = 'tag_date'
@@ -339,29 +341,17 @@ module Github_database
     # +con+:: the database connection used. 
     # +tag+:: the +Tag+ containing all the relatvent information about the tag.
     def Github_database.insertTag(con, tag)
-        commit_id = getCommitId(con, tag.commit)
 
-        pick = con.prepare("INSERT INTO #{TAGS} (#{COMMIT_REFERENCE}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
-        pick.execute(commit_id, tag.tag_name, tag.tag_description, tag.tag_date)
+        pick = con.prepare("INSERT INTO #{TAGS} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?, ?)")
+        pick.execute(tag.repo_id, tag.sha, tag.tag_name, tag.tag_description, tag.tag_date)
      
         return Utility.toInteger(pick.insert_id)
     end
 
-    # Insert the given tag into the database
-    # +con+:: the database connection used. 
-    # +tag+:: the +Tag+ containing all the relatvent information about the tag.
-    def Github_database.insertTagWithId(con, commit_id, tag_name, tag_desc, tag_date)
-
-        pick = con.prepare("INSERT INTO #{TAGS} (#{COMMIT_REFERENCE}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?)")
-        pick.execute(commit_id, tag_name, tag_description, tag_date)
-     
-        return Utility.toInteger(pick.insert_id)
-    end
 
     # Get all the tags in the database
     # +con+:: the database connection used. 
     def Github_database.getTags(con)
-
 
         pick = con.prepare("SELECT * FROM #{TAGS}")
         
@@ -402,6 +392,20 @@ module Github_database
     def Github_database.getFileTypes(con, repo_name, repo_owner)
         pick = con.prepare("SELECT #{TYPE} FROM #{FILE_TYPE} AS ft INNER JOIN #{REPO_FILE_TYPE} AS rf ON ft.#{TYPE_ID} = rf.#{FILE_TYPE_ID} INNER JOIN #{REPO} AS r ON rf.#{REPO_ID} = r.#{REPO_ID} WHERE r.REPO_NAME LIKE ? AND r.#{REPO_OWNER} LIKE ?")
 
+        pick.execute(repo_name, repo_owner)
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        return results
+    end
+
+    def Github_database.getTags(con, repo_name, repo_owner)
+        pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{REPO} AS r INNER JOIN #{TAG} AS t ON r.#{REPO_ID} = t.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
         pick.execute(repo_name, repo_owner)
 
         rows = pick.num_rows
@@ -496,15 +500,20 @@ class Sourcefile
 end
 
 class Tag
-    def initialize(commit, tag_name, tag_description, tag_date)
-        @commit = commit
+    def initialize(repo_id, sha, tag_name, tag_description, tag_date)
+        @repo_id = repo_id
+        @sha = sha
         @tag_name = tag_name
         @tag_description = tag_description
         @tag_date = tag_date
     end
 
-    def commit()
-        @commit        
+    def repo_id()
+        @repo_id        
+    end
+
+    def sha()
+        @sha        
     end
 
     def tag_name()

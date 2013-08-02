@@ -108,13 +108,12 @@ CREATE TABLE file
 CREATE TABLE tags
 (
     tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    repo_reference INTEGER UNSIGHED,
-    commit_reference BIGINT UNSIGNED,
+    repo_reference INTEGER UNSIGNED,
+    tag_sha VARCHAR(64),
     tag_name TEXT,
     tag_description TEXT,
     tag_date DATETIME, 
-    CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fkey_tags_2 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fkey_tags_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 /* Will store 'py', 'rb', 'java'... */
