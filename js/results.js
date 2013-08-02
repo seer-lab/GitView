@@ -124,7 +124,7 @@ function plotChurn(data, repo, group, pack) {
         for (var k = 0; k < keys.length; k++) {
             if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
             {
-                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), /*(-1) * */ parseInt(data[keys[k]][j])];
+                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[k]][j])];
             }
             else
             {
@@ -193,7 +193,7 @@ function areaPlotChurn(id, stats, repo, group) {
         },
 
         rangeSelector:{
-            enabled:true,
+            enabled: true,
             buttons: [{
                 type: 'month',
                 count: 1,
@@ -246,16 +246,44 @@ function areaPlotChurn(id, stats, repo, group) {
             lineWidth: 2
         }],
         tooltip: {
-            pointFormat: 'Number of Lines of {series.name}: <b>{point.y:,.0f}</b><br/>',
-            shared: true
-        },
-        plotOptions: {
-            column: {
-                stacking: 'normal'/*,
-                dataLabels: {
-                        enabled: true
+            formatter: function() {
+
+                //console.log(this);
+                //console.log(this.point.text);
+                var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
+
+                if (this.point == undefined)
+                {
+                    $.each(this.points, function(i, point) {
+                        if (point.series.name == 'Releases')
+                        {
+                            s += '<br>Release </br>';
+                        }
+                        else {
+                            if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column' && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column')
+                            {
+                                s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + point.y + '</b></br>';
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    s += '<br>' + this.series.name + ': <b> ' + this.point.text + '</b></br>';
+                }
+                return s;
+                /*if(this.series.name != 'Total Comments Column' && this.series.name != 'Total Comments Modified Column' && this.series.name != 'Total Code Column' && this.series.name != 'Total Code Modified Column')
+                {
+                    
+                }
+                else
+                {
+                    return false;
                 }*/
             },
+            shared: true 
+        },
+        plotOptions: {
             spline: {
                 
                 marker: {
@@ -271,7 +299,7 @@ function areaPlotChurn(id, stats, repo, group) {
             }
         },
         series: [{
-            type: 'column',
+            type: 'spline',
             name: 'Comments Added',
             data: stats["commentsAdded"],
             color: 'rgba(205,92,92, 0.9)',
@@ -282,7 +310,7 @@ function areaPlotChurn(id, stats, repo, group) {
             }
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
-            type: 'column',
+            type: 'spline',
             name: 'Comments Deleted',
             data: stats["commentsDeleted"],
             color: 'rgba(220,20,60, 0.9)',
@@ -292,7 +320,7 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
-            type: 'column',
+            type: 'spline',
             name: 'Comments Modified',
             data: stats["commentsModified"],
             color: 'rgba(139,0,0, 0.9)',
@@ -302,7 +330,8 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
-            type: 'column',
+            id: 'codeadded',
+            type: 'spline',
             name: 'Code Added',
             data: stats["codeAdded"],
             color: 'rgba(135,206,235, 0.9)',
@@ -312,7 +341,7 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
-            type: 'column',
+            type: 'spline',
             name: 'Code Deleted',
             data: stats["codeDeleted"],
             color: 'rgba(70,130,180, 0.9)',
@@ -322,7 +351,7 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
-            type: 'column',
+            type: 'spline',
             name: 'Code Modified',
             data: stats["codeModified"],
             color: 'rgba(0,0,128, 0.9)',
@@ -332,6 +361,7 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
+            id: 'Total Comments',
             type: 'spline',
             name: 'Total Comments',
             data: stats["totalComments"],
@@ -341,6 +371,17 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
+            linkedTo: 'Total Comments',
+            type: 'column',
+            name: 'Total Comments Column',
+            data: stats["totalComments"],
+            color: 'rgba(205,92,92, 0.3)',
+            yAxis: 1,
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            id: 'Total Comments Modified',
             type: 'spline',
             name: 'Total Comments Modified',
             data: stats["totalCommentsModified"],
@@ -350,6 +391,17 @@ function areaPlotChurn(id, stats, repo, group) {
                 approximation: "average"
             }
         }, {
+            type: 'column',
+            name: 'Total Comments Modified Column',
+            data: stats["totalCommentsModified"],
+            color: 'rgba(139,0,0, 0.3)',
+            yAxis: 1,
+            linkedTo: 'Total Comments Modified',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            id: 'Total Code',
             type: 'spline',
             name: 'Total Code',
             data: stats["totalCode"],
@@ -358,7 +410,18 @@ function areaPlotChurn(id, stats, repo, group) {
             dataGrouping: {
                 approximation: "average"
             }
-        },  {
+        }, {
+            type: 'column',
+            name: 'Total Code Column',
+            data: stats["totalCode"],
+            color: 'rgba(70,130,180, 0.3)',
+            yAxis: 1,
+            linkedTo: 'Total Code',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            id: 'Total Code Modified',
             type: 'spline',
             name: 'Total Code Modified',
             data: stats["totalCodeModified"],
@@ -367,6 +430,31 @@ function areaPlotChurn(id, stats, repo, group) {
             dataGrouping: {
                 approximation: "average"
             }
+        },  {
+            type: 'column',
+            name: 'Total Code Modified Column',
+            data: stats["totalCodeModified"],
+            color: 'rgba(0,0,128, 0.3)',
+            yAxis: 1,
+            linkedTo: 'Total Code Modified',
+            dataGrouping: {
+                approximation: "average"
+            }
+        }, {
+            type: 'flags',
+            data: [{
+                    x: Date.UTC(2012, 4, 4),
+                    title: '1.1-R2',
+                    text: 'Version 1.1-R2'
+                }, {
+                    x: 1367380800000,
+                    title: '1.0.1-R1',
+                    text: 'Version 1.0.1-R1'
+                }],
+            //onSeries: 'codeadded',
+            shape: 'circlepin',
+            title: "Releases",
+            name: "Releases"
         }]
     }, function(chart){
 

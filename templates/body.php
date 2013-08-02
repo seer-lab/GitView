@@ -2,7 +2,7 @@
 require_once 'inc/auth.php';
 require_once 'inc/db_interface.php';
 
-$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
+$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "05");
 
 global $selectedOwner, $selectedRepo;
 ?>
