@@ -397,6 +397,48 @@ function getUniquePackage($mysqli, $user, $repo)
     return getParentPackages($packages);
 }
 
+function getUser()
+{
+    
+}
+
+
+function getTags($mysqli, $user, $repo)
+{
+    $results = array(   'date'          => array(),
+                        'name'          => array(),
+                        'description'   => array(),
+                        'sha'           => array());
+
+    if ($stmt = $mysqli->prepare("SELECT t.tag_name, t.tag_description, t.tag_date, t.tag_sha FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY t.tag_date"))
+    {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $desc, $date, $sha);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results['date'][$i] = $date;
+            $results['desc'][$i] = $desc;
+            $results['name'][$i] = $name;
+            $results['sha'][$i] = $sha;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
 function getClasses($mysqli, $user, $repo, $package)
 {
     $results = array();
