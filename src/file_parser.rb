@@ -313,10 +313,6 @@ def findMultiLineComments (lines)
                     end
 
                 else
-
-                    #
-                    
-
                         #puts "codes if nothing else"
                         #This line is not a comment
                         #lineCounter.linesOfCode(1)
@@ -447,12 +443,12 @@ def findMultiLineComments (lines)
                 codeChurn.commentModified(commentMod.length)
 
                 #comments added = comments added - # of positive lines modified
-                codeChurn.commentAdded(commentModLength)
+                codeChurn.commentAdded((-1)*commentModLength)
                 #comments deleted = comments deleted - # of lines modified(since the mapping is 1 Negative to many Positve lines)
-                codeChurn.commentDeleted(commentMod.length)
+                codeChurn.commentDeleted((-1)*commentMod.length)
 
-                codeChurn.codeAdded(codeModLength)
-                codeChurn.codeDeleted(codeMod.length)
+                codeChurn.codeAdded((-1)*codeModLength)
+                codeChurn.codeDeleted((-1)*codeMod.length)
 
                 #puts "mods = #{mods}"
                 #patchNegStreak, patchPosStreak = 0, 0
