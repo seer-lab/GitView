@@ -92,6 +92,22 @@ module Stats_db
         return Utility.toInteger(result)
     end
 
+
+    def Stats_db.getRepos(con)
+        pick = con.prepare("SELECT * FROM #{REPO}")
+        pick.execute
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        #results.each { |x| puts x }
+        return results
+    end
+
     # Insert the given repository to the database
     # +con+:: the database connection used. 
     # +repo+:: the name of the repository
@@ -169,7 +185,7 @@ module Stats_db
     def Stats_db.insertFile(con, commit_id, path, name, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{MODIFIED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}, #{MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-
+        pick.execute(commit_id, path, name, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return Utility.toInteger(pick.insert_id)
     end
@@ -180,6 +196,22 @@ module Stats_db
         pick.execute(name)
 
         return Utility.toInteger(pick.insert_id)
+    end
+
+    def Stats_db.getUserId(con, name)
+        pick = con.prepare("SELECT #{USER_ID} FROM user WHERE #{NAME} LIKE ?")
+        pick.execute(name)
+
+        result = pick.fetch
+
+        #puts "result #{result}"
+        if(result == nil)
+            result = insertUser(con, name)
+        end
+        #puts "#{user.name} id = #{result}"
+
+        return Utility.toInteger(result)
+
     end
 
     def Stats_db.insertTag(con, repo_id, sha, name, description, date)

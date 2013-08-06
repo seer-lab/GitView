@@ -739,7 +739,7 @@ tags = Github_database.getTags(con, repo_name, repo_owner)
 
 tags.each { |sha, tag_name, tag_desc, tag_date|
     if !$test
-        Stats_db.insertTag(con, repo_id, sha, tag_name, tag_desc, tag_date)
+        Stats_db.insertTag(stats_con, repo_id, sha, tag_name, tag_desc, tag_date)
     else
         puts "sha = #{sha}"
         puts "tag_name = #{tag_name}"
@@ -802,12 +802,13 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
     sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0) + comments[3].commentModified(0)  + comments[3].codeModified(0)
     #Get the path and the name of the file.
     package, name = parsePackages(file_name)
+    
     if !$test && sum > 0
         
         if commit_id == nil
 
-            committer_id = Stats_db.insertUser(stats_con, com_name)
-            author_id = Stats_db.insertUser(stats_con, com_name)
+            committer_id = Stats_db.getUserId(stats_con, com_name)
+            author_id = Stats_db.getUserId(stats_con, com_name)
 
             commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)            
         end
