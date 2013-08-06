@@ -21,6 +21,7 @@ global $selectedOwner, $selectedRepo;
                         $thresholds[1] = "05_M";
                         $thresholds[2] = "10";
                         $thresholds[3] = "10_M";
+                        $thresholds[4] = "20_08_05_M";
 
                         $selected = true;
                         $option = '';
@@ -51,6 +52,10 @@ global $selectedOwner, $selectedRepo;
                             elseif ($threshold == "10_M")
                             {
                               $value = "1.0 M";
+                            }
+                            elseif ($threshold == "20_08_05_M")
+                            {
+                              $value = "S = 20, H = 0.8, L = 0.5 M";
                             }
                             echo $option . $value . '</option>';
                         }

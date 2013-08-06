@@ -407,7 +407,7 @@ function getTags($mysqli, $user, $repo)
 {
     $results = array(   'date'          => array(),
                         'name'          => array(),
-                        'description'   => array(),
+                        'desc'          => array(),
                         'sha'           => array());
     if ($stmt = $mysqli->prepare("SELECT t.tag_name, t.tag_description, t.tag_date, t.tag_sha FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY t.tag_date"))
     {

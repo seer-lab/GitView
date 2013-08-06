@@ -28,6 +28,10 @@ $(document).ready(function () {
         {
             exten = "10_M";
         }
+        else if (thre == "S = 20, H = 0.8, L = 0.5 M")
+        {
+            exten = "20_08_05_M";
+        }
         getChurn(repo, group, pack, exten);
     }
 });
@@ -79,6 +83,10 @@ $('#update').click(function(event) {
         else if (thre == "1.0 M")
         {
             exten = "10_M";
+        }
+        else if (thre == "S = 20, H = 0.8, L = 0.5 M")
+        {
+            exten = "20_08_05_M";
         }
         
         /* Pass these values to the function that gets the data using
@@ -135,8 +143,33 @@ function plotChurn(data, repo, group, pack) {
         }
     }
 
-    console.log(statsArray)
-    areaPlotChurn("container", statsArray, repo, group);
+    var tagArray = [];
+    tagKeys = Object.keys(tagData);
+    dataLength = tagData[tagKeys[0]].length;
+
+    console.log(tagData);
+    /*for (var i = 0; i < tagKeys.length; i++) {
+        tagArray[i] = {};
+    }*/
+    
+    for (var i = 0; i < dataLength; i++) {
+
+        if (tagData["desc"][i] == "")
+        {
+            tagData["desc"][i] = tagData["name"][i];
+        }
+        
+        tagArray.push({
+            x: moment(tagData[tagKeys[0]][i], "YYYY-MM-DD HH:mm:ss").valueOf(),
+            title: tagData["name"][i],
+            text: tagData["desc"][i]
+        }); 
+    }
+    
+    console.log(tagArray);
+
+    console.log(statsArray);
+    areaPlotChurn("container", statsArray, repo, group, tagArray);
 }
 
 var PageHeight
@@ -149,7 +182,7 @@ $(document).ready(function(){
     console.log(PageHeight);
 });
 
-function areaPlotChurn(id, stats, repo, group) {
+function areaPlotChurn(id, stats, repo, group, tagInfo) {
 
     //
     var chart = $('#container').highcharts('StockChart', {
@@ -441,22 +474,23 @@ function areaPlotChurn(id, stats, repo, group) {
             dataGrouping: {
                 approximation: "average"
             }
-        }/*, {
+        }, {
             type: 'flags',
-            data: [{
+            data: tagInfo,
+            /*data: [{
                     x: Date.UTC(2012, 4, 4),
-                    title: '1.1-R2',
+                    title: "1.1-R2",
                     text: 'Version 1.1-R2'
                 }, {
                     x: 1367380800000,
                     title: '1.0.1-R1',
                     text: 'Version 1.0.1-R1'
-                }],
+                }],*/
             //onSeries: 'codeadded',
             shape: 'circlepin',
             title: "Releases",
             name: "Releases"
-        }*/]
+        }]
     }, function(chart){
 
             // apply the date pickers
