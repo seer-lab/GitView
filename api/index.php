@@ -11,6 +11,7 @@ $app = new \Slim\Slim();
 // GET route
 $app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:thre/:user/:repo/:group/:path', 'getCommitsChurnAPI');
+//$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
 
 $app->run();
@@ -62,17 +63,17 @@ function getCommitsChurnAPI($thre, $user, $repo, $group, $path)
     	//$repo = explode('/', $repo);
 		if($group == $MONTH)
 		{
-			echo json_encode(getChurnMonths($mysqli_stats, $user, $repo, $path));
+			echo json_encode([getChurnMonths($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
 		}
 		elseif($group == $DAY)
 		{
-			echo json_encode(getChurnDays($mysqli_stats, $user, $repo, $path));
+			echo json_encode([getChurnDays($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
 		}
 		else
 		{
 
 			/* On a per commit basis */
-			echo json_encode(getChurn($mysqli_stats, $user, $repo, $path));
+			echo json_encode([getChurn($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
 		}
 	}
 }
@@ -90,3 +91,18 @@ function getRepoPackages($user, $repo)
 
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
 }
+
+/*function getCommitsChurnAPI($thre, $user, $repo)
+{
+	global $db_user, $db_pass, $db_stats;
+
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats );//. $thre);
+
+	// check connection
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+
+	echo json_encode();
+}*/

@@ -379,12 +379,12 @@ function getUniquePackage($mysqli, $user, $repo)
         if ($i > 0 && $packages[$i-1] != $result[0])
         {
             $packages[$i] = $result[0];
-            echo "<p>actual " . $result[0] . "</p>";
+            //echo "<p>actual " . $result[0] . "</p>";
         }
         else if ($i == 0)
         {
             $packages[$i] = $result[0];
-            echo "<p>actual " . $result[0] . "</p>";
+            //echo "<p>actual " . $result[0] . "</p>";
         }
         else
         {
@@ -409,7 +409,6 @@ function getTags($mysqli, $user, $repo)
                         'name'          => array(),
                         'description'   => array(),
                         'sha'           => array());
-
     if ($stmt = $mysqli->prepare("SELECT t.tag_name, t.tag_description, t.tag_date, t.tag_sha FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY t.tag_date"))
     {
         /* bind parameters for markers */
@@ -421,9 +420,11 @@ function getTags($mysqli, $user, $repo)
         /* bind result variables */
         $stmt->bind_result($name, $desc, $date, $sha);
 
+
         $i = 0;
         while ($stmt->fetch())
         {
+            //echo "<p>date " . $date . "</p>";
             $results['date'][$i] = $date;
             $results['desc'][$i] = $desc;
             $results['name'][$i] = $name;

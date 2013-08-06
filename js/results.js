@@ -107,9 +107,11 @@ function plotChurn(data, repo, group, pack) {
     //console.log(encodeURIComponent(pack));
     console.log(data);
 
-    keys = Object.keys(data);
+    churnData = data[0]
+    tagData = data[1]
+    keys = Object.keys(churnData);
     console.log(keys.length)
-    dataLength = data[keys[0]].length;
+    dataLength = churnData[keys[0]].length;
 
     // Start from index one since the first is the date.
     var statsArray = {};
@@ -124,20 +126,19 @@ function plotChurn(data, repo, group, pack) {
         for (var k = 0; k < keys.length; k++) {
             if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
             {
-                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(data[keys[k]][j])];
+                statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(churnData[keys[k]][j])];
             }
             else
             {
-                statsArray[keys[k]][j] = [moment(data[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(data[keys[k]][j])];
+                statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(churnData[keys[k]][j])];
             }   
         }
     }
 
     console.log(statsArray)
     areaPlotChurn("container", statsArray, repo, group);
-    //var comments = new Array(data["comments"].length);
-    //var code = new Array(data["code"].length);
 }
+
 var PageHeight
 $(document).ready(function(){
     if ($(window).height()*0.8 > 600)
@@ -440,7 +441,7 @@ function areaPlotChurn(id, stats, repo, group) {
             dataGrouping: {
                 approximation: "average"
             }
-        }, {
+        }/*, {
             type: 'flags',
             data: [{
                     x: Date.UTC(2012, 4, 4),
@@ -455,7 +456,7 @@ function areaPlotChurn(id, stats, repo, group) {
             shape: 'circlepin',
             title: "Releases",
             name: "Releases"
-        }]
+        }*/]
     }, function(chart){
 
             // apply the date pickers

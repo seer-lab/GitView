@@ -13,6 +13,13 @@ CREATE TABLE repositories
     PRIMARY KEY(repo_id)
 );
 
+CREATE TABLE user
+(
+    user_id BIGINT UNSIGNED AUTO_INCREMENT,
+    name VARCHAR(64),
+    PRIMARY KEY(user_id)
+);
+
 CREATE TABLE commits
 (
     commit_id BIGINT UNSIGNED AUTO_INCREMENT,
@@ -31,13 +38,6 @@ CREATE TABLE commits
     CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fkey_commits_2 FOREIGN KEY (committer_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fkey_commits_3 FOREIGN KEY (author_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE user
-(
-    user_id BIGINT UNSIGNED AUTO_INCREMENT,
-    name VARCHAR(64),
-    PRIMARY KEY(user_id)
 );
 
 CREATE TABLE file
@@ -68,9 +68,9 @@ CREATE TABLE tags
 );
 
 DROP TABLE file;
-DROP TABLE user;
 DROP TABLE tags;
 DROP TABLE commits;
+DROP TABLE user;
 DROP TABLE repositories;
 
 
