@@ -5,6 +5,7 @@ $(document).ready(function () {
     /* Display the election results when page is loaded */
     if (window.location.pathname.match(/index\.php/))
     {
+        $('#commit_info_panel').hide();
         //allCommits();
         var repo = $('#repo').val();
         var group = $('#group').val();
@@ -105,28 +106,34 @@ function getChurn(repo, group, pack, thre) {
         url: rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack),
         dataType: "json", // data type of response
         success: function(data) {
+            //console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
             plotChurn(data, repo, group, pack);
         }
     });
 }
 
 function plotChurn(data, repo, group, pack) {
-    console.log(pack);
+    //console.log(pack);
     //console.log(encodeURIComponent(pack));
     console.log(data);
 
     churnData = data[0]
     tagData = data[1]
     keys = Object.keys(churnData);
-    console.log(keys.length)
+    //console.log(keys)
     dataLength = churnData[keys[0]].length;
 
     // Start from index one since the first is the date.
     var statsArray = {};
 
     for (var i = 0; i < keys.length; i++) {
-        statsArray[keys[i]] = new Array(dataLength);
+        if (keys[i] != "date" && keys[i] != "committer_name" && keys[i] != "author_name" && keys[i] != "body")
+        {
+            statsArray[keys[i]] = new Array(dataLength);
+        }
     }
+
+    var commit_level = $.inArray("committer_name", keys) != -1
 
     // Linearize the elements and add the date to them.
     for(var j = 0; j < dataLength; j++) {
@@ -134,20 +141,42 @@ function plotChurn(data, repo, group, pack) {
         for (var k = 0; k < keys.length; k++) {
             if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
             {
-                statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), (-1) * parseInt(churnData[keys[k]][j])];
+                if (commit_level && keys[k] == "commentsAdded")
+                {
+                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: (-1) * parseInt(churnData[keys[k]][j]), myData: [churnData["committer_name"][j], churnData["author_name"][j], churnData["body"][j]]};
+                }  
+                else
+                {
+                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: (-1) * parseInt(churnData[keys[k]][j])};
+                }
+            }
+            else if (keys[k] == "date" || keys[k] == "committer_name" || keys[k] == "author_name" || keys[k] == "body")
+            {
+                //break;
+                //user[moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf()] = churnData[keys[k]][j];
+                //statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), churnData[keys[k]][j]];
             }
             else
             {
-                statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), parseInt(churnData[keys[k]][j])];
+                if (commit_level && keys[k] == "commentsAdded")
+                {
+                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: parseInt(churnData[keys[k]][j]), myData: [churnData["committer_name"][j], churnData["author_name"][j], churnData["body"][j]]};
+                }
+                else
+                {
+                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: parseInt(churnData[keys[k]][j])};
+                }
             }   
         }
     }
+
+    console.log(statsArray);
 
     var tagArray = [];
     tagKeys = Object.keys(tagData);
     dataLength = tagData[tagKeys[0]].length;
 
-    console.log(tagData);
+    //console.log(tagData);
     /*for (var i = 0; i < tagKeys.length; i++) {
         tagArray[i] = {};
     }*/
@@ -158,7 +187,7 @@ function plotChurn(data, repo, group, pack) {
         {
             tagData["desc"][i] = tagData["name"][i];
         }
-        
+
         tagArray.push({
             x: moment(tagData[tagKeys[0]][i], "YYYY-MM-DD HH:mm:ss").valueOf(),
             title: tagData["name"][i],
@@ -167,8 +196,7 @@ function plotChurn(data, repo, group, pack) {
     }
     
     console.log(tagArray);
-
-    console.log(statsArray);
+    
     areaPlotChurn("container", statsArray, repo, group, tagArray);
 }
 
@@ -296,6 +324,11 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                         else {
                             if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column' && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column')
                             {
+                                if (i == 0 && point.series.userOptions.data[i].myData != undefined)
+                                {
+                                    s += '<br>Committed By: <b> ' + point.series.userOptions.data[i].myData[0] + '</b></br>';
+                                    s += '<br>Authored By: <b> ' + point.series.userOptions.data[i].myData[1] + '</b></br>';
+                                }
                                 s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + point.y + '</b></br>';
                             }
                         }

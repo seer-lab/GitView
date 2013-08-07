@@ -7,8 +7,11 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "05");
 global $selectedOwner, $selectedRepo;
 ?>
 
-<div class="row" id="container" style="width:100%; height:500px;"></div>
+<div class="container-fluid" id="container" style="width:100%; height:500px;"></div>
 
+<div class="container-fluid" id="seperator">
+   <div class="row-fluid">
+    <div class="span6">
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
           <label for="threshold" class="control-label">Threshold</label>
@@ -145,3 +148,13 @@ global $selectedOwner, $selectedRepo;
           </div>
         </div>
 </form>
+</div>
+    
+      <div class="panel" id="commit_info_panel">
+          <div class="panel-heading">
+            <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
+          </div>
+          <p id="commit_message"> MODIFIED: a lot of codes and comments</p>
+        </div>
+     </div>
+  </div>

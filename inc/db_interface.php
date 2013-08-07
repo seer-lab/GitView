@@ -53,9 +53,10 @@ function getChurn($mysqli, $user, $repo, $path)
                         'totalCodeModified'     => array(),
                         'committer_name'        => array(),
                         'author_name'           => array(),
+                        'body'                  => array(),
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -66,7 +67,7 @@ function getChurn($mysqli, $user, $repo, $path)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified, $commiter_name, $author_name);
+        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified, $body, $commiter_name, $author_name);
 
         $i = 0;
         $results['totalComments'][$i] = 0;
@@ -84,6 +85,7 @@ function getChurn($mysqli, $user, $repo, $path)
             $results['codeModified'][$i] = $codeModified;
             $results['committer_name'][$i] = $commiter_name;
             $results['author_name'][$i] = $author_name;
+            $results['body'][$i] = $body;
 
             if ($i > 0)
             {
