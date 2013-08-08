@@ -103,6 +103,7 @@ $('#update').click(function(event) {
     });
 
 function getChurn(repo, group, pack, thre) {
+    console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
         url: rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack),
@@ -139,8 +140,6 @@ function plotChurn(data, repo, group, pack) {
             first = false;
         }
     }
-
-    
 
     var commit_level = $.inArray("committer_name", keys) != -1
 
@@ -324,18 +323,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
         tooltip: {
             formatter: function(i) {
 
-                //console.log(this);
-                //console.log(this.point.text);
-
-                /*var series = this.series.chart.series,
-                x = this.point.x, 
-                i = 0,
-                str = '<b>x: '+x+'</b>';
-            
-                for(; i<series.length; i++)
-                    str += '<br/><span style="color: '+series[i].color+'">'+series[i].name+'</span>'+series[i].data[x].y
-                
-                return str;*/
                 var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
                 
                 if (this.point == undefined)
@@ -350,10 +337,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                         document.getElementById('commit_message').innerHTML = this.points[index].series.userOptions.data[y_point].myData["body"]
                         $('#commit_info_panel').show();
                     }
-                    else if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] == undefined)
-                    {
-                        console.log(y_point)
-                    }
 
                     $.each(this.points, function(i, point) {
                         
@@ -364,7 +347,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                         else {
                             if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column' && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column')
                             {
-                                s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + point.y + '</b></br>';
+                                s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + Math.round(point.y) + '</b></br>';
                             }
                         }
                     });
@@ -374,18 +357,13 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                     s += '<br>' + this.series.name + ': <b> ' + this.point.text + '</b></br>';
                 }
                 return s;
-                /*if(this.series.name != 'Total Comments Column' && this.series.name != 'Total Comments Modified Column' && this.series.name != 'Total Code Column' && this.series.name != 'Total Code Modified Column')
-                {
-                    
-                }
-                else
-                {
-                    return false;
-                }*/
             },
-            crosshairs: true//, shared: true 
+            shared: true 
         },
         plotOptions: {
+            series: {
+                turboThreshold: 0,
+            },
             spline: {
                 
                 marker: {
