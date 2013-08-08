@@ -245,7 +245,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             //maxZoom: 14 * 24 * 3600000,
 
             labels: {
-                enabled: false,
+                enabled: true,
                 //step: 2,
                 //staggerLines: 2,
                 formatter: function () {
@@ -327,8 +327,10 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                 
                 if (this.point == undefined)
                 {
-                    var y_point = Math.round(this.points[0].y);
                     var index = this.points.length-1;
+                    var y_point = Math.round(this.points[index].y);
+                    console.log(y_point);
+                    
                     if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] != undefined)
                     {
                         s += '<br>Committed By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["com"] + '</b></br>';
