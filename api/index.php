@@ -81,14 +81,13 @@ function getCommitsChurnAPI($thre, $user, $repo, $group, $path)
 function getRepoPackages($user, $repo)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
 	}
-
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
 }
 

@@ -7,37 +7,27 @@ session_start();
 include 'templates/header.php';
 include 'templates/body.php';
 
+$_SESSION['first_load'] = true;
+
 /* Connect to the databases */
-$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
+/*
+$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats ."20_08_05_M");
 
 $_SESSION['first_load'] = true;
 
-//$repos = getAllRepos($mysqli_stats);
+$packages = getUniquePackage($mysqli_stats, "ACRA", "acra");
+echo '<option selected="selected">All Packages</option>';
 
-/* Check that the post is set */
-/*if (!isset($_POST['repo']) && !isset($_POST['group']) && isset($repos))
+foreach ($packages as $package)
 {
-    /* Set to first repo /
-    $_POST['repo'] = $repos[0]['repo_owner'] . "/" . $repos[0]['repo_name'];
-    $_POST['group'] = 'Month';
-    echo $_POST['repo'];
-    echo $_POST['group'];
+  echo '<p>' . $package . '</p>';
 }
 
-
-if (isset($_POST['repo']) && isset($_POST['group']))
-{
-    
-}*/
-
-//echo $_POST['repo'];
-//echo $_POST['group'];
-
-/* check connection */
+// check connection
 if (mysqli_connect_errno()) {
     printf("Connect failed: %s\n", mysqli_connect_error());
     exit();
-}
+}*/
 
 //getCommits($mysqli_stats);
 

@@ -45,9 +45,8 @@ $('#repo').click(function(event) {
     $.ajax({
         type: 'GET',
         url: rootURL + '/packages/' + repo,
-        dataType: "json", // data type of response
+        dataType: "json", 
         success: function(data) {
-
             length = data.length;
 
             for (var i = 0; i < length; i++)
@@ -93,6 +92,9 @@ $('#update').click(function(event) {
         /* Pass these values to the function that gets the data using
            REST and plots it */
         //console.log(pack)
+
+        $('#commit_info_panel').hide();
+
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
         getChurn(repo, group, pack, exten);
@@ -113,9 +115,9 @@ function getChurn(repo, group, pack, thre) {
 }
 
 function plotChurn(data, repo, group, pack) {
-    //console.log(pack);
+    console.log(pack);
     //console.log(encodeURIComponent(pack));
-    console.log(data);
+    //console.log(data);
 
     churnData = data[0]
     tagData = data[1]
@@ -125,13 +127,20 @@ function plotChurn(data, repo, group, pack) {
 
     // Start from index one since the first is the date.
     var statsArray = {};
-
+    first = true;
     for (var i = 0; i < keys.length; i++) {
         if (keys[i] != "date" && keys[i] != "committer_name" && keys[i] != "author_name" && keys[i] != "body")
         {
             statsArray[keys[i]] = new Array(dataLength);
         }
+        else if (first)
+        {
+            statsArray["ExtraData"] = new Array(dataLength);
+            first = false;
+        }
     }
+
+    
 
     var commit_level = $.inArray("committer_name", keys) != -1
 
@@ -141,32 +150,37 @@ function plotChurn(data, repo, group, pack) {
         for (var k = 0; k < keys.length; k++) {
             if (keys[k] == "commentsDeleted" || keys[k] == "codeDeleted")
             {
-                if (commit_level && keys[k] == "commentsAdded")
+                /*if (commit_level && keys[k] == "commentsAdded")
                 {
                     statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: (-1) * parseInt(churnData[keys[k]][j]), myData: [churnData["committer_name"][j], churnData["author_name"][j], churnData["body"][j]]};
                 }  
                 else
-                {
-                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: (-1) * parseInt(churnData[keys[k]][j])};
-                }
+                {*/
+                    statsArray[keys[k]][j] = {x: moment(churnData["date"][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: (-1) * parseInt(churnData[keys[k]][j])};
+                //}
             }
             else if (keys[k] == "date" || keys[k] == "committer_name" || keys[k] == "author_name" || keys[k] == "body")
             {
-                //break;
-                //user[moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf()] = churnData[keys[k]][j];
-                //statsArray[keys[k]][j] = [moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), churnData[keys[k]][j]];
+                
             }
             else
             {
-                if (commit_level && keys[k] == "commentsAdded")
+                /*if (commit_level && keys[k] == "commentsAdded")
                 {
                     statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: parseInt(churnData[keys[k]][j]), myData: [churnData["committer_name"][j], churnData["author_name"][j], churnData["body"][j]]};
                 }
                 else
-                {
-                    statsArray[keys[k]][j] = {x: moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: parseInt(churnData[keys[k]][j])};
-                }
-            }   
+                {*/
+                    statsArray[keys[k]][j] = {x: moment(churnData["date"][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: parseInt(churnData[keys[k]][j])};
+                //}
+            }  
+
+        }
+        if (commit_level)
+        {
+            //break;
+            //user[moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf()] = churnData[keys[k]][j];
+            statsArray["ExtraData"][j] = {x: moment(churnData["date"][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: j, myData: {com: churnData["committer_name"][j], aut: churnData["author_name"][j], body: churnData["body"][j]}};
         }
     }
 
@@ -195,7 +209,7 @@ function plotChurn(data, repo, group, pack) {
         }); 
     }
     
-    console.log(tagArray);
+    //console.log(tagArray);
     
     areaPlotChurn("container", statsArray, repo, group, tagArray);
 }
@@ -308,15 +322,41 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             lineWidth: 2
         }],
         tooltip: {
-            formatter: function() {
+            formatter: function(i) {
 
                 //console.log(this);
                 //console.log(this.point.text);
-                var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
 
+                /*var series = this.series.chart.series,
+                x = this.point.x, 
+                i = 0,
+                str = '<b>x: '+x+'</b>';
+            
+                for(; i<series.length; i++)
+                    str += '<br/><span style="color: '+series[i].color+'">'+series[i].name+'</span>'+series[i].data[x].y
+                
+                return str;*/
+                var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
+                
                 if (this.point == undefined)
                 {
+                    var y_point = Math.round(this.points[0].y);
+                    var index = this.points.length-1;
+                    if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] != undefined)
+                    {
+                        s += '<br>Committed By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["com"] + '</b></br>';
+                        s += '<br>Authored By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["aut"] + '</b></br>';
+
+                        document.getElementById('commit_message').innerHTML = this.points[index].series.userOptions.data[y_point].myData["body"]
+                        $('#commit_info_panel').show();
+                    }
+                    else if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] == undefined)
+                    {
+                        console.log(y_point)
+                    }
+
                     $.each(this.points, function(i, point) {
+                        
                         if (point.series.name == 'Releases')
                         {
                             s += '<br>Release </br>';
@@ -324,11 +364,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                         else {
                             if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column' && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column')
                             {
-                                if (i == 0 && point.series.userOptions.data[i].myData != undefined)
-                                {
-                                    s += '<br>Committed By: <b> ' + point.series.userOptions.data[i].myData[0] + '</b></br>';
-                                    s += '<br>Authored By: <b> ' + point.series.userOptions.data[i].myData[1] + '</b></br>';
-                                }
                                 s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + point.y + '</b></br>';
                             }
                         }
@@ -348,7 +383,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                     return false;
                 }*/
             },
-            shared: true 
+            crosshairs: true//, shared: true 
         },
         plotOptions: {
             spline: {
@@ -373,6 +408,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
             //color: 'rgba(255, 255, 255, 0.7)'
@@ -384,6 +420,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
         }, {
@@ -394,6 +431,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
         }, {
@@ -405,6 +443,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'code',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
         }, {
@@ -415,6 +454,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'code',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
         }, {
@@ -425,6 +465,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             yAxis: 0,
             stack: 'code',
             dataGrouping: {
+                //enabled: false,
                 approximation: "average"
             }
         }, {
@@ -510,19 +551,23 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
         }, {
             type: 'flags',
             data: tagInfo,
-            /*data: [{
-                    x: Date.UTC(2012, 4, 4),
-                    title: "1.1-R2",
-                    text: 'Version 1.1-R2'
-                }, {
-                    x: 1367380800000,
-                    title: '1.0.1-R1',
-                    text: 'Version 1.0.1-R1'
-                }],*/
-            //onSeries: 'codeadded',
             shape: 'circlepin',
             title: "Releases",
             name: "Releases"
+        }, {
+            type: 'spline',
+            name: 'ExtraData',
+            data: stats["ExtraData"],
+            color: 'rgba(255,255,255, 0.0)',
+            yAxis: 0,
+            //stack: 'comment',
+            //visible: false,
+            showInLegend: false,
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
         }]
     }, function(chart){
 
