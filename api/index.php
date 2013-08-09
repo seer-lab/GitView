@@ -63,17 +63,17 @@ function getCommitsChurnAPI($thre, $user, $repo, $group, $path)
     	//$repo = explode('/', $repo);
 		if($group == $MONTH)
 		{
-			echo json_encode([getChurnMonths($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
+			echo json_encode(array(getChurnMonths($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
 		}
 		elseif($group == $DAY)
 		{
-			echo json_encode([getChurnDays($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
+			echo json_encode(array(getChurnDays($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
 		}
 		else
 		{
 
 			/* On a per commit basis */
-			echo json_encode([getChurn($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)]);
+			echo json_encode(array(getChurn($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
 		}
 	}
 }
@@ -105,3 +105,6 @@ function getRepoPackages($user, $repo)
 
 	echo json_encode();
 }*/
+?>
+
+

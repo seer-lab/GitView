@@ -321,7 +321,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             lineWidth: 2
         }],
         tooltip: {
-            formatter: function(i) {
+            formatter: function() {
 
                 var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
                 
@@ -329,7 +329,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                 {
                     var index = this.points.length-1;
                     var y_point = Math.round(this.points[index].y);
-                    console.log(y_point);
+                    //console.log(y_point);
                     
                     if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] != undefined)
                     {
