@@ -1,5 +1,8 @@
 <?php
 
+$LIMIT = 5;
+$DESC = "DESC";
+
 /**
  * Get all of the repositories stored in the database
  * @param $mysqli the mysql connection.
@@ -460,6 +463,192 @@ function getClasses($mysqli, $user, $repo, $package)
         {
             $results[$i] = array();
             $results[$i][0] = $package;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * Get the Top coders (most lines of code in total (added - deleted)) in order
+ * The number of coders is set by the $LIMIT
+ */
+function getTopCoder($mysqli, $user, $repo, $package, $reverse)
+{
+    global $LIMIT, $DESC;
+
+    /* Set to the query to get the lowest coders if reverse is set*/
+    $desc = "";
+    
+
+    if ($reverse == false)
+    {
+        $desc = $DESC;
+    }
+
+    $results = array();
+
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_code > 0 ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $amount);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results[$i] = array($name, $amount);
+            //$results["amount"][$i] = $amount;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * Get the Top documentors (most lines of code in total (added - deleted))
+ * in order.
+ * The number of coders is set by the $LIMIT
+ */
+function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
+{
+    global $LIMIT, $DESC;
+
+    /* Set to the query to get the lowest coders if reverse is set*/
+    $desc = "";
+    if (!$reverse)
+    {
+        $desc = $DESC;
+    }
+
+    $results = array(   'name'      => array(),
+                        'amount'    => array());
+
+    if ($stmt = $mysqli->prepare("SELECT aut.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $amount);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results["name"][$i] = $name;
+            $results["amount"][$i] = $amount;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * Get the Top committer (highest number of commits) in order.
+ * The number of coders is set by the $LIMIT
+ */
+function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
+{
+    global $LIMIT, $DESC;
+
+    /* Set to the query to get the lowest coders if reverse is set*/
+    $desc = "";
+    if (!$reverse)
+    {
+        $desc = $DESC;
+    }
+
+    $results = array(   'name'      => array(),
+                        'amount'    => array());
+
+    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $amount);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results["name"][$i] = $name;
+            $results["amount"][$i] = $amount;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * Get the Top committer (highest number of commits) in order.
+ * The number of coders is set by the $LIMIT
+ */
+function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
+{
+    global $LIMIT, $DESC;
+
+    /* Set to the query to get the lowest coders if reverse is set*/
+    $desc = "";
+    if (!$reverse)
+    {
+        $desc = $DESC;
+    }
+
+    $results = array(   'name'      => array(),
+                        'amount'    => array());
+
+    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $amount);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results["name"][$i] = $name;
+            $results["amount"][$i] = $amount;
             
             $i++;
         }

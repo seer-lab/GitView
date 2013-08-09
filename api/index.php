@@ -13,6 +13,7 @@ $app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:thre/:user/:repo/:group/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
+$app->get('/topCoder/:user/:repo/:reverse/:pack', 'getTopCoders');
 
 $app->run();
 
@@ -89,6 +90,39 @@ function getRepoPackages($user, $repo)
 		exit();
 	}
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
+}
+
+function getTopCoders($user, $repo, $reverse, $path)
+{
+	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+
+	$path = urldecode($path);
+
+	$path = preg_replace('/!/', '/', $path);
+
+	if ($path == "All Packages")
+	{
+		$path = "";
+	}
+
+    if ($reverse == "false")
+    {
+        //echo "<p>true</p>";
+        $reverse = false;
+    }
+    else
+    {
+		$reverse = true;
+    }
+
+	echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
 }
 
 /*function getCommitsChurnAPI($thre, $user, $repo)

@@ -34,6 +34,7 @@ $(document).ready(function () {
             exten = "20_08_05_M";
         }
         getChurn(repo, group, pack, exten);
+        getMostCoder(repo, pack);
     }
 });
 
@@ -98,6 +99,7 @@ $('#update').click(function(event) {
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
         getChurn(repo, group, pack, exten);
+        getMostCoder(repo, pack);
 
         event.preventDefault();
     });
@@ -369,14 +371,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             spline: {
                 
                 marker: {
-                    enabled: false//,
-                    //symbol: 'circle',
-                    //radius: 2,
-                    //states: {
-                    //    hover: {
-                    //        enabled: true
-                    //    }
-                    //}
+                    enabled: false
                 }
             }
         },
@@ -569,3 +564,50 @@ $(function() {
         }
     });
 });
+
+function getMostCoder(repo, pack) {
+    console.log(rootURL + '/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack));
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack),
+        dataType: "json", // data type of response
+        success: function(data) {
+            //console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
+            plotMostCoder(data, repo);
+        }
+    });
+}
+
+function plotMostCoder(data, repo) {
+    $('#code_pie').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Top 5 Coders for ' + '<a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
+            useHTML: true
+        },
+        tooltip: {
+            //pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    //format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Code Committed',
+            data: data
+        }]
+    });
+}

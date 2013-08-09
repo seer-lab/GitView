@@ -20,11 +20,11 @@ global $selectedOwner, $selectedRepo;
 
                     <?php
                         $thresholds = array();
-                        $thresholds[0] = "05";
-                        $thresholds[1] = "05_M";
-                        $thresholds[2] = "10";
-                        $thresholds[3] = "10_M";
-                        $thresholds[4] = "20_08_05_M";
+                        //$thresholds[0] = "05";
+                        //$thresholds[1] = "05_M";
+                        //$thresholds[2] = "10";
+                        //$thresholds[3] = "10_M";
+                        $thresholds[0] = "20_08_05_M";
 
                         $selected = true;
                         $option = '';
@@ -149,12 +149,13 @@ global $selectedOwner, $selectedRepo;
         </div>
 </form>
 </div>
-    
-      <div class="panel" id="commit_info_panel">
-          <div class="panel-heading">
-            <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
-          </div>
-          <p id="commit_message"> MODIFIED: a lot of codes and comments</p>
+    <div class="panel" id="commit_info_panel">
+        <div class="panel-heading">
+          <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
         </div>
-     </div>
-  </div>
+        <p id="commit_message"> MODIFIED: a lot of codes and comments</p>
+      </div>
+   </div>
+</div>
+
+<div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>

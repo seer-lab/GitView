@@ -118,10 +118,16 @@ SELECT f.file_id, f.name FROM repositories AS r INNER JOIN commits AS c ON r.rep
 SELECT f.file, f.name, c.commit_id, com.date, c.body, f.patch, com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'storm' AND r.repo_owner LIKE 'nathanmarz' AND f.name LIKE '%\.java' ORDER BY com.date;
 
 
-/*
- * Only storing the commit date*
- * Left join for tags (since the project may not have tags)
- */
-SELECT t.tag_name, com.name, aut.name, f.file, f.name, c.commit_id, com.date, c.body, f.patch FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id INNER JOIN users AS aut ON c.author_reference = aut.user_id INNER JOIN tags AS t ON c.commit_id = t.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.name LIKE '%\.java' ORDER BY com.date;
+SELECT com.name, aut.name, f.name, c.commit_id, c.commit_date, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'  ORDER BY c.commit_date;
 
 SELECT t.* FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'
+
+select SUM(total_comment_addition) - SUM(total_comment_deletion) AS total Comments from commits WHERE repo_reference = 1 GROUP BY repo_reference;
+
+SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' GROUP BY com.name HAVING most_code > 0 ORDER BY most_code DESC LIMIT 5;
+
+SELECT aut.name, SUM(c.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id  WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' GROUP BY com.name ORDER BY most_comments DESC LIMIT 5;
+
+SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id  WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' GROUP BY com.name ORDER BY most_commits DESC LIMIT 5;
+
+SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE 'elasticsearch' AND r.repo_owner LIKE 'elasticsearch' AND f.path LIKE '%' GROUP BY com.name HAVING most_code > 0 ORDER BY most_code DESC LIMIT 5

@@ -166,6 +166,9 @@ def findMultiLineComments (lines)
     patchPosStreak = 0
     patchPosPrev = 0
     patchNegPrev = 0
+    totalCode = 0
+    totalComment = 0
+
 
 
     #puts patches
@@ -200,7 +203,7 @@ def findMultiLineComments (lines)
                 #Can remove empty comment lines
                 #if line[0].gsub(/\*/, '').match(/^\s*$/) == nil
                 lineCounter.multiLineComment(1)
-
+                
                 #puts "part of multi"
             else
                 #Found multi-line terminator
@@ -215,13 +218,15 @@ def findMultiLineComments (lines)
                 patchPosStreak += 1
                 #puts "patch add streak #{patchPosStreak}"
                 linesCommentStreak["+"].push(line[0][1..-1])
-
+                
+                totalComment+=1
                 codeChurn.commentAdded(1)
             elsif line[0][0] == "-"
                 patchNegStreak += 1
                 #puts "patch neg streak #{patchNegStreak}"
                 linesCommentStreak["-"].push(line[0][1..-1])
 
+                totalComment-=1
                 codeChurn.commentDeleted(1)
             end
 
@@ -249,11 +254,13 @@ def findMultiLineComments (lines)
                         #puts "patch add streak #{patchPosStreak}"
                         linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
+                        totalComment+=1
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         #puts "patch neg streak #{patchNegStreak}"
                         linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
+                        totalComment-=1
                     end
                     
                     # Single Comment 'In-line'
@@ -275,11 +282,13 @@ def findMultiLineComments (lines)
                             #puts "patch add streak #{patchPosStreak}"
                             linesStreak["+"].push(line[0][1..-1])
                             codeChurn.codeAdded(1)
+                            totalCode+=1
                         elsif line[0][0] == "-"
                             #patchNegStreak += 1
                             #puts "patch neg streak #{patchNegStreak}"
                             linesStreak["-"].push(line[0][1..-1])
                             codeChurn.codeDeleted(1)
+                            totalCode-=1
                         end
                         #Stop looking for the code                        
                         commentLookingForChild = false
@@ -305,11 +314,13 @@ def findMultiLineComments (lines)
                         #puts "patch add streak #{patchPosStreak}"
                         linesCommentStreak["+"].push(line[0][1..-1])
                         codeChurn.commentAdded(1)
+                        totalComment+=1
                     elsif line[0][0] == "-"
                         patchNegStreak += 1
                         #puts "patch neg streak #{patchNegStreak}"
                         linesCommentStreak["-"].push(line[0][1..-1])
                         codeChurn.commentDeleted(1)
+                        totalComment-=1
                     end
 
                 else
@@ -324,6 +335,7 @@ def findMultiLineComments (lines)
 
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
                                 codeChurn.codeAdded(1)
+                                totalCode+=1
                             end
                         elsif line[0][0] == "-"
                             patchNegStreak += 1
@@ -331,6 +343,7 @@ def findMultiLineComments (lines)
                             linesStreak["-"].push(line[0][1..-1])
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
                                 codeChurn.codeDeleted(1)
+                                totalCode-=1
                             end
                         end
 
@@ -495,7 +508,7 @@ def findMultiLineComments (lines)
         
         #a = $stdin.gets
     }
-    return ["", codeLines, lineCounter, codeChurn]
+    return [[totalComment, totalCode], codeLines, lineCounter, codeChurn]
 end
 
 # Determines if a quote needs to be added at the beginning or at the end of the line
@@ -758,6 +771,8 @@ churn["CommentModified"] = 0
 churn["CodeAdded"] = 0
 churn["CodeDeleted"] = 0
 churn["CodeModified"] = 0
+churn["TotalComment"] = 0
+churn["TotalCode"] = 0
 
 fileHashTable = Hash.new
 
@@ -790,6 +805,14 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
     churn["CodeDeleted"] += comments[3].codeDeleted(0)
     churn["CodeModified"] += comments[3].codeModified(0)
 
+    churn["TotalComment"] += comments[0][0]
+    churn["TotalCode"] += comments[0][1]
+
+    if $test
+        puts comments[0][0] #The total number of lines of comments in the file
+        puts comments[0][1] #The total number of lines of code in the file
+    end
+
     #puts "CommentAdded = #{churn["CommentAdded"]}"
     #puts "CommentDeleted = #{churn["CommentDeleted"]}"
     #puts "CodeAdded = #{churn["CodeAdded"]}"
@@ -806,9 +829,9 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
             committer_id = Stats_db.getUserId(stats_con, com_name)
             author_id = Stats_db.getUserId(stats_con, com_name)
 
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)            
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)            
         end
-        Stats_db.insertFile(stats_con, commit_id, package, name, comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
+        Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
     end
     
     if prev_commit != current_commit
@@ -816,7 +839,7 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
         prev_commit = current_commit
 
         if !$test && sum > 0
-            Stats_db.updateCommit(stats_con, commit_id, churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
+            Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
         end
         commit_id = nil
         churn["CommentAdded"] = 0
@@ -825,6 +848,8 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
         churn["CodeAdded"] = 0
         churn["CodeDeleted"] = 0        
         churn["CodeModified"] = 0
+        churn["TotalComment"] = 0
+        churn["TotalCode"] = 0
         #commit_comments = 0
         #commit_code = 0
     end
