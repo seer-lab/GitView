@@ -631,7 +631,7 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
         $package = $package . '%';
         /* bind parameters for markers */
         $stmt->bind_param('sss', $repo, $user, $package);
-        
+
         /* execute query */
         $stmt->execute();
 
@@ -652,5 +652,41 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
     
     return $results;
 }
+
+/**
+ * Get the Top committer (highest number of commits) in order.
+ * The number of coders is set by the $LIMIT
+ */
+function codeRatio($mysqli, $user, $repo, $package)
+{
+    $results = array();
+
+    if ($stmt = $mysqli->prepare("SELECT SUM(f.total_code) AS most_code, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ?"))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+        
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($code, $comment);
+
+        $stmt->fetch();
+        array_push($results, array("Code", $code));
+
+        array_push($results, array("Comments", $comment));
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/* Could do # of lines of comments per n lines of code
+ * so the percent of comments would be (where c is # of comments and s is # of  * souce code lines) c / (s / n)
+ */
 
 ?>

@@ -133,3 +133,9 @@ SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER
 SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE 'elasticsearch' AND r.repo_owner LIKE 'elasticsearch' AND f.path LIKE '%' GROUP BY com.name HAVING most_code > 0 ORDER BY most_code DESC LIMIT 5
 
 SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE 'elasticsearch' AND r.repo_owner LIKE 'elasticsearch' AND f.path LIKE '%' GROUP BY aut.name ORDER BY most_commits DESC
+
+SELECT SUM(f.total_code) AS most_code, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA';
+
+SELECT  FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' HAVING most_comments > 0 ORDER BY most_comments DESC LIMIT 5;
+
+SELECT SUM(f.total_code) AS most_code, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ?

@@ -138,6 +138,10 @@ function getPieStats($type, $user, $repo, $reverse, $path)
 	{
 		echo json_encode(getTopAuthor($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
 	}
+	elseif($type == "CommentCode")
+	{
+		echo json_encode(codeRatio($mysqli_stats, $user, $repo, $path), JSON_NUMERIC_CHECK);
+	}
 }
 
 /*function getCommitsChurnAPI($thre, $user, $repo)

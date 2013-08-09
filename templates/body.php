@@ -178,7 +178,7 @@ global $selectedOwner, $selectedRepo;
                         echo '<option>Top Authors</option>';
                         echo '<option>Bottem Coders</option>';
                         echo '<option>Bottem Commenters</option>';
-                        //echo '<option>Top Authors</option>';
+                        echo '<option>Comment To Code</option>';
                         
                     ?>
                 </select>

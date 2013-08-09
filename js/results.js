@@ -591,6 +591,10 @@ function getTypeOfPie(type, repo)
     {
         url += 'bottemCommenters' + "/" + repo + "/" + true + "/";
     }
+    else if (type == "Comment To Code")
+    {
+        url += 'CommentCode' + "/" + repo + "/" + false + "/";
+    }
     return url;
 }
 
