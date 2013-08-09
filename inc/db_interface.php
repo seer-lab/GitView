@@ -538,7 +538,7 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_comments > 0 ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -582,7 +582,7 @@ function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_commits > 0 ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -626,12 +626,12 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name HAVING most_commits > 0 ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
         $stmt->bind_param('sss', $repo, $user, $package);
-
+        
         /* execute query */
         $stmt->execute();
 

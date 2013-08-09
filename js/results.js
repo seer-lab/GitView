@@ -583,6 +583,14 @@ function getTypeOfPie(type, repo)
     {
         url += 'topAuthor' + "/" + repo + "/" + false + "/";
     }
+    else if (type == "Bottem Coders")
+    {
+        url += 'bottemCoders' + "/" + repo + "/" + true + "/";
+    }
+    else if (type == "Bottem Commenters")
+    {
+        url += 'bottemCommenters' + "/" + repo + "/" + true + "/";
+    }
     return url;
 }
 
