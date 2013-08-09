@@ -159,3 +159,26 @@ global $selectedOwner, $selectedRepo;
 </div>
 
 <div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
+<form class="form-horizontal" accept-charset="UTF-8">
+      <div class="control-group">
+          <label for="group" class="control-label">Group</label>
+              <div class="controls">
+                <select id="pie_type" name="group" class="input-xlarge">
+                    <?php
+                        /*
+                         * Options will be:
+                         * - Month
+                         * - Day
+                         * - Commit (None)
+                         */
+
+                        echo '<option selected="selected">Top Coders</option>';
+                        echo '<option>Top Commenters</option>';
+                        echo '<option>Top Committers</option>';
+                        echo '<option>Top Authors</option>';
+                        
+                    ?>
+                </select>
+            </div>
+        </div>
+</form>

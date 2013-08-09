@@ -509,7 +509,6 @@ function getTopCoder($mysqli, $user, $repo, $package, $reverse)
         while ($stmt->fetch())
         {
             $results[$i] = array($name, $amount);
-            //$results["amount"][$i] = $amount;
             
             $i++;
         }
@@ -537,10 +536,9 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
         $desc = $DESC;
     }
 
-    $results = array(   'name'      => array(),
-                        'amount'    => array());
+    $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -555,8 +553,7 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
         $i = 0;
         while ($stmt->fetch())
         {
-            $results["name"][$i] = $name;
-            $results["amount"][$i] = $amount;
+            $results[$i] = array($name, $amount);
             
             $i++;
         }
@@ -583,8 +580,7 @@ function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
         $desc = $DESC;
     }
 
-    $results = array(   'name'      => array(),
-                        'amount'    => array());
+    $results = array();
 
     if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
     {
@@ -601,8 +597,7 @@ function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
         $i = 0;
         while ($stmt->fetch())
         {
-            $results["name"][$i] = $name;
-            $results["amount"][$i] = $amount;
+            $results[$i] = array($name, $amount);
             
             $i++;
         }
@@ -629,10 +624,9 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
         $desc = $DESC;
     }
 
-    $results = array(   'name'      => array(),
-                        'amount'    => array());
+    $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -647,8 +641,7 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
         $i = 0;
         while ($stmt->fetch())
         {
-            $results["name"][$i] = $name;
-            $results["amount"][$i] = $amount;
+            $results[$i] = array($name, $amount);
             
             $i++;
         }

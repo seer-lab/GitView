@@ -13,7 +13,7 @@ $app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:thre/:user/:repo/:group/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
-$app->get('/topCoder/:user/:repo/:reverse/:pack', 'getTopCoders');
+$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 
 $app->run();
 
@@ -92,7 +92,7 @@ function getRepoPackages($user, $repo)
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
 }
 
-function getTopCoders($user, $repo, $reverse, $path)
+function getPieStats($type, $user, $repo, $reverse, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
@@ -122,7 +122,22 @@ function getTopCoders($user, $repo, $reverse, $path)
 		$reverse = true;
     }
 
-	echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
+    if ($type == "topCoder")
+    {
+		echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
+	}
+	elseif($type == "topCommenter")
+	{
+		echo json_encode(getTopCommenter($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
+	}
+	elseif($type == "topCommitter")
+	{
+		echo json_encode(getTopCommitter($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
+	}
+	elseif($type == "topAuthor")
+	{
+		echo json_encode(getTopAuthor($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
+	}
 }
 
 /*function getCommitsChurnAPI($thre, $user, $repo)

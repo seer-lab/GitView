@@ -122,8 +122,8 @@ function plotChurn(data, repo, group, pack) {
     //console.log(encodeURIComponent(pack));
     //console.log(data);
 
-    churnData = data[0]
-    tagData = data[1]
+    churnData = data[0];
+    tagData = data[1];
     keys = Object.keys(churnData);
     //console.log(keys)
     dataLength = churnData[keys[0]].length;
@@ -238,7 +238,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             text: 'Comments and Code Churn Per ' + group
         },
         subtitle: {
-            //TODO set to db query
             text: '<a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
             useHTML: true
         },
@@ -565,14 +564,54 @@ $(function() {
     });
 });
 
-function getMostCoder(repo, pack) {
-    console.log(rootURL + '/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack));
+function getTypeOfPie(type, repo)
+{
+    var url = '/pie_stats/';
+    if (type == "Top Coders")
+    {
+        url += 'topCoder' + "/" + repo + "/" + false + "/";
+    }
+    else if (type == "Top Commenters")
+    {
+        url += 'topCommenter' + "/" + repo + "/" + false + "/";
+    }
+    else if (type == "Top Committers")
+    {
+        url += 'topCommitter' + "/" + repo + "/" + false + "/";
+    }
+    else if (type == "Top Authors")
+    {
+        url += 'topAuthor' + "/" + repo + "/" + false + "/";
+    }
+    return url;
+}
+
+$('#pie_type').click(function(event) {
+    var type = $('#pie_type').val();
+    var repo = $('#repo').val();
+    var pack = $('#package').val();
+
+    pack = pack.replace(/\//g, '!');
+
+    console.log(rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack));
+    
     $.ajax({
         type: 'GET',
-        url: rootURL + '/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack),
-        dataType: "json", // data type of response
+        url: rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack),
+        dataType: "json", 
         success: function(data) {
-            //console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
+            plotMostCoder(data, repo);
+        }
+    });
+});
+
+function getMostCoder(repo, pack) {
+    console.log(rootURL + '/pie_stats/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack));
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/pie_stats/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack),
+        dataType: "json",
+        success: function(data) {
             plotMostCoder(data, repo);
         }
     });
