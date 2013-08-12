@@ -567,7 +567,7 @@ $(function() {
     });
 });
 
-function getTypeOfPie(type, repo)
+/*function getTypeOfPie(type, repo)
 {
     var url = '/pie_stats/';
     var seriesName = "";
@@ -607,7 +607,7 @@ function getTypeOfPie(type, repo)
         seriesName = "Comment to Code";
     }
     return [url, seriesName];
-}
+}*/
 
 function getStats(repo, pack)
 {
@@ -661,7 +661,7 @@ $('#pie_type').click(function(event) {
 
 });
 
-function getMostCoder(repo, pack) {
+/*function getMostCoder(repo, pack) {
     var type = $('#pie_type').val();
     
     pack = pack.replace(/\//g, '!');
@@ -678,7 +678,7 @@ function getMostCoder(repo, pack) {
             plotMostCoder(data, repo, url[1]);
         }
     });
-}
+}*/
 
 function plotMostCoder(data, repo, name) {
     $('#code_pie').highcharts({

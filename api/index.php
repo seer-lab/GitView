@@ -13,7 +13,7 @@ $app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:thre/:user/:repo/:group/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
-$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
+//$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/stats/:user/:repo/:path', 'getStats');
 
 $app->run();
@@ -93,12 +93,12 @@ function getRepoPackages($user, $repo)
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
 }
 
-function getPieStats($type, $user, $repo, $reverse, $path)
+/*function getPieStats($type, $user, $repo, $reverse, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
 
-	/* check connection */
+	// check connection
 	if (mysqli_connect_errno()) {
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
@@ -143,7 +143,7 @@ function getPieStats($type, $user, $repo, $reverse, $path)
 	{
 		echo json_encode(codeRatio($mysqli_stats, $user, $repo, $path), JSON_NUMERIC_CHECK);
 	}
-}
+}*/
 
 function getStats($user, $repo, $path)
 {
@@ -175,26 +175,6 @@ function getStats($user, $repo, $path)
 								'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
 								'topAuthor'   		=> getTopAuthor($mysqli_stats, $user, $repo, $path, false),
 								'bottomAuthor'   	=> getTopAuthor($mysqli_stats, $user, $repo, $path, true))), JSON_NUMERIC_CHECK);
-    /*if ($type == "topCoder" || $type == "bottomCoders")
-    {
-		//echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topCommenter" || $type == "bottomCommenters")
-	{
-		//echo json_encode(, JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topCommitter")
-	{
-		//echo json_encode(, JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topAuthor")
-	{
-		//echo json_encode(, JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "CommentCode")
-	{
-		//echo json_encode(, JSON_NUMERIC_CHECK);
-	}*/
 }
 
 
