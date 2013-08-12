@@ -20,9 +20,8 @@ con = Github_database.createConnection()
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
 repo = 0
-if !$test
-    repo = Stats_db.getRepos(stats_con, repo_name, repo_owner)
-end
+
+repo = Stats_db.getRepos(stats_con)
 
 repo.each { |repo_id, repo_name, repo_owner|
 

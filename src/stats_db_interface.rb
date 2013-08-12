@@ -69,13 +69,13 @@ module Stats_db
 
     def Stats_db.createConnectionThreshold(threshold, multi)
         
-        $DATABASE = "#{$DATABASE}#{threshold}"
+        tempDB = "#{$DATABASE}#{threshold}"
         
         if multi
-            $DATABASE = "#{$DATABASE}_M"
+            tempDB = "#{tempDB}_M"
         end
 
-        Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
+        Mysql.new(HOST, USERNAME, PASSWORD, tempDB)
     end
 
 
@@ -98,7 +98,7 @@ module Stats_db
 
 
     def Stats_db.getRepos(con)
-        pick = con.prepare("SELECT * FROM #{REPO}")
+        pick = con.prepare("SELECT #{REPO_ID}, #{REPO_NAME}, #{REPO_OWNER} FROM #{REPO}")
         pick.execute
 
         rows = pick.num_rows
@@ -224,22 +224,6 @@ module Stats_db
      
         return Utility.toInteger(pick.insert_id)
     end
-
-    # Get the repositories stored in the database
-    def Stats_db.getRepos(con)
-        pick = con.prepare("SELECT #{REPO_OWNER}, #{REPO_NAME} FROM #{REPO}")
-        pick.execute()
-    
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #There should be only 1 id return anyways.
-        return results
-    end 
 
     # Get the commit totals stored in the database
     # TODO add constants to SQL statement

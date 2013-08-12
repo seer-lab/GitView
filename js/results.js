@@ -139,6 +139,10 @@ function plotChurn(data, repo, group, pack) {
         else if (first)
         {
             statsArray["ExtraData"] = new Array(dataLength);
+
+            //Fix for undefined error for days grouping
+            //Since highcharts only checks the first value
+            statsArray["ExtraData"][0] = 0;
             first = false;
         }
     }
@@ -533,7 +537,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
             name: 'ExtraData',
             data: stats["ExtraData"],
             color: 'rgba(255,255,255, 0.0)',
-            yAxis: 0,
             //stack: 'comment',
             //visible: false,
             showInLegend: false,

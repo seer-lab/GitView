@@ -142,4 +142,6 @@ SELECT SUM(f.total_code) AS most_code, SUM(f.total_comments) AS most_comments FR
 
 SELECT t.* FROM tags AS t, (SELECT com.date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN users AS com ON c.commiter_reference = com.user_id WHERE r.repo_name LIKE 'ACRA' AND r.repo_owner LIKE 'ACRA' AND f.name LIKE '%\.java' ORDER BY com.date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date; 
 
-SELECT t.* FROM tags AS t, (SELECT c.commit_date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'ACRA' AND r.repo_owner LIKE 'ACRA' ORDER BY c.commit_date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date; 
+SELECT t.* FROM tags AS t, (SELECT c.commit_date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'ACRA' AND r.repo_owner LIKE 'ACRA' ORDER BY c.commit_date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date;
+
+SELECT t.tag_id FROM tags AS t, (SELECT c.commit_date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_id = 1 ORDER BY c.commit_date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date
