@@ -158,30 +158,46 @@ global $selectedOwner, $selectedRepo;
    </div>
 </div>
 
-<div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
-<form class="form-horizontal" accept-charset="UTF-8">
+<div class="container-fluid" id="seperator">
+   <div class="row-fluid">
+    <div class="span5">
+      <div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
+    </div>
+
+    <div class="span7" >
+      <table class="table">
+        <thead>
+          <th>Top 5 Coders</th>
+          <th>Bottom 5 Coders</th>
+          <th>Top 5 Commenters</th>
+          <th>Bottom 5 Commenters</th>
+        </thead>
+        <tbody id="CodeComment">
+        </tbody>
+      </table>
+      <table class="table">
+        <thead>
+          <th>Top 5 Committers</th>
+          <th>Bottom 5 Committers</th>
+          <th>Top 5 Authors</th>
+          <th>Bottom 5 Authors</th>
+        </thead>
+        <tbody id="CommitAuthor">
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+<!--<form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
           <label for="pie_type" class="control-label">Graph</label>
               <div class="controls">
                 <select id="pie_type" name="" class="input-xlarge">
                     <?php
-                        /*
-                         * Options will be:
-                         * - Month
-                         * - Day
-                         * - Commit (None)
-                         */
-
-                        echo '<option selected="selected">Top Coders</option>';
-                        echo '<option>Top Commenters</option>';
-                        echo '<option>Top Committers</option>';
-                        echo '<option>Top Authors</option>';
-                        echo '<option>Bottom Coders</option>';
-                        echo '<option>Bottom Commenters</option>';
-                        echo '<option>Comment To Code</option>';
-                        
+                        echo '<option selected="selected">Comment To Code</option>';
                     ?>
                 </select>
             </div>
         </div>
-</form>
+</form> </-->

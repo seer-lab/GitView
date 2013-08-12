@@ -34,7 +34,7 @@ $(document).ready(function () {
             exten = "20_08_05_M";
         }
         getChurn(repo, group, pack, exten);
-        getMostCoder(repo, pack);
+        getStats(repo, pack);
     }
 });
 
@@ -99,7 +99,7 @@ $('#update').click(function(event) {
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
         getChurn(repo, group, pack, exten);
-        getMostCoder(repo, pack);
+        getStats(repo, pack);
 
         event.preventDefault();
     });
@@ -609,10 +609,55 @@ function getTypeOfPie(type, repo)
     return [url, seriesName];
 }
 
+function getStats(repo, pack)
+{
+    pack = pack.replace(/\//g, '!');
+
+    $.ajax({
+        type: 'GET',
+        url: rootURL + "/stats/" + repo + "/" + encodeURIComponent(pack),
+        dataType: "json", 
+        success: function(data) {
+            plotMostCoder(data["CommentCode"], repo, "Comment to Code");
+            fillTable(data["other"]);
+        }
+    });
+}
+
+function fillTable(data)
+{
+    var list = "";
+    var authList = "";
+    keys = Object.keys(data);
+    for (var i = 0; i < 5; i ++)
+    {
+        list += createRow(data, 0, Math.round(keys.length/2), i);
+        authList += createRow(data, Math.round(keys.length/2), keys.length, i);
+    }
+    console.log(Math.round(keys.length/2));
+    console.log(authList);
+    
+    $('#CodeComment').html(list);
+    $('#CommitAuthor').html(authList);
+}
+
+function createRow(data, starter, stopper, rowNumber)
+{
+    var list = "<tr>";
+
+    keys = Object.keys(data);
+    for (var i = starter; i < stopper; i++)
+    {
+        list+= "<td>" + data[keys[i]][rowNumber][0] + " ["+data[keys[i]][rowNumber][1] + "]</td>";
+    }
+    list+="</tr>";
+    return list;
+}
+
 $('#pie_type').click(function(event) {
     var repo = $('#repo').val();
     var pack = $('#package').val();
-    getMostCoder(repo, pack);
+    getStats(repo, pack);
 
 });
 
@@ -621,9 +666,10 @@ function getMostCoder(repo, pack) {
     
     pack = pack.replace(/\//g, '!');
 
-    console.log(rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack));
     var url = getTypeOfPie(type, repo);
-    console.log(url[1]);
+    console.log(rootURL + url[0] + encodeURIComponent(pack));
+    
+    //console.log(url[1]);
     $.ajax({
         type: 'GET',
         url: rootURL + url[0] + encodeURIComponent(pack),
@@ -655,15 +701,7 @@ function plotMostCoder(data, repo, name) {
                 //if(this.point.name)
                 //{
                     s = "";
-                    if(this.series.name != "Comment to Code")
-                    {
-                        s+= '' + this.point.name + ': <b>' + this.point.y + '</b>';
-                    }
-                    else
-                    {
-                        //var percentage = (Math.round(this.point.percentage*10))/10
-                        s+='' + this.point.name + ': <b>' + this.point.y + '</b>';//,<b> ' + percentage + '%</b>';
-                    }
+                    s+='' + this.point.name + ': <b>' + this.point.y + '</b>';//,<b> ' + percentage + '%</b>';
                     return s;
                 //}
             }
@@ -679,15 +717,8 @@ function plotMostCoder(data, repo, name) {
                     connectorColor: '#000000',
                     formatter: function() {
                         s = "";
-                        if(this.series.name != "Comment to Code")
-                        {
-                            s+= '' + this.point.name + '';
-                        }
-                        else
-                        {
-                            var percentage = (Math.round(this.point.percentage*10))/10
-                            s+='' + this.point.name + ': ' + percentage + '%';
-                        }
+                        var percentage = (Math.round(this.point.percentage*10))/10
+                        s+='' + this.point.name + ': ' + percentage + '%';
                         return s;
                     }
                     //format: '<b>{point.name}</b>: {point.percentage:.1f} %'
