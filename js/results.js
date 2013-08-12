@@ -567,69 +567,71 @@ $(function() {
 function getTypeOfPie(type, repo)
 {
     var url = '/pie_stats/';
+    var seriesName = "";
     if (type == "Top Coders")
     {
         url += 'topCoder' + "/" + repo + "/" + false + "/";
+        seriesName = "Top 5 Code Committers";
     }
     else if (type == "Top Commenters")
     {
         url += 'topCommenter' + "/" + repo + "/" + false + "/";
+        seriesName = "Top 5 Comments Committers";
     }
     else if (type == "Top Committers")
     {
         url += 'topCommitter' + "/" + repo + "/" + false + "/";
+        seriesName = "Top 5 Commiters";
     }
     else if (type == "Top Authors")
     {
         url += 'topAuthor' + "/" + repo + "/" + false + "/";
+        seriesName = "Top 5 Authors";
     }
-    else if (type == "Bottem Coders")
+    else if (type == "Bottom Coders")
     {
-        url += 'bottemCoders' + "/" + repo + "/" + true + "/";
+        url += 'bottomCoders' + "/" + repo + "/" + true + "/";
+        seriesName = "Bottom 5 Code Committers";
     }
-    else if (type == "Bottem Commenters")
+    else if (type == "Bottom Commenters")
     {
-        url += 'bottemCommenters' + "/" + repo + "/" + true + "/";
+        url += 'bottomCommenters' + "/" + repo + "/" + true + "/";
+        seriesName = "Bottom 5 Comments Committers";
     }
     else if (type == "Comment To Code")
     {
         url += 'CommentCode' + "/" + repo + "/" + false + "/";
+        seriesName = "Comment to Code";
     }
-    return url;
+    return [url, seriesName];
 }
 
 $('#pie_type').click(function(event) {
-    var type = $('#pie_type').val();
     var repo = $('#repo').val();
     var pack = $('#package').val();
+    getMostCoder(repo, pack);
 
-    pack = pack.replace(/\//g, '!');
-
-    console.log(rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack));
-    
-    $.ajax({
-        type: 'GET',
-        url: rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack),
-        dataType: "json", 
-        success: function(data) {
-            plotMostCoder(data, repo);
-        }
-    });
 });
 
 function getMostCoder(repo, pack) {
-    console.log(rootURL + '/pie_stats/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack));
+    var type = $('#pie_type').val();
+    
+    pack = pack.replace(/\//g, '!');
+
+    console.log(rootURL + getTypeOfPie(type, repo) + encodeURIComponent(pack));
+    var url = getTypeOfPie(type, repo);
+    console.log(url[1]);
     $.ajax({
         type: 'GET',
-        url: rootURL + '/pie_stats/topCoder/' + repo + "/" + false + "/" + encodeURIComponent(pack),
-        dataType: "json",
+        url: rootURL + url[0] + encodeURIComponent(pack),
+        dataType: "json", 
         success: function(data) {
-            plotMostCoder(data, repo);
+            plotMostCoder(data, repo, url[1]);
         }
     });
 }
 
-function plotMostCoder(data, repo) {
+function plotMostCoder(data, repo, name) {
     $('#code_pie').highcharts({
         chart: {
             plotBackgroundColor: null,
@@ -637,10 +639,31 @@ function plotMostCoder(data, repo) {
             plotShadow: false
         },
         title: {
-            text: 'Top 5 Coders for ' + '<a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
+            text: 'Project stats',
+            useHTML: true
+        },
+        
+        subtitle: {
+            text: name + ' for <a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
             useHTML: true
         },
         tooltip: {
+            formatter: function() {
+                //if(this.point.name)
+                //{
+                    s = "";
+                    if(this.series.name != "Comment to Code")
+                    {
+                        s+= '' + this.point.name + ': <b>' + this.point.y + '</b>';
+                    }
+                    else
+                    {
+                        //var percentage = (Math.round(this.point.percentage*10))/10
+                        s+='' + this.point.name + ': <b>' + this.point.y + '</b>';//,<b> ' + percentage + '%</b>';
+                    }
+                    return s;
+                //}
+            }
             //pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
         },
         plotOptions: {
@@ -651,13 +674,26 @@ function plotMostCoder(data, repo) {
                     enabled: true,
                     color: '#000000',
                     connectorColor: '#000000',
+                    formatter: function() {
+                        s = "";
+                        if(this.series.name != "Comment to Code")
+                        {
+                            s+= '' + this.point.name + '';
+                        }
+                        else
+                        {
+                            var percentage = (Math.round(this.point.percentage*10))/10
+                            s+='' + this.point.name + ': ' + percentage + '%';
+                        }
+                        return s;
+                    }
                     //format: '<b>{point.name}</b>: {point.percentage:.1f} %'
                 }
             }
         },
         series: [{
             type: 'pie',
-            name: 'Code Committed',
+            name: name,
             data: data
         }]
     });

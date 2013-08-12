@@ -161,9 +161,9 @@ global $selectedOwner, $selectedRepo;
 <div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
-          <label for="group" class="control-label">Group</label>
+          <label for="pie_type" class="control-label">Graph</label>
               <div class="controls">
-                <select id="pie_type" name="group" class="input-xlarge">
+                <select id="pie_type" name="" class="input-xlarge">
                     <?php
                         /*
                          * Options will be:
@@ -176,8 +176,8 @@ global $selectedOwner, $selectedRepo;
                         echo '<option>Top Commenters</option>';
                         echo '<option>Top Committers</option>';
                         echo '<option>Top Authors</option>';
-                        echo '<option>Bottem Coders</option>';
-                        echo '<option>Bottem Commenters</option>';
+                        echo '<option>Bottom Coders</option>';
+                        echo '<option>Bottom Commenters</option>';
                         echo '<option>Comment To Code</option>';
                         
                     ?>

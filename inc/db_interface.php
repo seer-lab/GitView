@@ -674,6 +674,7 @@ function codeRatio($mysqli, $user, $repo, $package)
         $stmt->bind_result($code, $comment);
 
         $stmt->fetch();
+
         array_push($results, array("Code", $code));
 
         array_push($results, array("Comments", $comment));

@@ -122,11 +122,11 @@ function getPieStats($type, $user, $repo, $reverse, $path)
 		$reverse = true;
     }
 
-    if ($type == "topCoder" || $type == "bottemCoders")
+    if ($type == "topCoder" || $type == "bottomCoders")
     {
 		echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
 	}
-	elseif($type == "topCommenter" || $type == "bottemCommenters")
+	elseif($type == "topCommenter" || $type == "bottomCommenters")
 	{
 		echo json_encode(getTopCommenter($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
 	}
