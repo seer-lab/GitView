@@ -491,15 +491,19 @@ function getTopCoder($mysqli, $user, $repo, $package, $reverse, $opposite)
         $desc = $DESC;
     }
 
-    $cond = "HAVING most_code > 0";
-    if ($opposite)
+    $cond = "code_addition";
+    if ($opposite == "deletion")
     {
-        $cond = "HAVING most_code < 0";
+        $cond = "code_deletion";
+    }
+    elseif ($opposite == "modified")
+    {
+        $cond = "code_modified";
     }
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ". $cond . " ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f." . $cond . ") AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_code > 0 ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -542,15 +546,19 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse, $opposite)
         $desc = $DESC;
     }
 
-    $cond = "HAVING most_comments > 0";
-    if ($opposite)
+    $cond = "comment_addition";
+    if ($opposite == "deletion")
     {
-        $cond = "HAVING most_comments < 0";
+        $cond = "comment_deletion";
+    }
+    elseif ($opposite == "modified")
+    {
+        $cond = "comment_modified";
     }
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name " . $cond . " ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f." . $cond . ") AS comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING comments > 0 ORDER BY comments " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -638,7 +646,7 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name HAVING most_commits > 0 ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(f.total_comments + f.total_code) AS contrib FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY contrib " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */

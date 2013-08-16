@@ -167,35 +167,22 @@ function getStats($user, $repo, $path)
 
 	echo json_encode(array(	'CommentCode' 		=> codeRatio($mysqli_stats, $user, $repo, $path),
 							'other'				=> array(
-								'topCoder'			=> getTopCoder($mysqli_stats, $user, $repo, $path, false, false),
-								'bottomCoder'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, false),
-								'topCommenter'		=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, false),
+								'topCoder'			=> getTopCoder($mysqli_stats, $user, $repo, $path, false, "addition"),
+								'topModified'		=> getTopCoder($mysqli_stats, $user, $repo, $path, false, "modified"),
+								'topDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, false, "deletion"),
+								'topCommenter'		=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, "addition"),
+								'topModCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, "modified"),
+								'topDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, "deletion"),
+								/*'bottomCoder'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, false),								
 								'bottomCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, false),
+								'bottomDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, true),
+								'bottomDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, true),*/
 								'topCommitter'		=> getTopCommitter($mysqli_stats, $user, $repo, $path, false),
-								'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
-								'topAuthor'   		=> getTopAuthor($mysqli_stats, $user, $repo, $path, false),
-								'bottomAuthor'   	=> getTopAuthor($mysqli_stats, $user, $repo, $path, true),
-								'topDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, true),
-								'bottomDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, false, true),
-								'topDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, true),
-								'bottomDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, true))), JSON_NUMERIC_CHECK);
+								//'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
+								'topAuthor'			=> getTopAuthor($mysqli_stats, $user, $repo, $path, false),
+								/*'bottomAuthor'		=> getTopAuthor($mysqli_stats, $user, $repo, $path, true)*/)), JSON_NUMERIC_CHECK);
 }
 
-
-/*function getCommitsChurnAPI($thre, $user, $repo)
-{
-	global $db_user, $db_pass, $db_stats;
-
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats );//. $thre);
-
-	// check connection
-	if (mysqli_connect_errno()) {
-		printf("Connect failed: %s\n", mysqli_connect_error());
-		exit();
-	}
-
-	echo json_encode();
-}*/
 ?>
 
 

@@ -176,7 +176,7 @@ function plotChurn(data, repo, group, pack) {
 
 var PageHeight
 $(document).ready(function(){
-    if ($(window).height()*0.8 > 600)
+    if ($(window).height()*0.8 > 700)
     {
         $('#container').height($(window).height()*0.8);
     }
@@ -595,15 +595,17 @@ function fillTable(data)
     keys = Object.keys(data);
     for (var i = 0; i < 5; i ++)
     {
-        list += createRow(data, 0, Math.round(keys.length/3), i);
-        authList += createRow(data, Math.round(keys.length/3), Math.round((keys.length*2)/3), i);
-        deleList += createRow(data,Math.round((keys.length*2)/3), keys.length, i);
+        list += createRow(data, 0, 3, i);
+        deleList += createRow(data, 3, 6, i);
+        //modList += createRow(data, 3, 6, i);
+        authList += createRow(data, keys.length-2, keys.length, i);
     }
     //console.log(Math.round(keys.length/2));
     //console.log(authList);
     
     $('#CodeComment').html(list);
     $('#CommitAuthor').html(authList);
+    //$('#CommitAuthor').html(modList);
     $('#Deleters').html(deleList);
 }
 
@@ -618,7 +620,7 @@ function createRow(data, starter, stopper, rowNumber)
         if (data[keys[i]][rowNumber] != undefined)
         {
             empty = false;
-            list+= "<td>" + data[keys[i]][rowNumber][0] + " [<em>"+data[keys[i]][rowNumber][1] + "</em>]</td>";
+            list+= "<td>" + (rowNumber+1) + ". " + data[keys[i]][rowNumber][0] + " [<em>"+data[keys[i]][rowNumber][1] + "</em>]</td>";
         }
         else
         {
@@ -695,6 +697,7 @@ function plotMostCoder(data, repo, name) {
                     enabled: true,
                     color: '#000000',
                     connectorColor: '#000000',
+                    inside: true,
                     formatter: function() {
                         s = "";
                         var percentage = (Math.round(this.point.percentage*10))/10

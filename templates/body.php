@@ -7,7 +7,7 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_0
 global $selectedOwner, $selectedRepo;
 ?>
 
-<div class="container-fluid" id="container" style="width:100%; height:500px;"></div>
+<div class="container-fluid" id="container" style="width:100%; height:700px;"></div>
 
 <div class="container-fluid" id="seperator">
    <div class="row-fluid">
@@ -96,6 +96,7 @@ global $selectedOwner, $selectedRepo;
         </div>
 </form>
 </div>
+  <div class="span6">
     <div class="panel" id="commit_info_panel">
         <div class="panel-heading">
           <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
@@ -103,45 +104,50 @@ global $selectedOwner, $selectedRepo;
         <p id="commit_message"> MODIFIED: a lot of codes and comments</p>
       </div>
    </div>
+ </div>
+  
 </div>
 
 <div class="container-fluid" id="seperator">
    <div class="row-fluid">
     <div class="span5">
       <div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
+      <table class="table">
+        <thead>
+          <th>Top Committers</th>
+          <th>Top Contributors</th>
+        </thead>
+        <tbody id="CommitAuthor">
+        </tbody>
+      </table>
     </div>
 
     <div class="span7" >
       <table class="table">
         <thead>
-          <th>Top 5 Coders</th>
-          <th>Bottom 5 Coders</th>
-          <th>Top 5 Commenters</th>
-          <th>Bottom 5 Commenters</th>
+          <th>Top Coders</th>
+          <th>Top Modifiers</th>
+          <th>Top Deleters</th>
         </thead>
         <tbody id="CodeComment">
         </tbody>
-      </table>
-      <table class="table">
         <thead>
-          <th>Top 5 Deleters</th>
-          <th>Bottom 5 Deleters</th>
-          <th>Top 5 Comment Deleters</th>
-          <th>Bottom 5 Comment Deleters</th>
+          <th>Top Commenters</th>
+          <th>Top Comment Modifiers</th>
+          <th>Top Comment Deleters</th>
         </thead>
         <tbody id="Deleters">
         </tbody>
-      </table>
-      <table class="table">
-        <thead>
-          <th>Top 5 Committers</th>
-          <th>Bottom 5 Committers</th>
-          <th>Top 5 Authors</th>
-          <th>Bottom 5 Authors</th>
+        <!--<thead>
+          <th>Bottom Coders</th>
+          <th>Bottom Commenters</th>
+          <th>Bottom Deleters</th>
+          <th>Bottom Comment Deleters</th>
         </thead>
-        <tbody id="CommitAuthor">
+        <tbody id="mod">
         </tbody>
-      </table>      
+        </-->
+      </table>
     </div>
 
   </div>
@@ -152,7 +158,7 @@ global $selectedOwner, $selectedRepo;
               <div class="controls">
                 <select id="pie_type" name="" class="input-xlarge">
                     <?php
-                        echo '<option selected="selected">Comment To Code</option>';
+                        //echo '<option selected="selected">Comment To Code</option>';
                     ?>
                 </select>
             </div>
