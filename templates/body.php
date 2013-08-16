@@ -14,59 +14,6 @@ global $selectedOwner, $selectedRepo;
     <div class="span6">
 <form class="form-horizontal" accept-charset="UTF-8">
       <div class="control-group">
-          <label for="threshold" class="control-label">Threshold</label>
-              <div class="controls">
-                <select id="threshold" name="threshold" class="input-xlarge">
-
-                    <?php
-                        $thresholds = array();
-                        //$thresholds[0] = "05";
-                        //$thresholds[1] = "05_M";
-                        //$thresholds[2] = "10";
-                        //$thresholds[3] = "10_M";
-                        $thresholds[0] = "20_08_05_M";
-
-                        $selected = true;
-                        $option = '';
-                        foreach ($thresholds as $threshold)
-                        {
-                            if ($selected)
-                            {
-                                $option = '<option selected="selected">';
-                                $selected = false;
-                            }
-                            else
-                            {
-                                $option = '<option>';
-                            }
-
-                            if ($threshold == "05")
-                            {
-                              $value = "0.5";
-                            }
-                            elseif ($threshold == "05_M")
-                            {
-                              $value = "0.5 M";
-                            }                            
-                            elseif ($threshold == "10")
-                            {
-                              $value = "1.0";
-                            }
-                            elseif ($threshold == "10_M")
-                            {
-                              $value = "1.0 M";
-                            }
-                            elseif ($threshold == "20_08_05_M")
-                            {
-                              $value = "S = 20, H = 0.8, L = 0.5 M";
-                            }
-                            echo $option . $value . '</option>';
-                        }
-                    ?>
-                </select>
-            </div>
-        </div> 
-      <div class="control-group">
           <label for="repo" class="control-label">Repository</label>
               <div class="controls">
                 <select id="repo" name="repo" class="input-xlarge">
@@ -177,6 +124,16 @@ global $selectedOwner, $selectedRepo;
       </table>
       <table class="table">
         <thead>
+          <th>Top 5 Deleters</th>
+          <th>Bottom 5 Deleters</th>
+          <th>Top 5 Comment Deleters</th>
+          <th>Bottom 5 Comment Deleters</th>
+        </thead>
+        <tbody id="Deleters">
+        </tbody>
+      </table>
+      <table class="table">
+        <thead>
           <th>Top 5 Committers</th>
           <th>Bottom 5 Committers</th>
           <th>Top 5 Authors</th>
@@ -184,7 +141,7 @@ global $selectedOwner, $selectedRepo;
         </thead>
         <tbody id="CommitAuthor">
         </tbody>
-      </table>
+      </table>      
     </div>
 
   </div>

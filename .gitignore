@@ -15,3 +15,7 @@ database
 
 # Ignore class files
 *.class
+
+*.png
+
+doc/poster/

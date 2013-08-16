@@ -10,7 +10,7 @@ $app = new \Slim\Slim();
 
 // GET route
 $app->get('/commits', 'getCommitsAPI');
-$app->get('/commitsChurn/:thre/:user/:repo/:group/:path', 'getCommitsChurnAPI');
+$app->get('/commitsChurn/:user/:repo/:group/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
@@ -34,11 +34,11 @@ function getCommitsAPI()
 	echo json_encode(getCommitsMonths($mysqli_stats));
 }
 
-function getCommitsChurnAPI($thre, $user, $repo, $group, $path)
+function getCommitsChurnAPI($user, $repo, $group, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . $thre);
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
 	
 	/* check connection */
 	if (mysqli_connect_errno()) {
@@ -167,14 +167,18 @@ function getStats($user, $repo, $path)
 
 	echo json_encode(array(	'CommentCode' 		=> codeRatio($mysqli_stats, $user, $repo, $path),
 							'other'				=> array(
-								'topCoder'			=> getTopCoder($mysqli_stats, $user, $repo, $path, false),
-								'bottomCoder'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true),
-								'topCommenter'		=> getTopCommenter($mysqli_stats, $user, $repo, $path, false),
-								'BottomCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true),
+								'topCoder'			=> getTopCoder($mysqli_stats, $user, $repo, $path, false, false),
+								'bottomCoder'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, false),
+								'topCommenter'		=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, false),
+								'bottomCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, false),
 								'topCommitter'		=> getTopCommitter($mysqli_stats, $user, $repo, $path, false),
 								'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
 								'topAuthor'   		=> getTopAuthor($mysqli_stats, $user, $repo, $path, false),
-								'bottomAuthor'   	=> getTopAuthor($mysqli_stats, $user, $repo, $path, true))), JSON_NUMERIC_CHECK);
+								'bottomAuthor'   	=> getTopAuthor($mysqli_stats, $user, $repo, $path, true),
+								'topDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, true, true),
+								'bottomDeleter'		=> getTopCoder($mysqli_stats, $user, $repo, $path, false, true),
+								'topDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, true),
+								'bottomDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, false, true))), JSON_NUMERIC_CHECK);
 }
 
 

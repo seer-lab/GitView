@@ -10,30 +10,8 @@ $(document).ready(function () {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
-        var thre = $('#threshold').val();
 
-        exten = "";
-        if (thre == "0.5")
-        {
-            exten = "05";
-        }
-        else if (thre == "0.5 M")
-        {
-            exten = "05_M";
-        }
-        else if (thre == "1.0")
-        {
-            exten = "10";
-        }
-        else if (thre == "1.0 M")
-        {
-            exten = "10_M";
-        }
-        else if (thre == "S = 20, H = 0.8, L = 0.5 M")
-        {
-            exten = "20_08_05_M";
-        }
-        getChurn(repo, group, pack, exten);
+        getChurn(repo, group, pack);
         getStats(repo, pack);
     }
 });
@@ -66,29 +44,6 @@ $('#update').click(function(event) {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
-        var thre = $('#threshold').val();
-
-        exten = "";
-        if (thre == "0.5")
-        {
-            exten = "05";
-        }
-        else if (thre == "0.5 M")
-        {
-            exten = "05_M";
-        }
-        else if (thre == "1.0")
-        {
-            exten = "10";
-        }
-        else if (thre == "1.0 M")
-        {
-            exten = "10_M";
-        }
-        else if (thre == "S = 20, H = 0.8, L = 0.5 M")
-        {
-            exten = "20_08_05_M";
-        }
         
         /* Pass these values to the function that gets the data using
            REST and plots it */
@@ -98,20 +53,20 @@ $('#update').click(function(event) {
 
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
-        getChurn(repo, group, pack, exten);
+        getChurn(repo, group, pack);
         getStats(repo, pack);
 
         event.preventDefault();
     });
 
-function getChurn(repo, group, pack, thre) {
-    console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
+function getChurn(repo, group, pack) {
+    console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
-        url: rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack),
+        url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack),
         dataType: "json", // data type of response
         success: function(data) {
-            //console.log(rootURL + '/commitsChurn/' + thre + "/" + repo + "/" + group + "/" + encodeURIComponent(pack));
+            //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
             plotChurn(data, repo, group, pack);
         }
     });
@@ -142,7 +97,7 @@ function plotChurn(data, repo, group, pack) {
 
             //Fix for undefined error for days grouping
             //Since highcharts only checks the first value
-            statsArray["ExtraData"][0] = 0;
+            statsArray["ExtraData"][0] = {x: moment(churnData["date"][0], "YYYY-MM-DD HH:mm:ss").valueOf(), y: 0};
             first = false;
         }
     }
@@ -336,7 +291,11 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                     var y_point = Math.round(this.points[index].y);
                     //console.log(y_point);
                     
-                    if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] != undefined)
+                    /*
+                     * Check if the series is the index series. If it is plot the user names
+                     */
+                    if (this.points[index].series.name == "ExtraData" && this.points[index].series.userOptions.data[y_point] != undefined
+                        && this.points[index].series.userOptions.data[y_point].myData != undefined)
                     {
                         s += '<br>Committed By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["com"] + '</b></br>';
                         s += '<br>Authored By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["aut"] + '</b></br>';
@@ -609,6 +568,10 @@ $(function() {
     return [url, seriesName];
 }*/
 
+/**
+ *
+ *
+ */
 function getStats(repo, pack)
 {
     pack = pack.replace(/\//g, '!');
@@ -628,17 +591,20 @@ function fillTable(data)
 {
     var list = "";
     var authList = "";
+    var deleList = "";
     keys = Object.keys(data);
     for (var i = 0; i < 5; i ++)
     {
-        list += createRow(data, 0, Math.round(keys.length/2), i);
-        authList += createRow(data, Math.round(keys.length/2), keys.length, i);
+        list += createRow(data, 0, Math.round(keys.length/3), i);
+        authList += createRow(data, Math.round(keys.length/3), Math.round((keys.length*2)/3), i);
+        deleList += createRow(data,Math.round((keys.length*2)/3), keys.length, i);
     }
-    console.log(Math.round(keys.length/2));
-    console.log(authList);
+    //console.log(Math.round(keys.length/2));
+    //console.log(authList);
     
     $('#CodeComment').html(list);
     $('#CommitAuthor').html(authList);
+    $('#Deleters').html(deleList);
 }
 
 function createRow(data, starter, stopper, rowNumber)
@@ -646,11 +612,25 @@ function createRow(data, starter, stopper, rowNumber)
     var list = "<tr>";
 
     keys = Object.keys(data);
+    var empty = true;
     for (var i = starter; i < stopper; i++)
     {
-        list+= "<td>" + data[keys[i]][rowNumber][0] + " ["+data[keys[i]][rowNumber][1] + "]</td>";
+        if (data[keys[i]][rowNumber] != undefined)
+        {
+            empty = false;
+            list+= "<td>" + data[keys[i]][rowNumber][0] + " [<em>"+data[keys[i]][rowNumber][1] + "</em>]</td>";
+        }
+        else
+        {
+            list+= "<td>" + "</td>";
+        }
     }
     list+="</tr>";
+
+    if (empty)
+    {
+        return "";
+    }
     return list;
 }
 

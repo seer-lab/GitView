@@ -478,7 +478,7 @@ function getClasses($mysqli, $user, $repo, $package)
  * Get the Top coders (most lines of code in total (added - deleted)) in order
  * The number of coders is set by the $LIMIT
  */
-function getTopCoder($mysqli, $user, $repo, $package, $reverse)
+function getTopCoder($mysqli, $user, $repo, $package, $reverse, $opposite)
 {
     global $LIMIT, $DESC;
 
@@ -491,9 +491,15 @@ function getTopCoder($mysqli, $user, $repo, $package, $reverse)
         $desc = $DESC;
     }
 
+    $cond = "HAVING most_code > 0";
+    if ($opposite)
+    {
+        $cond = "HAVING most_code < 0";
+    }
+
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_code > 0 ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_code) AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ". $cond . " ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -525,7 +531,7 @@ function getTopCoder($mysqli, $user, $repo, $package, $reverse)
  * in order.
  * The number of coders is set by the $LIMIT
  */
-function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
+function getTopCommenter($mysqli, $user, $repo, $package, $reverse, $opposite)
 {
     global $LIMIT, $DESC;
 
@@ -536,9 +542,15 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse)
         $desc = $DESC;
     }
 
+    $cond = "HAVING most_comments > 0";
+    if ($opposite)
+    {
+        $cond = "HAVING most_comments < 0";
+    }
+
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_comments > 0 ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name " . $cond . " ORDER BY most_comments " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -582,7 +594,7 @@ function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_commits > 0 ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */

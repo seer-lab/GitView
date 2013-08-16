@@ -100,7 +100,6 @@ SELECT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.tota
 
 SELECT DISTINCT name FROM file WHERE name Like 'UniversalImageLoader%';
 
-
 /* Might as well do the running total in php since I would have to do a inner query to do it */
 SELECT c.commit_date, (c.total_comment_addition - c.total_comment_deletion) AS total_comments, (c.total_code_addition - c.total_code_deletion) AS total_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' ORDER BY c.commit_date
 
