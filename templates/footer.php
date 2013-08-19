@@ -3,7 +3,7 @@
 ?>
       <footer class="footer">
         <div class="pull-left">
-          <p>Designed and built by the <a target="_blank" href="https://github.com/dataBaseError">Joseph Heron</a>, 
+          <p>Designed and built by <a target="_blank" href="https://github.com/dataBaseError">Joseph Heron</a>, 
             <a target="_blank" href="http://faculty.uoit.ca/bradbury/sqrlab/">SQR Lab</a></p>
         </div>
       </footer>
