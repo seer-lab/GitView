@@ -179,7 +179,7 @@ function getStats($user, $repo, $path)
 								'bottomDeCommenter'	=> getTopCommenter($mysqli_stats, $user, $repo, $path, true, true),*/
 								'topCommitter'		=> getTopCommitter($mysqli_stats, $user, $repo, $path, false),
 								//'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
-								'topAuthor'			=> getTopAuthor($mysqli_stats, $user, $repo, $path, false),
+								'topContributors' => getTopContributors($mysqli_stats, $user, $repo, $path, false),
 								/*'bottomAuthor'		=> getTopAuthor($mysqli_stats, $user, $repo, $path, true)*/)), JSON_NUMERIC_CHECK);
 }
 

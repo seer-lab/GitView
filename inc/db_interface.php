@@ -646,7 +646,7 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(f.total_comments + f.total_code) AS contrib FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY contrib " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS contrib FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY contrib " . $desc . " LIMIT " . $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -657,6 +657,50 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
 
         /* bind result variables */
         $stmt->bind_result($name, $amount);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results[$i] = array($name, $amount);
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * Get the Top committer (highest number of commits) in order.
+ * The number of coders is set by the $LIMIT
+ */
+function getTopContributors($mysqli, $user, $repo, $package, $reverse)
+{
+    global $LIMIT, $DESC;
+
+    /* Set to the query to get the lowest coders if reverse is set*/
+    $desc = "";
+    if (!$reverse)
+    {
+        $desc = $DESC;
+    }
+
+    $results = array();
+
+    if ($stmt = $mysqli->prepare("SELECT aut.name, SUM(f.total_comments) + SUM(f.total_code) AS contrib, ABS(SUM(f.total_comments) + SUM(f.total_code)) AS ordering FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY ordering " . $desc . " LIMIT " . $LIMIT))
+    {
+        $package = $package . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('sss', $repo, $user, $package);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name, $amount, $ordering);
 
         $i = 0;
         while ($stmt->fetch())

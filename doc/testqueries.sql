@@ -144,3 +144,5 @@ SELECT t.* FROM tags AS t, (SELECT com.date AS last_date, r.repo_id AS r_repo FR
 SELECT t.* FROM tags AS t, (SELECT c.commit_date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'ACRA' AND r.repo_owner LIKE 'ACRA' ORDER BY c.commit_date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date;
 
 SELECT t.tag_id FROM tags AS t, (SELECT c.commit_date AS last_date, r.repo_id AS r_repo FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference WHERE r.repo_id = 1 ORDER BY c.commit_date DESC LIMIT 1) AS top WHERE t.repo_reference = top.r_repo AND t.tag_date > top.last_date
+
+SELECT aut.name, (SUM(f.total_comments) + SUM(f.total_code)) AS contrib, ABS(SUM(f.total_comments) + SUM(f.total_code)) AS ordering FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA' AND f.path LIKE '%' GROUP BY aut.name ORDER BY ordering DESC;
