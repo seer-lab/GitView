@@ -7,21 +7,21 @@
 -        }						| Deleted line
 -							| Deleted line
          public String getTerm() {
--            return term();				| Modified Line deleted
--        }						| Deleted line
--							| Deleted line
+-            return term();				    | Modified Line deleted
+-        }						            | Deleted line
+-							                | Deleted line
 -        public int startOffset() {			| Deleted line
--            return this.startOffset;			| Deleted line
+-            return this.startOffset;	    | Deleted line
 +            return this.term;				| Modified Line added
          }
 
          public int getStartOffset() {
 -            return startOffset();			| Modified Line deleted
--        }						| Deleted line
--							| Deleted line
+-        }						            | Deleted line
+-							                | Deleted line
 -        public int endOffset() {			| Deleted line
 -            return this.endOffset;			| Deleted line
-+            return this.startOffset;			| Modified Line added
++            return this.startOffset;		| Modified Line added
          }
 
          public int getEndOffset() {
@@ -116,7 +116,7 @@
 -                        .append(token.startOffset()).append("->").append(token.endOffset()).appen$
 -                        .append(token.type())
 +                        .append(token.getTerm()).append(":")
-+                        .append(token.getStartOffset()).append("->").append(token.getEndOffset())$
++                        .append(token.getStartOffset()).append("->").append(token.getEndOffset())
 +                        .append(token.getType())
                          .append("]\n");
              }

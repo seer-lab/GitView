@@ -1,15 +1,24 @@
-require_relative '../src/database_interface'
-
-#The pattern for finding comments
-COMMENT_FINDER = /(.*?)< COMMENT type = "(.*?)" value = "(.*?)" > (.*?)< \/ COMMENT >(.*)/m
-
-a = "< COMMENT type = \"class\" value = \"forIn\" > // For the each of the many 
+< COMMENT type = \"class\" value = \"forIn\" > // For the each of the many 
 < / COMMENT >
 public class forIn {
     < COMMENT type = \"var_declaration\" value = \"numberOfRuns\" > // member declaration
     < / COMMENT >
     public static final int numberOfRuns = 6;
     private int numberOfLoops;
+
+    < COMMENT type = \"static_initializer\" value = \"static_init\" > // Need to declare 2
+    < / COMMENT >
+    {
+        // a is defined to 2
+        int a = 2;
+    }
+
+    < COMMENT type = \"instance_initializer\" value = \"instance_init\" > // defined just incase
+    < / COMMENT >
+    {
+        //This is a program
+        boolean isProgram = true;
+    }
 
     < COMMENT type = \"constructor\" value = \"forIn\" > //The default constructor
     < / COMMENT >
@@ -132,37 +141,3 @@ public class forIn {
     }
 
 }
-"
-
-result = a.scan(COMMENT_FINDER)
-
-before = result[0][0]
-type = result[0][1]
-value = result[0][2]
-comment = result[0][3]
-rest = result [0][4]
-
-#Should add tags to the actual txl code for making statements tagged.
-#breaks the given code into statements
-def breakIntoStatements(code)
-    statements = code.scan(/(.*?;)/m)
-
-    statements.each { |statement|
-
-        # Ensure that it is really breaking at the end of a statement
-        numQuotes = statement[0].scan(/[^\\](")/)
-        if numQuotes.length % 2 == 0 
-            #success
-        else
-            #mergeStatement
-
-        end
-    }
-    
-end
-
-#Store in db
-#parse #{rest} for end of code that is linked
-#link children to parent after linking their children to them
-    # Also using the regex to get the comment blocks linked to the code
-#Parse the remaining code that was no part of the parent.

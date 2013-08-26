@@ -1,0 +1,1 @@
+/< COMMENT type = "(.*?)" value = "(.*?)" > (\s|.)*?< \/ COMMENT >(.*)/m
