@@ -1,5 +1,4 @@
-#require 'mysql'
-
+require_relative 'utility'
 require_relative 'regex'
 require_relative 'stats_db_interface'
 
@@ -95,6 +94,13 @@ def prettyPrint(results)
     }
 end
 
+def getNumberOfTags(con, repo_id)
+	pick = con.prepare("SELECT count(t.tag_id) FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_id = ?")
+    pick.execute(repo_id)
+
+    return Utility.toInteger(pick.fetch)
+end
+
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
 
@@ -107,6 +113,15 @@ repo.each { |repo_id, repo_name, repo_owner|
 
     results = getStartAndFinish(stats_con, repo_owner, repo_name)
 
-    puts "Repo= #{repo_owner}/#{repo_name}"
+    puts "Repo = #{repo_owner}/#{repo_name}"
     prettyPrint(results)
+
+
+    numberOfTags = getNumberOfTags(stats_con, repo_id)
+
+    if numberOfTags == 0 then
+    	numberOfTags = "N/A"
+    end
+    puts "Number of Tags: #{numberOfTags}"
+    puts ""
 }
