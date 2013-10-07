@@ -10,9 +10,10 @@ $app = new \Slim\Slim();
 
 // GET route
 $app->get('/commits', 'getCommitsAPI');
-$app->get('/commitsChurn/:user/:repo/:group/:path', 'getCommitsChurnAPI');
+$app->get('/commitsChurn/:user/:repo/:group/:committer/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo', 'getRepoPackages');
+$app->get('/committers/:user/:repo', 'getRepoCommitter');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/stats/:user/:repo/:path', 'getStats');
 
@@ -34,7 +35,7 @@ function getCommitsAPI()
 	echo json_encode(getCommitsMonths($mysqli_stats));
 }
 
-function getCommitsChurnAPI($user, $repo, $group, $path)
+function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 
@@ -49,9 +50,16 @@ function getCommitsChurnAPI($user, $repo, $group, $path)
 
 	$path = preg_replace('/!/', '/', $path);
 
+	$committer = urldecode($committer);
+
 	if ($path == "All Packages")
 	{
 		$path = "";
+	}
+
+	if ($committer == "All Users")
+	{
+		$committer = "%";
 	}
 
 	#$user = urldecode($user);
@@ -65,17 +73,17 @@ function getCommitsChurnAPI($user, $repo, $group, $path)
     	//$repo = explode('/', $repo);
 		if($group == $MONTH)
 		{
-			echo json_encode(array(getChurnMonths($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
+			echo json_encode(array(getChurnMonths($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
 		}
 		elseif($group == $DAY)
 		{
-			echo json_encode(array(getChurnDays($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
+			echo json_encode(array(getChurnDays($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
 		}
 		else
 		{
 
 			/* On a per commit basis */
-			echo json_encode(array(getChurn($mysqli_stats, $user, $repo, $path), getTags($mysqli_stats, $user, $repo)));
+			echo json_encode(array(getChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
 		}
 	}
 }
@@ -91,6 +99,19 @@ function getRepoPackages($user, $repo)
 		exit();
 	}
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
+}
+
+function getRepoCommitter($user, $repo)
+{
+	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+	echo json_encode(getCommitters($mysqli_stats, $user, $repo));
 }
 
 /*function getPieStats($type, $user, $repo, $reverse, $path)

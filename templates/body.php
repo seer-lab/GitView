@@ -71,13 +71,42 @@ global $selectedOwner, $selectedRepo;
                     <?php
                       global $selectedOwner, $selectedRepo;
                       //SET TO load up only on first load
-                      if ($_SESSION['first_load'])
+
+                      echo '<option selected="selected">All Packages</option>';
+                      if ($_SESSION['first_load'] == 0)
                       {
-                        $_SESSION['first_load'] = false;
+                        $_SESSION['first_load'] = 1;
 			                  
 
 			                  $packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo);
-                        echo '<option selected="selected">All Packages</option>';
+                        //echo '<option selected="selected">All Packages</option>';
+                       
+                        foreach ($packages as $package)
+                        {
+                          echo '<option>' . $package . '</option>';
+                        }
+                      }
+                        
+                    ?>
+                </select>
+            </div>
+        </div>
+        <div class="control-group">
+          <label for="committer" class="control-label">Committer</label>
+              <div class="controls">
+                <select id="committer" name="committer" class="input-xlarge">
+                    <?php
+                      global $selectedOwner, $selectedRepo;
+                      //SET TO load up only on first load
+
+                      echo '<option selected="selected">All Users</option>';
+                      if ($_SESSION['first_load'] == 1)
+                      {
+                        $_SESSION['first_load'] = 2;
+                        
+
+                        $packages = getCommitters($mysqli_stats, $selectedOwner, $selectedRepo);
+                        
                        
                         foreach ($packages as $package)
                         {

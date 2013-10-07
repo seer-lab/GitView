@@ -10,16 +10,21 @@ $(document).ready(function () {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
+        var user = $('#committer').val();
 
-        getChurn(repo, group, pack);
+        getChurn(repo, group, pack, user);
         getStats(repo, pack);
     }
 });
 
 $('#repo').click(function(event) {
+
+    //TODO make so that Committers is update the just as packages is.
     var repo = $('#repo').val(); 
 
-    var list = "<option selected=\"selected\">All Packages</option>";
+    var packageList = "<option selected=\"selected\">All Packages</option>";
+
+    var committerList = "<option selected=\"selected\">All Users</option>";
 
     $.ajax({
         type: 'GET',
@@ -30,11 +35,28 @@ $('#repo').click(function(event) {
 
             for (var i = 0; i < length; i++)
             {
-                list += "<option>"+data[i]+"</option>";
+                packageList += "<option>"+data[i]+"</option>";
             }
 
             //console.log(list);
-            $('#package').html(list);
+            $('#package').html(packageList);
+        }
+    });
+
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/committers/' + repo,
+        dataType: "json", 
+        success: function(data) {
+            length = data.length;
+
+            for (var i = 0; i < length; i++)
+            {
+                committerList += "<option>"+data[i]+"</option>";
+            }
+
+            //console.log(list);
+            $('#committer').html(committerList);
         }
     });
 });
@@ -44,6 +66,7 @@ $('#update').click(function(event) {
         var repo = $('#repo').val();
         var group = $('#group').val();
         var pack = $('#package').val();
+        var user = $('#committer').val();
         
         /* Pass these values to the function that gets the data using
            REST and plots it */
@@ -53,17 +76,17 @@ $('#update').click(function(event) {
 
         pack = pack.replace(/\//g, '!');
         //console.log(pack)
-        getChurn(repo, group, pack);
+        getChurn(repo, group, pack, user);
         getStats(repo, pack);
 
         event.preventDefault();
     });
 
-function getChurn(repo, group, pack) {
-    console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
+function getChurn(repo, group, pack, user) {
+    console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
-        url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack),
+        url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack),
         dataType: "json", // data type of response
         success: function(data) {
             //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));

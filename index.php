@@ -7,7 +7,7 @@ session_start();
 include 'templates/header.php';
 include 'templates/body.php';
 
-$_SESSION['first_load'] = true;
+$_SESSION['first_load'] = 0;
 
 /* Connect to the databases */
 /*

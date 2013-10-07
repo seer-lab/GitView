@@ -41,7 +41,7 @@ function getAllRepos($mysqli)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getChurn($mysqli, $user, $repo, $path)
+function getChurn($mysqli, $user, $repo, $path, $committer)
 {
     $results = array(   'date'                  => array(),
                         'commentsAdded'         => array(),
@@ -59,12 +59,12 @@ function getChurn($mysqli, $user, $repo, $path)
                         'body'                  => array(),
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('sss', $repo, $user, $path);
+        $stmt->bind_param('ssss', $repo, $user, $path, $committer);
 
         /* execute query */
         $stmt->execute();
@@ -120,7 +120,7 @@ function getChurn($mysqli, $user, $repo, $path)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getChurnDays($mysqli, $user, $repo, $path)
+function getChurnDays($mysqli, $user, $repo, $path, $committer)
 {
     $results = array(   'date'                  => array(),
                         'commentsAdded'         => array(),
@@ -135,11 +135,11 @@ function getChurnDays($mysqli, $user, $repo, $path)
                         'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN user AS com ON c2.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ? AND com.name LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('sss', $repo, $user, $path);
+        $stmt->bind_param('ssss', $repo, $user, $path, $committer);
 
         /* execute query */
         $stmt->execute();
@@ -192,7 +192,7 @@ function getChurnDays($mysqli, $user, $repo, $path)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getChurnMonths($mysqli, $user, $repo, $path)
+function getChurnMonths($mysqli, $user, $repo, $path, $committer)
 {
     $results = array(   'date'                  => array(),
                         'commentsAdded'         => array(),
@@ -207,11 +207,11 @@ function getChurnMonths($mysqli, $user, $repo, $path)
                         'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN user AS com ON c2.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ? AND com.name LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
-        $stmt->bind_param('sss', $repo, $user, $path);
+        $stmt->bind_param('ssss', $repo, $user, $path, $committer);
 
         /* execute query */
         $stmt->execute();
@@ -432,6 +432,37 @@ function getTags($mysqli, $user, $repo)
             $results['desc'][$i] = $desc;
             $results['name'][$i] = $name;
             $results['sha'][$i] = $sha;
+            
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+function getCommitters($mysqli, $user, $repo)
+{
+    $results = array();
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY com.name"))
+    {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($name);
+
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            //echo "<p>date " . $date . "</p>";
+            $results[$i] = $name;
             
             $i++;
         }
