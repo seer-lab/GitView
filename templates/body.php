@@ -120,7 +120,8 @@ global $selectedOwner, $selectedRepo;
         </div>
         <div class="control-group">
           <div class="controls">
-            <button class="btn btn-primary" id='update' >Submit</button>
+              <button class="btn btn-primary" id='update' >Refine</button>
+              <button class="btn btn-primary" id='reset' >Reset</button>
           </div>
         </div>
 </form>

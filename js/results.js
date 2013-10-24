@@ -3,17 +3,11 @@ var rootURL = "http://git_data.dom/api";
 
 $(document).ready(function () {
     /* Display the election results when page is loaded */
-    if (window.location.pathname.match(/index\.php/))
+    //if (window.location.pathname.match(/index\.php/) || window.location.pathname.match(//))
     {
         $('#commit_info_panel').hide();
         //allCommits();
-        var repo = $('#repo').val();
-        var group = $('#group').val();
-        var pack = $('#package').val();
-        var user = $('#committer').val();
-
-        getChurn(repo, group, pack, user);
-        getStats(repo, pack);
+        plotSelectedValues();
     }
 });
 
@@ -61,26 +55,68 @@ $('#repo').click(function(event) {
     });
 });
 
+function plotSelectedValues()
+{
+    /* Get the unique session id and POST data */
+    var repo = $('#repo').val();
+    var group = $('#group').val();
+    var pack = $('#package').val();
+    var user = $('#committer').val();
+    
+    /* Pass these values to the function that gets the data using
+       REST and plots it */
+    //console.log(pack)
+
+    $('#commit_info_panel').hide();
+
+    pack = pack.replace(/\//g, '!');
+    //console.log(pack)
+    getChurn(repo, group, pack, user);
+    getStats(repo, pack);
+}
+
 $('#update').click(function(event) {
-        /* Get the unique session id and POST data */
-        var repo = $('#repo').val();
-        var group = $('#group').val();
-        var pack = $('#package').val();
-        var user = $('#committer').val();
-        
-        /* Pass these values to the function that gets the data using
-           REST and plots it */
-        //console.log(pack)
+    
+    plotSelectedValues();
 
-        $('#commit_info_panel').hide();
+    event.preventDefault();
+});
 
-        pack = pack.replace(/\//g, '!');
-        //console.log(pack)
-        getChurn(repo, group, pack, user);
-        getStats(repo, pack);
+$('#reset').click(function(event) {
 
-        event.preventDefault();
+
+    $('#repo option').each(function () {
+        if (this.defaultSelected) {
+            this.selected = true;
+            return false;
+        }
     });
+
+    $('#group option').each(function () {
+        if (this.defaultSelected) {
+            this.selected = true;
+            return false;
+        }
+    });
+    
+    $('#package option').each(function () {
+        if (this.defaultSelected) {
+            this.selected = true;
+            return false;
+        }
+    });
+
+    $('#committer option').each(function () {
+        if (this.defaultSelected) {
+            this.selected = true;
+            return false;
+        }
+    });
+
+    plotSelectedValues();
+
+    event.preventDefault();
+});
 
 function getChurn(repo, group, pack, user) {
     console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
