@@ -264,14 +264,14 @@ function getChurnMonths($mysqli, $user, $repo, $path, $committer)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getPackages($mysqli, $user, $repo)
+function getPackages($mysqli, $user, $repo, $committer)
 {
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY f.path, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND com.name LIKE ? ORDER BY f.path, c.commit_date"))
     {
         /* bind parameters for markers */
-        $stmt->bind_param('ss', $repo, $user);
+        $stmt->bind_param('sss', $repo, $user, $committer);
 
         /* execute query */
         $stmt->execute();
@@ -376,9 +376,9 @@ function checkForMore($packages, $package)
  * @param $user the owner of the repository.
  * @param $repo the repository to get the statistics for.
  */
-function getUniquePackage($mysqli, $user, $repo)
+function getUniquePackage($mysqli, $user, $repo, $committer)
 {
-    $results = getPackages($mysqli, $user, $repo);
+    $results = getPackages($mysqli, $user, $repo, $committer);
 
     $packages = array();
 
@@ -443,13 +443,16 @@ function getTags($mysqli, $user, $repo)
     return $results;
 }
 
-function getCommitters($mysqli, $user, $repo)
+function getCommitters($mysqli, $user, $repo, $path)
 {
     $results = array();
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY com.name"))
+
+    $path = $path . '%';
+    
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference  WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY com.name"))
     {
         /* bind parameters for markers */
-        $stmt->bind_param('ss', $repo, $user);
+        $stmt->bind_param('sss', $repo, $user, $path);
 
         /* execute query */
         $stmt->execute();

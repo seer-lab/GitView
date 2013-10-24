@@ -12,8 +12,8 @@ $app = new \Slim\Slim();
 $app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:user/:repo/:group/:committer/:path', 'getCommitsChurnAPI');
 //$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
-$app->get('/packages/:user/:repo', 'getRepoPackages');
-$app->get('/committers/:user/:repo', 'getRepoCommitter');
+$app->get('/packages/:user/:repo/:commiter', 'getRepoPackages');
+$app->get('/committers/:user/:repo/:path', 'getRepoCommitter');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/stats/:user/:repo/:path', 'getStats');
 
@@ -46,21 +46,8 @@ function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
 	}
-	$path = urldecode($path);
-
-	$path = preg_replace('/!/', '/', $path);
-
-	$committer = urldecode($committer);
-
-	if ($path == "All Packages")
-	{
-		$path = "";
-	}
-
-	if ($committer == "All Users")
-	{
-		$committer = "%";
-	}
+	$path = cleanPackage($path);
+	$committer = cleanUser($committer);
 
 	#$user = urldecode($user);
 	#$repo = urldecode($repo);
@@ -88,30 +75,58 @@ function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 	}
 }
 
-function getRepoPackages($user, $repo)
+function getRepoPackages($user, $repo, $committer)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	$committer = cleanUser($committer);
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
 	}
-	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo));
+	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo, $committer));
 }
 
-function getRepoCommitter($user, $repo)
+function getRepoCommitter($user, $repo, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	$path = cleanPackage($path);
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		exit();
 	}
-	echo json_encode(getCommitters($mysqli_stats, $user, $repo));
+	echo json_encode(getCommitters($mysqli_stats, $user, $repo, $path));
+}
+
+function cleanPackage($path)
+{
+	$path = urldecode($path);
+
+	$path = preg_replace('/!/', '/', $path);
+
+	if ($path == "All Packages")
+	{
+		$path = "";
+	}
+	return $path;
+}
+
+function cleanUser($committer)
+{
+	$committer = urldecode($committer);
+
+	if ($committer == "All Users")
+	{
+		$committer = "%";
+	}
+	return $committer;
 }
 
 /*function getPieStats($type, $user, $repo, $reverse, $path)

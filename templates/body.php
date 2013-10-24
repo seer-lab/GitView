@@ -78,7 +78,7 @@ global $selectedOwner, $selectedRepo;
                         $_SESSION['first_load'] = 1;
 			                  
 
-			                  $packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo);
+			                  $packages = getUniquePackage($mysqli_stats, $selectedOwner, $selectedRepo, '%');
                         //echo '<option selected="selected">All Packages</option>';
                        
                         foreach ($packages as $package)
@@ -105,7 +105,7 @@ global $selectedOwner, $selectedRepo;
                         $_SESSION['first_load'] = 2;
                         
 
-                        $packages = getCommitters($mysqli_stats, $selectedOwner, $selectedRepo);
+                        $packages = getCommitters($mysqli_stats, $selectedOwner, $selectedRepo, '%');
                         
                        
                         foreach ($packages as $package)

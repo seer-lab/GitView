@@ -3,7 +3,7 @@ var rootURL = "http://git_data.dom/api";
 
 $(document).ready(function () {
     /* Display the election results when page is loaded */
-    //if (window.location.pathname.match(/index\.php/) || window.location.pathname.match(//))
+    if (checkIfGraphPage())
     {
         $('#commit_info_panel').hide();
         //allCommits();
@@ -11,49 +11,132 @@ $(document).ready(function () {
     }
 });
 
+function checkIfGraphPage()
+{
+    if (window.location.pathname.match(/^\/index\.php$/) || window.location.pathname.match(/^\/$/))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 $('#repo').click(function(event) {
 
-    //TODO make so that Committers is update the just as packages is.
     var repo = $('#repo').val(); 
+    var pack = $('#package').val();
+    var user = $('#committer').val();
 
-    var packageList = "<option selected=\"selected\">All Packages</option>";
+    refreshPackage(repo, user, pack);
+    refreshCommitter(repo, pack, user);
+});
 
-    var committerList = "<option selected=\"selected\">All Users</option>";
+$('#committer').click(function(event) {
+    var repo = $('#repo').val(); 
+    var pack = $('#package').val();
+    var user = $('#committer').val();
+
+    refreshPackage(repo, user, pack);
+});
+
+$('#package').click(function(event) {
+
+    var repo = $('#repo').val();
+    var pack = $('#package').val();
+
+    var user = $('#committer').val();
+
+    refreshCommitter(repo, pack, user);
+});
+
+function refreshPackage(repo, user, path)
+{
+
+    var packageList = "";
+
+    console.log(path);
+    if(path == '')
+    {
+        packageList = "<option selected=\"selected\">All Packages</option>";
+    }
+    else
+    {
+        packageList = "<option>All Packages</option>";
+    }
 
     $.ajax({
         type: 'GET',
-        url: rootURL + '/packages/' + repo,
+        url: rootURL + '/packages/' + repo + "/" + encodeURIComponent(user),
         dataType: "json", 
         success: function(data) {
             length = data.length;
 
             for (var i = 0; i < length; i++)
             {
-                packageList += "<option>"+data[i]+"</option>";
+                if (data[i] == path)
+                {
+                    packageList += "<option selected=\"selected\">"+data[i]+"</option>";
+                }
+                else
+                {
+                    packageList += "<option>"+data[i]+"</option>";
+                }
             }
 
             //console.log(list);
             $('#package').html(packageList);
         }
-    });
+    });   
+}
+
+function refreshCommitter(repo, pack, committer)
+{
+    var committerList = "";
+
+    console.log(committer);
+
+    if(committer == '')
+    {
+        committerList = "<option selected=\"selected\">All Users</option>";
+    }
+    else
+    {
+        committerList = "<option>All Users</option>";
+    }
+
+    pack = pack.replace(/\//g, '!');
+
+    console.log(rootURL + '/committers/' + repo + "/" + encodeURIComponent(pack));
 
     $.ajax({
         type: 'GET',
-        url: rootURL + '/committers/' + repo,
+        url: rootURL + '/committers/' + repo + "/" + encodeURIComponent(pack),
         dataType: "json", 
         success: function(data) {
             length = data.length;
 
+            console.log(data);
             for (var i = 0; i < length; i++)
             {
-                committerList += "<option>"+data[i]+"</option>";
+                if (data[i] == committer)
+                {
+
+                    committerList += "<option selected=\"selected\">"+data[i]+"</option>";
+                }
+                else
+                {
+                    committerList += "<option>"+data[i]+"</option>";
+                }
             }
 
             //console.log(list);
             $('#committer').html(committerList);
         }
     });
-});
+
+}
 
 function plotSelectedValues()
 {
@@ -84,34 +167,10 @@ $('#update').click(function(event) {
 
 $('#reset').click(function(event) {
 
-
-    $('#repo option').each(function () {
-        if (this.defaultSelected) {
-            this.selected = true;
-            return false;
-        }
-    });
-
-    $('#group option').each(function () {
-        if (this.defaultSelected) {
-            this.selected = true;
-            return false;
-        }
-    });
-    
-    $('#package option').each(function () {
-        if (this.defaultSelected) {
-            this.selected = true;
-            return false;
-        }
-    });
-
-    $('#committer option').each(function () {
-        if (this.defaultSelected) {
-            this.selected = true;
-            return false;
-        }
-    });
+    document.getElementById("repo").selectedIndex = 0;
+    document.getElementById("group").selectedIndex = 0;
+    document.getElementById("package").selectedIndex = 0;
+    document.getElementById("committer").selectedIndex = 0;
 
     plotSelectedValues();
 
@@ -233,14 +292,17 @@ function plotChurn(data, repo, group, pack) {
     areaPlotChurn("container", statsArray, repo, group, tagArray);
 }
 
-var PageHeight
+var PageHeight;
 $(document).ready(function(){
-    if ($(window).height()*0.8 > 700)
+    if(checkIfGraphPage())
     {
-        $('#container').height($(window).height()*0.8);
+        if ($(window).height()*0.8 > 700)
+        {
+            $('#container').height($(window).height()*0.8);
+        }
+        PageHeight = $('#container').height();
+        console.log(PageHeight);
     }
-    PageHeight = $('#container').height();
-    console.log(PageHeight);
 });
 
 function areaPlotChurn(id, stats, repo, group, tagInfo) {
@@ -695,12 +757,14 @@ function createRow(data, starter, stopper, rowNumber)
     return list;
 }
 
+/*
 $('#pie_type').click(function(event) {
     var repo = $('#repo').val();
     var pack = $('#package').val();
     getStats(repo, pack);
 
 });
+*/
 
 /*function getMostCoder(repo, pack) {
     var type = $('#pie_type').val();
@@ -774,3 +838,12 @@ function plotMostCoder(data, repo, name) {
         }]
     });
 }
+
+$('#submit').click(function(event) {
+    
+    //plotSelectedValues();
+
+    // Make api request 
+
+    event.preventDefault();
+});

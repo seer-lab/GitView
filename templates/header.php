@@ -34,7 +34,17 @@
         <div class="container">
           <a class="brand" href="../index.php">
             Mining GitHub for Comment and Code Churn Information
-          </a>            
+          </a> 
+          
+            <?php
+              if(preg_match("/\/(index.php)?.*/", $_SERVER['REQUEST_URI'])){
+                echo '<ul class="nav pull-right">';
+                //echo '<ul class="">';
+                echo '<a class="brand" href="../add_new.php"">Add New</a>';
+                //echo '</ul>';
+                echo '</ul>';
+              }
+            ?>          
         </div>
       </div>
     </div>
