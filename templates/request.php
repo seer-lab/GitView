@@ -34,7 +34,7 @@ global $selectedOwner, $selectedRepo;
           <div class="controls">
             <input id="username" type="text" placeholder="Username">
             <label class="control-label">/</label>
-            <input id="repo" type="text" placeholder="Repository">
+            <input id="repository" type="text" placeholder="Repository">
           </div>
         </div>
         <button class="btn btn-primary" id='submit' >Submit</button>

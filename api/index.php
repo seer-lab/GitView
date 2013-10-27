@@ -16,6 +16,7 @@ $app->get('/packages/:user/:repo/:commiter', 'getRepoPackages');
 $app->get('/committers/:user/:repo/:path', 'getRepoCommitter');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/stats/:user/:repo/:path', 'getStats');
+$app->get('/newrepo/:user/:repo/', 'getNewRepo');
 
 $app->run();
 
@@ -217,6 +218,35 @@ function getStats($user, $repo, $path)
 								//'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
 								'topContributors' => getTopContributors($mysqli_stats, $user, $repo, $path, false),
 								/*'bottomAuthor'		=> getTopAuthor($mysqli_stats, $user, $repo, $path, true)*/)), JSON_NUMERIC_CHECK);
+}
+
+function getNewRepo($user ,$repo)
+{
+	//Validate both repo and user
+	if(validateUserRepo($user, $repo) === TRUE)
+	{
+		//TODO check if the user/repo hasnt already been parsed
+
+		//TODO run the script to parse new repo
+		$output = shell_exec('ls -lart');
+		echo json_encode($output);
+
+		
+	}
+}
+
+function validateUserRepo($user ,$repo)
+{
+	//Username == alphanumeric with dashes (just not at the beginning)
+	//Repo can only be alphanumeric (with dashes, underscores, periods)
+	if(preg_match("/^[a-zA-Z0-9][a-zA-Z0-9-]*$/", $user) === 1)
+	{
+		if(preg_match("/^[a-zA-Z0-9-_\.]+$/", $repo) === 1)
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 ?>
