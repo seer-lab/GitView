@@ -788,4 +788,42 @@ function codeRatio($mysqli, $user, $repo, $package)
  * so the percent of comments would be (where c is # of comments and s is # of  * souce code lines) c / (s / n)
  */
 
+
+/**
+ * Using the github_data database check if the given repo is there
+ * 
+ */
+function isUniqueRepo($mysqli, $user, $repo)
+{
+
+    $result = 0;
+
+    if ($stmt = $mysqli->prepare("SELECT 1 FROM repositories WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ?"))
+    {
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+        
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($result);
+
+        $stmt->fetch();
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    if($result === 0)
+    {
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
+    
+}
+
 ?>

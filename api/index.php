@@ -220,22 +220,44 @@ function getStats($user, $repo, $path)
 								/*'bottomAuthor'		=> getTopAuthor($mysqli_stats, $user, $repo, $path, true)*/)), JSON_NUMERIC_CHECK);
 }
 
-function getNewRepo($user ,$repo)
+function getNewRepo($user, $repo)
 {
+	global $db_user, $db_pass, $db_data, $MONTH, $DAY;
+	$mysqli_data = new mysqli("localhost", $db_user, $db_pass, $db_data);
+
+	$user = urldecode($user);
+	$repo = urldecode($repo);
+
 	//Validate both repo and user
 	if(validateUserRepo($user, $repo) === TRUE)
 	{
-		//TODO check if the user/repo hasnt already been parsed
+		// check if the user/repo hasnt already been parsed
+		if(isUniqueRepo($mysqli_data, $user, $repo) === FALSE)
+		{
+			//TODO run the script to scrap new repo
+			$output = shell_exec('ls');
 
-		//TODO run the script to parse new repo
-		$output = shell_exec('ls -lart');
-		echo json_encode($output);
+			// If the scrap is successful parse otherwise return an error
 
-		
+			//TODO run the script to parse new repo
+			echo json_encode($output);
+
+			// If the parse is unsuccessful return 
+
+			//TODO generally set up a queue to allow for syncronize requests.
+		}
+		else
+		{
+			// User/Repo aready parsed error
+		}
+	}
+	else
+	{
+		// User/Repo are not valid error
 	}
 }
 
-function validateUserRepo($user ,$repo)
+function validateUserRepo($user, $repo)
 {
 	//Username == alphanumeric with dashes (just not at the beginning)
 	//Repo can only be alphanumeric (with dashes, underscores, periods)
