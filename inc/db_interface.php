@@ -798,7 +798,7 @@ function isUniqueRepo($mysqli, $user, $repo)
 
     $result = 0;
 
-    if ($stmt = $mysqli->prepare("SELECT 1 FROM repositories WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ?"))
+    if ($stmt = $mysqli->prepare("SELECT 1 FROM repositories WHERE repo_name LIKE ? AND repo_owner LIKE ?"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('ss', $repo, $user);
