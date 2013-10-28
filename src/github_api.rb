@@ -221,26 +221,32 @@ def getAllCommits(con, github, username, repo_name)
 
         tagList.body.each { |tag|
 
-            tagMore = (github.git_data.tags.get username, repo_name, tag["object"]["sha"]).body
+            sha, name, message, date = "", "", "", ""
+            begin
+               tagMore = (github.git_data.tags.get username, repo_name, tag["object"]["sha"]).body
+                # Get the commit sha
+                sha = tagMore["object"]["sha"]
 
-            # Get the commit sha
-            sha = tagMore["object"]["sha"]
+                # Get the tag name
+                name = tagMore["tag"]
 
-            # Get the tag name
-            name = tagMore["tag"]
+                # Get the tag message
+                message = tagMore["message"]
 
-            # Get the tag message
-            # TODO remove the '\n' at the end
-            message = tagMore["message"]
+                if message[-1] == "\n"
+                    message = message[0..-2]
+                end
 
-            # Get the date the tag was added
-            date = tagMore["tagger"]["date"]
+                # Get the date the tag was added
+                date = tagMore["tagger"]["date"]
 
-            #puts dates
-
-            #sha = tag["commit"]["sha"]
-            #test the actual command
-            #tagMore = github.git_data.tags.get username, repo_name, sha
+            rescue Github::Error::NotFound => e
+                sha = tag["object"]["sha"]
+                name = tag["ref"].scan(TAG_REGEX)[0][0]
+                commit = github.repos.commits.get(username, repo_name, tag["object"]["sha"])
+                message = commit.body["commit"]["message"]
+                date = commit.body["commit"]["committer"]["date"]
+            end
             Github_database.insertTag(con, Tag.new(repo_id, sha, name, message, date))
         }
     rescue Github::Error::GithubError => e
