@@ -12,7 +12,7 @@ $NOT_FOUND = 0
 $BAD_FILE_ARRAY = Array.new
 
 #Command line arguements in order (default $test to true)
-repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, false
+repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, true
 $low_threshold, $size_threshold = 0.8, 20
 $log = true
 
@@ -25,6 +25,13 @@ if ARGV.size == 8
     outputFile, $ONE_TO_MANY = ARGV[3], ARGV[4]
 
     $high_threshold, $low_threshold, $size_threshold = ARGV[5], ARGV[6], ARGV[7]
+elsif ARGV.size == 4
+    repo_owner, repo_name = ARGV[0], ARGV[1]
+    
+    if ARGV[2] == "false"
+        $test = false
+    end
+    outputFile = ARGV[3]
 else
 	abort("Invalid parameters")
 end

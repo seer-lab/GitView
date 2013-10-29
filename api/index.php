@@ -235,7 +235,7 @@ function getNewRepo($user, $repo)
 		if(isUniqueRepo($mysqli_data, $user, $repo) === FALSE)
 		{
 			//TODO run the script to scrap new repo
-			$output = shell_exec('ls');
+			$output = system('bash ../src/scraper ' . $user . ' ' . $repo);
 
 			// If the scrap is successful parse otherwise return an error
 
