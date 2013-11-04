@@ -4,7 +4,7 @@ require_once 'inc/db_interface.php';
 
 session_start();
 
-include 'templates/header.php';
+include 'templates/request_header.php';
 include 'templates/request.php';
 
 
