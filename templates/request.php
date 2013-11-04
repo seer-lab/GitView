@@ -7,6 +7,8 @@ $mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_0
 global $selectedOwner, $selectedRepo;
 ?>
 
+<!-- TODO Change header to GitView -->
+<!-- TODO Add email and name, add note that its not shared or sold, its academic project, it will only be used for informing them about the status of their project and of GitView -->
 
 <div class="container-fluid" id="seperator">
 
@@ -14,20 +16,24 @@ global $selectedOwner, $selectedRepo;
       <h1>Submit a New Repository</h1>
       <br/>
       <div class="row">
-      <!--  Display an error if they entered invalid credentials -->
+      <!-- TODO Display an error if they entered invalid credentials -->
       <?php
-        if (isset($invalid))
+        /*if (isset($invalid))
         {
           echo '<div class="alert alert-error span8">
                       <button type="button" class="close" data-dismiss="alert">×</button>
                     <strong>Invalid Credentials!</strong> Please enter a valid username and password.
                     </div>';
-        }
+        }*/
         ?>
         </div>
       
-        <p> Please enter a GitHub user and repository that contains a majority
-          of Java code to be visualized</p>
+        <p> Intrested in having your project visualized in GitView? Please enter a GitHub 
+          username and repository for the Java project to be visualized. It may take up to
+          48 hours for your project to be added. </p>
+        <p> Please note that this is an academic
+          project and your name and email will only be used to provide information about
+          the progress of your request and updates about GitView.</p>
 
       <form class="form-inline" accept-charset="UTF-8">
         <div class="control-group">
@@ -35,6 +41,12 @@ global $selectedOwner, $selectedRepo;
             <input id="username" type="text" placeholder="Username">
             <label class="control-label">/</label>
             <input id="repository" type="text" placeholder="Repository">
+          </div>
+        </div>
+        <div class="control-group">
+         <div>
+            <input id="name" type="text" placeholder="Name">
+            <input id="email" type="text" placeholder="Email">
           </div>
         </div>
         <button class="btn btn-primary" id='submit' >Submit</button>

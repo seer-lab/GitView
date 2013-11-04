@@ -38,17 +38,11 @@
           </a> 
           
             <?php
-              if(preg_match("/\/(index.php)?.*/", $_SERVER['REQUEST_URI'])){
-                echo '<ul class="nav pull-right">';
-                //echo '<ul class="">';
-                echo '<a class="brand" href="../add_new.php">Add New</a>';
-                //echo '</ul>';
-                echo '</ul>';
-              }
+              
             ?>
             <ul class="nav pull-right"> 
             <a class="brand" href="">About</a>
-            </ul>
+            </ul>      
         </div>
       </div>
     </div>
