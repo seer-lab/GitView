@@ -234,17 +234,14 @@ function getNewRepo($user, $repo)
 		// check if the user/repo hasnt already been parsed
 		if(isUniqueRepo($mysqli_data, $user, $repo) === FALSE)
 		{
-			//TODO run the script to scrap new repo
-			$output = system('bash ../src/scraper ' . $user . ' ' . $repo);
+			//$output = system('bash ../src/scraper ' . $user . ' ' . $repo);
 
 			// If the scrap is successful parse otherwise return an error
-
-			//TODO run the script to parse new repo
-			echo json_encode($output);
+			//echo json_encode($output);
 
 			// If the parse is unsuccessful return 
 
-			//TODO generally set up a queue to allow for syncronize requests.
+			//TODO set up a queue to allow for syncronize requests.
 		}
 		else
 		{
