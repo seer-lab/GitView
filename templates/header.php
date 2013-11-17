@@ -34,7 +34,7 @@
         <div class="container">
           <!-- GitView Visualizing  -->
           <a class="brand" href="../index.php">
-            Mining GitHub for Comment and Code Churn Information
+            GitView Visualizing
           </a> 
           
             <?php
@@ -47,7 +47,7 @@
               }
             ?>
             <ul class="nav pull-right"> 
-            <a class="brand" href="">About</a>
+            <!-- <a class="brand" href="">About</a> -->
             </ul>
         </div>
       </div>
