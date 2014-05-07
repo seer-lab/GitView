@@ -253,6 +253,7 @@ def findMultiLineComments (lines)
             if result != nil
 
                 comment = nil
+                # A full comment is in the line
                 if result[1] != nil || result[2] != nil
 
                     # Determine whether the line was added or deleted
@@ -308,7 +309,8 @@ def findMultiLineComments (lines)
             else
 
                 #quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
-                #Check for part of multi line comment
+
+                # Check for part of multi line comment
                 result = quoteLessLine.scan(JAVA_MULTI_LINE_FIRST_HALF)
                 if result[0] != nil
                     #There is a multi-line comment starting here
@@ -331,38 +333,51 @@ def findMultiLineComments (lines)
                     end
 
                 else
-                        #puts "codes if nothing else"
-                        #This line is not a comment
-                        #lineCounter.linesOfCode(1)
+                    #This line is not a comment
+                    #lineCounter.linesOfCode(1)
 
-                        if line[0][0] == "+"
-                            patchPosStreak += 1
-                            #puts "patch add streak #{patchPosStreak}"
-                            linesStreak["+"].push(line[0][1..-1])
+                    #TODO CHECK IF ITS A METHOD!
 
-                            if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
-                                codeChurn.codeAdded(1)
-                                totalCode+=1
-                            end
-                        elsif line[0][0] == "-"
-                            patchNegStreak += 1
-                            #puts "patch neg streak #{patchNegStreak}"
-                            linesStreak["-"].push(line[0][1..-1])
-                            if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
-                                codeChurn.codeDeleted(1)
-                                totalCode-=1
+                    res = quoteLessLine.scan(/([\w\s\<\>]*)\(([\w\s\<\>,]*)\)\s*(\{?)/)
+                    if $test
+                        if !res.empty?
+                            puts "Values = #{res}"
+                            if res[0][2] != ""
+                                puts "START OF A METHOD!!!!"
+                            else
+                                puts "MAY NOT BE A METHOD!"
                             end
                         end
+                    end
 
-                        #codeLines.push(line[0])
-                        
-                        if commentLookingForChild
-                            #Code found store it in the grouping
-                            #grouped.setSourceCode(line[0])
-                            #Stop looking for the code
-                            commentLookingForChild = false
+                    if line[0][0] == "+"
+                        patchPosStreak += 1
+                        #puts "patch add streak #{patchPosStreak}"
+                        linesStreak["+"].push(line[0][1..-1])
 
+                        if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                            codeChurn.codeAdded(1)
+                            totalCode+=1
                         end
+                    elsif line[0][0] == "-"
+                        patchNegStreak += 1
+                        #puts "patch neg streak #{patchNegStreak}"
+                        linesStreak["-"].push(line[0][1..-1])
+                        if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                            codeChurn.codeDeleted(1)
+                            totalCode-=1
+                        end
+                    end
+
+                    #codeLines.push(line[0])
+                    
+                    if commentLookingForChild
+                        #Code found store it in the grouping
+                        #grouped.setSourceCode(line[0])
+                        #Stop looking for the code
+                        commentLookingForChild = false
+
+                    end
                     
                 end
             end
