@@ -205,6 +205,7 @@ def findMultiLineComments (lines)
         end
 
         if multiLine
+            #TODO check if this should be quoteless
             result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
             if result == nil
                 #Still part of the multi-line, terminating line has not be found
@@ -444,8 +445,6 @@ def findMultiLineComments (lines)
                 #Process.wait code_pid
                 #Process.wait comment_pid
 
-
-
                 #codeModLength = codeMod.length
                 #commentModLength = commentMod.length
                 
@@ -653,6 +652,7 @@ def mergePatch(lines, patch, name)
     return lines
 end
 
+# TODO document
 def fillBefore (lines, offset, currentLine)
 
     while offset > currentLine do
@@ -684,16 +684,8 @@ end
 
 con = Github_database.createConnection()
 
-
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
-#username, repo_name = 'nostra13', 'Android-Universal-Image-Loader'
-#username, repo_name = 'SpringSource', 'spring-framework'
-#username, repo_name = 'elasticsearch', 'elasticsearch'
-#username, repo_name = 'ACRA', 'acra'
-#username, repo_name = 'junit-team', 'junit'
-#files = getFile(con, PYTHON, 'luigi', 'spotify')
-#files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
 files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner)
 
 if !$test
@@ -769,11 +761,6 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
         puts comments[0][1] #The total number of lines of code in the file
     end
 
-    #puts "CommentAdded = #{churn["CommentAdded"]}"
-    #puts "CommentDeleted = #{churn["CommentDeleted"]}"
-    #puts "CodeAdded = #{churn["CodeAdded"]}"
-    #puts "CodeDeleted = #{churn["CodeDeleted"]}"
-
     sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0) + comments[3].commentModified(0)  + comments[3].codeModified(0)
     #Get the path and the name of the file.
     package, name = parsePackages(file_name)
@@ -809,42 +796,6 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
         #commit_comments = 0
         #commit_code = 0
     end
-
-    #a = gets
-=begin
-   comments = findMultiLineComments(lines, file[5])
-
-    if fileHashTable[file[1]] == nil
-        fileHashTable[file[1]] = Array.new().push(comments)
-    else
-        fileHashTable[file[1]].push(comments)
-    end
-    fileComments = comments[2].singleLineComment(0)+ comments[2].multiLineCommentInLine(0) + comments[2].multiLineComment(0)
-    fileCode = comments[2].linesOfCode(0)
-
-    Stats_db.insertFile(stats_con, commit_id, file[1], fileComments, fileCode)
-
-    puts "Total file comments = #{fileComments}"
-    puts "Total file code = #{fileCode}"
-
-    commit_comments += fileComments
-    commit_code += fileCode
-    
-    
-
-    #puts file[1]
-    #puts "Comments: #{comments[0]}"
-    #puts ""
-    #puts "Code: #{comments[1]}"
-    #puts ""
-    #puts "in line single #{comments[2].inLineSingle(0)}"
-    #puts "in line multi #{comments[2].inLineMulti(0)}"
-    #puts "single #{comments[2].singleLineComment(0)}"
-    #puts "multiInline = #{comments[2].multiLineCommentInLine(0)}"
-    #puts "multi #{comments[2].multiLineComment(0)}"
-    #puts "code #{comments[2].linesOfCode(0)}"
-    puts ""
-=end
 }
 
 puts "filesize = #{files.length}"

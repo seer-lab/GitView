@@ -1,6 +1,5 @@
 require_relative 'manage_quotes'
 
-# TODO make sure that line is sanitized (no quoted strings)
 # TODO handle comments (replace them with empty comments for parsing)
 class MethodFinder
 
@@ -26,7 +25,9 @@ class MethodFinder
         while !found && index < @lines.length
 
             #TODO ensure that the [0] is necessary
-            quoteLess = @mq.removeQuotes(@lines[index])
+            quoteLess = @mq.cleanLine(@lines[index])
+
+            puts "clean line = #{quoteLess}"
 
             # Check if there is a '{' in the sanitized statement
             if quoteLess.match(/\{/)
@@ -40,7 +41,7 @@ class MethodFinder
                 sindex = start
                 fullStatement = ""
                 while sindex <= index
-                    fullStatement = "#{fullStatement} #{@mq.removeQuotes(@lines[sindex])}"
+                    fullStatement = "#{fullStatement} #{@mq.cleanLine(@lines[sindex])}"
                     sindex += 1
                 end
 
@@ -63,6 +64,8 @@ class MethodFinder
                 # Statement has ended
                 break
                 # Move onto the next statement
+            elsif quoteLess.match(/\}/)
+                break
             end
             index += 1
         end
@@ -118,7 +121,7 @@ class MethodFinder
 
         while index < @lines.length
 
-            quoteLess = @mq.removeQuotes(lines[index])
+            quoteLess = @mq.cleanLine(@lines[index])
 
             result = quoteLess.scan(/\{|\}/)
 
@@ -151,7 +154,7 @@ class MethodFinder
     end
 end
 
-#=begin
+=begin
 text = "public void onItemClick(AdapterView<?> parent, View view, int position,
         long id) {
     switch (position)
@@ -174,10 +177,15 @@ text = "public void onItemClick(AdapterView<?> parent, View view, int position,
 
     for(int i = 0;
         i < 10; i++) {
-        System.out.println (\"public void add(int x, int y) { return x + y; }\");
+        System.out.println (\"public int add(int x, int y) { return x + y; }\");
         AddContact.editTc = null;
     }
-}"
+}
+/* public int subtract(int x, int y) { return x - y; } */
+// public int divide(int x, int y) { return x / y; }
+public int divide(int x, int y) {
+    return x / y; }
+"
 text = text[0..-1]
 lines = text.split(/\n/)
 fm = MethodFinder.new(lines)
@@ -190,4 +198,9 @@ lines.each do |line|
     i+= 1
     fm.iterate
 end
-#=end
+
+# Start + delta + 1 == first line after method signature
+puts "First method: start = 0, end = #{fm.methodEndFinder(0+1+1)}"
+
+puts "Second method: start = 0, end = #{fm.methodEndFinder(26+2+1)}"
+=end

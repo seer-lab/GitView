@@ -51,6 +51,17 @@ class ManageQuotes
         @prevOpen = ending
         return newLine
     end
+
+    # Remove the single line comment
+    def removeSingleLineComment(line)
+        return line.gsub(/(\/\/.*$)|(\/\*.*\*\/)/,'')
+    end
+
+    # Call all cleaning methods
+    def cleanLine(line)
+        line = removeQuotes(line)
+        return removeSingleLineComment(line)
+    end
 end
 
 
