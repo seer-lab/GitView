@@ -176,6 +176,7 @@ def findMultiLineComments (lines)
     totalCode = 0
     totalComment = 0
 
+    lineCount = 0
 
 
     #puts patches
@@ -337,18 +338,7 @@ def findMultiLineComments (lines)
                     #lineCounter.linesOfCode(1)
 
                     #TODO CHECK IF ITS A METHOD!
-
-                    res = quoteLessLine.scan(/([\w\s\<\>]*)\(([\w\s\<\>,]*)\)\s*(\{?)/)
-                    if $test
-                        if !res.empty?
-                            puts "Values = #{res}"
-                            if res[0][2] != ""
-                                puts "START OF A METHOD!!!!"
-                            else
-                                puts "MAY NOT BE A METHOD!"
-                            end
-                        end
-                    end
+                    #methodFinder(lines, lineCount)
 
                     if line[0][0] == "+"
                         patchPosStreak += 1
@@ -529,6 +519,7 @@ def findMultiLineComments (lines)
         #puts ""
         
         #a = $stdin.gets
+        lineCount += 1
     }
     return [[totalComment, totalCode], codeLines, lineCounter, codeChurn]
 end
