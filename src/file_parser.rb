@@ -2,6 +2,7 @@ require_relative 'database_interface'
 require_relative 'regex'
 require_relative 'stats_db_interface'
 require_relative 'matchLines'
+require_relative 'text_parsing_utility'
 
 # Possible reasons for negative files
 # - Files that could not be retreived (404/403 etc)
@@ -160,7 +161,8 @@ def findMultiLineComments (lines)
     commentLookingForMultiChild = false
     commentLookingForChild = false
 
-    openQuote = false
+    quoteManager = ManageQuotes.new
+    #openQuote = false
 
     #linesModified = Array.new
     linesStreak = Hash.new
@@ -192,12 +194,12 @@ def findMultiLineComments (lines)
             grouped.push
         end
 
-        quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
+        quoteLessLine = quoteManager.removeQuotes(line[0])
 
         if $test
             puts "line = #{line[0]}"
             #puts "quot = #{quoteLessLine}"
-            #puts "open = #{openQuote}"
+            #puts "open = #{quoteManager.prevQuote}"
             #puts "multi = #{multiLine}"
             #puts ""
         end
@@ -247,7 +249,7 @@ def findMultiLineComments (lines)
         else
 
             #Remove the quotes prior to checking it
-            #quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
+            #quoteLessLine = quoteManager.removeQuotes(line[0])
             result = quoteLessLine.scan(JAVA_MULTI_LINE_FULL)
             
             result = result[0]
@@ -309,7 +311,7 @@ def findMultiLineComments (lines)
 
             else
 
-                #quoteLessLine, openQuote = removeQuotes(line[0], openQuote)
+                #quoteLessLine = quoteManager.removeQuotes(line[0])
 
                 # Check for part of multi line comment
                 result = quoteLessLine.scan(JAVA_MULTI_LINE_FIRST_HALF)
@@ -337,7 +339,7 @@ def findMultiLineComments (lines)
                     #This line is not a comment
                     #lineCounter.linesOfCode(1)
 
-                    #TODO CHECK IF ITS A METHOD!
+                    # TODO actually call correct method for finding methods
                     #methodFinder(lines, lineCount)
 
                     if line[0][0] == "+"
@@ -522,51 +524,6 @@ def findMultiLineComments (lines)
         lineCount += 1
     }
     return [[totalComment, totalCode], codeLines, lineCounter, codeChurn]
-end
-
-# Determines if a quote needs to be added at the beginning or at the end of the line
-def checkQuote(line, prevOpen)
-    numComments = line.scan(/[^\\]"/).length
-    #Special case when it is just two quotes side by side
-    specialCase = line.scan(/[^\\]""/).length
-    numComments += specialCase
-    beginning = false
-    ending = false
-
-    if numComments % 2 == 0 && !prevOpen
-        # Quote not open
-    elsif numComments % 2 == 0 && prevOpen
-        beginning = true
-        ending = true
-    elsif numComments % 2 == 1 && !prevOpen
-        #Quote is now open
-        ending = true
-    elsif numComments % 2 == 1 && prevOpen
-        #Quote is now closed
-        beginning = true
-        prevOpen = false
-    end
-
-    return beginning, ending
-end
-
-# Removes the quotes for the line 
-def stripLine(line, beginning, ending)
-    if beginning
-        line = "line[0]\"#{line[1..-1]}"
-    end
-    if ending
-        line = "#{line}\""
-    end
-    return line.gsub(/"([^"]*)"/,'')
-end
-
-# Facilitates the removal of the quoted text.
-def removeQuotes(line, prevOpen)
-    beginning, ending = checkQuote(line, prevOpen)
-    newLine = stripLine(line, beginning, ending)
-
-    return newLine, ending
 end
 
 def mergePatch(lines, patch, name)

@@ -1,3 +1,4 @@
+require_relative 'text_parsing_utility'
 
 # TODO make sure that line is sanitized (no quoted strings)
 # TODO handle comments (replace them with empty comments for parsing)
