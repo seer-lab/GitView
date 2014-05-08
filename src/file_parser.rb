@@ -2,7 +2,8 @@ require_relative 'database_interface'
 require_relative 'regex'
 require_relative 'stats_db_interface'
 require_relative 'matchLines'
-require_relative 'text_parsing_utility'
+require_relative 'manage_quotes'
+require_relative 'method_finder'
 
 # Possible reasons for negative files
 # - Files that could not be retreived (404/403 etc)
@@ -162,7 +163,6 @@ def findMultiLineComments (lines)
     commentLookingForChild = false
 
     quoteManager = ManageQuotes.new
-    #openQuote = false
 
     #linesModified = Array.new
     linesStreak = Hash.new
@@ -674,20 +674,6 @@ def parsePackages(path)
     return package[0]
 end
 
-def getFile(con, extension, repo_name, repo_owner)
-    pick = con.prepare("SELECT f.#{Github_database::FILE}, f.#{Github_database::NAME}, c.#{Github_database::COMMIT_ID}, com.#{Github_database::DATE}, c.#{Github_database::BODY}, f.#{Github_database::PATCH}, com.#{Github_database::NAME}, aut.#{Github_database::NAME} FROM #{Github_database::FILE} AS f INNER JOIN #{Github_database::COMMITS} AS c ON f.#{Github_database::COMMIT_REFERENCE} = c.#{Github_database::COMMIT_ID} INNER JOIN #{Github_database::REPO} AS r ON c.#{Github_database::REPO_REFERENCE} = r.#{Github_database::REPO_ID} INNER JOIN #{Github_database::USERS} AS com ON c.#{Github_database::COMMITER_REFERENCE} = com.#{Github_database::USER_ID} INNER JOIN #{Github_database::USERS} AS aut ON c.#{Github_database::AUTHOR_REFERENCE} = aut.#{Github_database::USER_ID} WHERE r.#{Github_database::REPO_NAME} LIKE ? AND r.#{Github_database::REPO_OWNER} LIKE ? AND f.#{Github_database::NAME} LIKE ? ORDER BY com.#{Github_database::DATE}")
-    pick.execute(repo_name, repo_owner, "#{Github_database::EXTENSION_EXPRESSION}#{extension}")
-
-    rows = pick.num_rows
-    results = Array.new(rows)
-
-    rows.times do |x|
-        results[x] = pick.fetch
-    end
-
-    return results
-end
-
 def mergeThreshold(threshold)
     threshold = ((threshold.to_f*10).to_i).to_s
     if threshold.length == 1 
@@ -708,7 +694,7 @@ stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeT
 #username, repo_name = 'junit-team', 'junit'
 #files = getFile(con, PYTHON, 'luigi', 'spotify')
 #files = getFile(con, JAVA, 'SlidingMenu', 'jfeinstein10')
-files = getFile(con, JAVA, repo_name, repo_owner)
+files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner)
 
 if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
@@ -799,7 +785,7 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
             committer_id = Stats_db.getUserId(stats_con, com_name)
             author_id = Stats_db.getUserId(stats_con, com_name)
 
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)            
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
         end
         Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
     end

@@ -337,6 +337,20 @@ module Github_database
         return results
     end
 
+    def Github_database.getFileForParsing(con, extension, repo_name, repo_owner)
+        pick = con.prepare("SELECT f.#{FILE}, f.#{NAME}, c.#{COMMIT_ID}, com.#{DATE}, c.#{BODY}, f.#{PATCH}, com.#{NAME}, aut.#{NAME} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ? ORDER BY com.#{DATE}")
+        pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}")
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        return results
+    end
+
     # Insert the given tag into the database
     # +con+:: the database connection used. 
     # +tag+:: the +Tag+ containing all the relatvent information about the tag.
