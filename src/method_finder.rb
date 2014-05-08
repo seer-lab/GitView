@@ -8,6 +8,7 @@ class MethodFinder
         @delta = 0
         @just_run = false
         @lines = lines
+        @mq = ManageQuotes.new
     end
 
     def findMethod(index)
@@ -23,9 +24,15 @@ class MethodFinder
         #    - may have declaration of arguments (or no arguments)      
 
         while !found && index < @lines.length
-            # Check if there is a '{' in the sanitized statement
-            if @lines[index].match(/\{/)
 
+            #TODO ensure that the [0] is necessary
+            quoteLess = @mq.removeQuotes(@lines[index])
+
+            # Check if there is a '{' in the sanitized statement
+            if quoteLess.match(/\{/)
+
+                prev = @mq.prevOpen
+                @mq.prevOpen = false
 
                 # Ensure that it is not a built-in primative function (as stated earlier)
 
@@ -33,9 +40,11 @@ class MethodFinder
                 sindex = start
                 fullStatement = ""
                 while sindex <= index
-                    fullStatement = "#{fullStatement} #{@lines[sindex]}"
+                    fullStatement = "#{fullStatement} #{@mq.removeQuotes(@lines[sindex])}"
                     sindex += 1
                 end
+
+                @mq.prevOpen = prev
 
                 if fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
                     # Not a statement since it has has built-in command as part of it
@@ -44,7 +53,7 @@ class MethodFinder
                     found = true
                     break
                 end
-            elsif @lines[index].match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
+            elsif quoteLess.match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
                 # \(.*?;.*?;.*\) could use to remove 'for' semi-colons
                 # Even with the purposed fix the desired goal is already achived.
                 # The purposed fix would also not handle the following:
@@ -74,7 +83,8 @@ class MethodFinder
         found = false
         if @delta == 0
             @just_run = true
-            @delta, found = findMethod(@lines, index)
+            @mq.prevOpen = false
+            @delta, found = findMethod(index)
         else#if @delta > 0
             @just_run = false
             #@delta -= 1
@@ -104,10 +114,13 @@ class MethodFinder
 
         # Assume that a method has been found. Therfore assume count('}') == count('{') + 1
         depthCounter = 1
+        @mq.prevOpen = false
 
         while index < @lines.length
 
-            result = @lines[index].scan(/\{|\}/)
+            quoteLess = @mq.removeQuotes(lines[index])
+
+            result = quoteLess.scan(/\{|\}/)
 
             result.each do |cur|
 
@@ -138,7 +151,7 @@ class MethodFinder
     end
 end
 
-=begin
+#=begin
 text = "public void onItemClick(AdapterView<?> parent, View view, int position,
         long id) {
     switch (position)
@@ -161,6 +174,7 @@ text = "public void onItemClick(AdapterView<?> parent, View view, int position,
 
     for(int i = 0;
         i < 10; i++) {
+        System.out.println (\"public void add(int x, int y) { return x + y; }\");
         AddContact.editTc = null;
     }
 }"
@@ -176,4 +190,4 @@ lines.each do |line|
     i+= 1
     fm.iterate
 end
-=end
+#=end

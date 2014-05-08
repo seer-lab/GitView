@@ -1,5 +1,6 @@
 
 class ManageQuotes
+    attr_accessor :prevOpen
 
     def initialize
         @prevOpen = false
@@ -49,10 +50,6 @@ class ManageQuotes
 
         @prevOpen = ending
         return newLine
-    end
-
-    def prevQuote
-        @prevOpen
     end
 end
 
