@@ -1,6 +1,5 @@
 require_relative 'manage_quotes'
 
-# TODO handle comments (replace them with empty comments for parsing)
 class MethodFinder
 
     def initialize(lines)
@@ -20,7 +19,8 @@ class MethodFinder
         #    - must have '{'
         #    - must not be if, else, elsif, while, for, switch
         #     - may be spawning over multiple lines
-        #    - may have declaration of arguments (or no arguments)      
+        #    - may have declaration of arguments (or no arguments)
+        fullStatement = ""   
 
         while !found && index < @lines.length
 
@@ -30,31 +30,8 @@ class MethodFinder
             puts "clean line = #{quoteLess}"
 
             # Check if there is a '{' in the sanitized statement
-            if quoteLess.match(/\{/)
-
-                prev = @mq.prevOpen
-                @mq.prevOpen = false
-
-                # Ensure that it is not a built-in primative function (as stated earlier)
-
-                # Take previous lines involved to make full statement and check
-                sindex = start
-                fullStatement = ""
-                while sindex <= index
-                    fullStatement = "#{fullStatement} #{@mq.cleanLine(@lines[sindex])}"
-                    sindex += 1
-                end
-
-                @mq.prevOpen = prev
-
-                if fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
-                    # Not a statement since it has has built-in command as part of it
-                    break
-                elsif fullStatement.match(/\(([\w\<\>\?,\s]*)\)\s*\{/)
-                    found = true
-                    break
-                end
-            elsif quoteLess.match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
+            
+            if quoteLess.match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
                 # \(.*?;.*?;.*\) could use to remove 'for' semi-colons
                 # Even with the purposed fix the desired goal is already achived.
                 # The purposed fix would also not handle the following:
@@ -66,6 +43,19 @@ class MethodFinder
                 # Move onto the next statement
             elsif quoteLess.match(/\}/)
                 break
+            else
+                fullStatement = "#{fullStatement} #{quoteLess}"
+
+                if quoteLess.match(/\{/)
+
+                    if fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
+                        # Not a statement since it has has built-in command as part of it
+                        break
+                    elsif fullStatement.match(/\(([\w\<\>\?,\s]*)\)\s*\{/)
+                        found = true
+                        break
+                    end
+                end
             end
             index += 1
         end
@@ -155,7 +145,7 @@ class MethodFinder
 end
 
 =begin
-text = "public void onItemClick(AdapterView<?> parent, View view, int position,
+text = 'public void onItemClick(AdapterView<?> parent, View view, int position,
         long id) {
     switch (position)
     {
@@ -177,7 +167,7 @@ text = "public void onItemClick(AdapterView<?> parent, View view, int position,
 
     for(int i = 0;
         i < 10; i++) {
-        System.out.println (\"public int add(int x, int y) { return x + y; }\");
+        System.out.println ("public int add(int x, int y) { return x + y; }");
         AddContact.editTc = null;
     }
 }
@@ -185,7 +175,13 @@ text = "public void onItemClick(AdapterView<?> parent, View view, int position,
 // public int divide(int x, int y) { return x / y; }
 public int divide(int x, int y) {
     return x / y; }
-"
+/*
+public int multiply(int x, int y)
+{
+    return x * y;
+}
+*/
+'
 text = text[0..-1]
 lines = text.split(/\n/)
 fm = MethodFinder.new(lines)
@@ -195,12 +191,17 @@ lines.each do |line|
     value = fm.methodFinderManager(i)
     #fm.methodFinderManager(i)
     puts "i = #{i}, found = #{value}, delta = #{fm.delta}"
+
+    if value
+        puts "######### method: start = #{i} end = #{fm.methodEndFinder(i+fm.delta+1)} #########"
+    end
+
     i+= 1
     fm.iterate
 end
 
 # Start + delta + 1 == first line after method signature
-puts "First method: start = 0, end = #{fm.methodEndFinder(0+1+1)}"
+#puts "First method: start = 0, end = #{fm.methodEndFinder(0+1+1)}"
 
-puts "Second method: start = 0, end = #{fm.methodEndFinder(26+2+1)}"
+#puts "Second method: start = 26, end = #{fm.methodEndFinder(26+2+1)}"
 =end

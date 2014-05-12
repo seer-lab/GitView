@@ -1,9 +1,10 @@
 
 class ManageQuotes
-    attr_accessor :prevOpen
+    attr_accessor :prevOpen, :commentOpen
 
     def initialize
         @prevOpen = false
+        @commentOpen = false
     end
 
     # Determines if a quote needs to be added at the beginning or at the end of the line
@@ -57,10 +58,38 @@ class ManageQuotes
         return line.gsub(/(\/\/.*$)|(\/\*.*\*\/)/,'')
     end
 
+    def removeMultComment(line)
+
+        # Check if the line is in the middle of a comment
+        if @commentOpen
+            # check if closing
+            if line.match(/.*\*\//)
+                # Comment finished
+                @commentOpen = false
+
+                # Remove Comment
+                line.gsub(/.*\*\//, '')
+            else
+                # In the middle of a comment, clear the line
+                line = ''
+            end
+        else
+            # Check if a new comment block is starting
+            if line.match(/\/\*.*$/)
+                @commentOpen = true
+
+                # Remove the comment on the line
+                line.gsub(/\/\*.*$/, '')
+            end
+        end
+        return line
+    end
+
     # Call all cleaning methods
     def cleanLine(line)
         line = removeQuotes(line)
-        return removeSingleLineComment(line)
+        line = removeSingleLineComment(line)
+        return removeMultComment(line)
     end
 end
 
