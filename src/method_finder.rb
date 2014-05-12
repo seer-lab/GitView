@@ -1,7 +1,7 @@
 require_relative 'manage_quotes'
 
 class MethodFinder
-    attr_accessor :plus_minus
+    attr_accessor :actual_start#, :plus_minus
 
     def initialize(lines)
         @delta = 0
@@ -9,10 +9,12 @@ class MethodFinder
         @lines = lines
         @mq = ManageQuotes.new
         @plus_minus = false
+        @actual_start = 0
     end
 
     def findMethod(index)
         start = index
+        @actual_start = index
         found = false
 
         # Identify the method
@@ -51,7 +53,7 @@ class MethodFinder
             else
                 #TODO remove +/- inside the statement
                 #TODO handle +/- properly
-                fullStatement = "#{fullStatement} #{quoteLess}"
+                fullStatement = "#{fullStatement} #{quoteLess[1..-1]}"
 
                 if quoteLess.match(/\{/)
                     
@@ -71,31 +73,37 @@ class MethodFinder
                 end
             end
             index += 1
+
+            if fullStatement.lstrip == ""
+                @actual_start += 1
+            end
         end
 
         # Extract useful info from it
-        methodSignatureLength = index - start
+        @delta = index - start
 
         # return number of lines the method signature takes up? 
         # Useful info:
         # - number of lines the method signature takes up
         #    - Can ignore the check for method for the number of lines the method signature takes up
         # - number of lines the method takes up
-        return [methodSignatureLength, found]
+        return found
     end
 
     def methodFinderManager(index)
 
-        found = false
+        #found = false
+        #actual = 0
         if @delta == 0
             @just_run = true
-            @delta, found = findMethod(index)
-        else#if @delta > 0
-            @just_run = false
-            #@delta -= 1
+            return findMethod(index)
         end
+        #else#if @delta > 0
+        @just_run = false
+        #@delta -= 1
+        #end
 
-        return found
+        return false
     end
 
     def delta
@@ -122,13 +130,13 @@ class MethodFinder
 
         while index < @lines.length
 
-            puts "Line = #{@lines[index][0]}"
-            puts "index = #{index}"
+            #puts "Line = #{@lines[index][0]}"
+            #puts "index = #{index}"
 
             quoteLess = @mq.cleanLine(@lines[index][0])
-            puts "inComment? = #{@mq.commentOpen}"
-            puts "depth = #{depthCounter}"
-            puts "quoteLess = #{quoteLess}"
+            #puts "inComment? = #{@mq.commentOpen}"
+            #puts "depth = #{depthCounter}"
+            #puts "quoteLess = #{quoteLess}"
 
             result = quoteLess.scan(/\{|\}/)
 
@@ -147,8 +155,8 @@ class MethodFinder
                 if cur == '{'
                     # Increment the count by 1
                     depthCounter += 1
-                    puts "depth Increased at #{@lines[index][0]}"
-                    puts "WITH #{result} and #{cur}"
+                    #puts "depth Increased at #{@lines[index][0]}"
+                    #puts "WITH #{result} and #{cur}"
                 end
             end
 
