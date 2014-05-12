@@ -1,12 +1,14 @@
 require_relative 'manage_quotes'
 
 class MethodFinder
+    attr_accessor :plus_minus
 
     def initialize(lines)
         @delta = 0
         @just_run = false
         @lines = lines
         @mq = ManageQuotes.new
+        @plus_minus = false
     end
 
     def findMethod(index)
@@ -24,35 +26,46 @@ class MethodFinder
 
         while !found && index < @lines.length
 
-            #TODO ensure that the [0] is necessary
-            quoteLess = @mq.cleanLine(@lines[index])
+            quoteLess = @mq.cleanLine(@lines[index][0])
 
-            puts "clean line = #{quoteLess}"
+            if quoteLess[0] == '-'
+                next
+            end
 
             # Check if there is a '{' in the sanitized statement
             
             if quoteLess.match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
                 # \(.*?;.*?;.*\) could use to remove 'for' semi-colons
-                # Even with the purposed fix the desired goal is already achived.
+                # Even with the purposed fix the desired goal is already achieved.
                 # The purposed fix would also not handle the following:
-                # for(int i = 0; //<= This would cause it be reconized as a statement
+                # for(int i = 0; //<= This would cause it be recognized as a statement
                 #     i < 10; i++) {...}
 
                 # Statement has ended
+                index = start
                 break
                 # Move onto the next statement
             elsif quoteLess.match(/\}/)
+                index = start
                 break
             else
+                #TODO remove +/- inside the statement
+                #TODO handle +/- properly
                 fullStatement = "#{fullStatement} #{quoteLess}"
 
                 if quoteLess.match(/\{/)
-
-                    if fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
+                    
+                    if fullStatement.match(/\s(new)\s+/) || fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)                    
                         # Not a statement since it has has built-in command as part of it
+                        index = start
                         break
-                    elsif fullStatement.match(/\(([\w\<\>\?,\s]*)\)\s*\{/)
+                    elsif fullStatement.match(/\(([\w\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
+                        # Note this will not catch interface's declaration of a method (since it has no body)
                         found = true
+                        break
+                    else
+                        # Not a method declaration
+                        index = start
                         break
                     end
                 end
@@ -76,7 +89,6 @@ class MethodFinder
         found = false
         if @delta == 0
             @just_run = true
-            @mq.prevOpen = false
             @delta, found = findMethod(index)
         else#if @delta > 0
             @just_run = false
@@ -100,18 +112,23 @@ class MethodFinder
         end
     end
 
-    # Given the index of the line preceeding the method declartion. 
+    # Given the index of the line preceding the method declaration. 
     # Identifies the ending index of the method.
     # If no end is found (most likely malformed code) then the nil is returned
     def methodEndFinder(index)
 
-        # Assume that a method has been found. Therfore assume count('}') == count('{') + 1
+        # Assume that a method has been found. Therefore assume count('}') == count('{') + 1
         depthCounter = 1
-        @mq.prevOpen = false
 
         while index < @lines.length
 
-            quoteLess = @mq.cleanLine(@lines[index])
+            puts "Line = #{@lines[index][0]}"
+            puts "index = #{index}"
+
+            quoteLess = @mq.cleanLine(@lines[index][0])
+            puts "inComment? = #{@mq.commentOpen}"
+            puts "depth = #{depthCounter}"
+            puts "quoteLess = #{quoteLess}"
 
             result = quoteLess.scan(/\{|\}/)
 
@@ -129,13 +146,15 @@ class MethodFinder
                
                 if cur == '{'
                     # Increment the count by 1
-                      depthCounter += 1
+                    depthCounter += 1
+                    puts "depth Increased at #{@lines[index][0]}"
+                    puts "WITH #{result} and #{cur}"
                 end
-               end
+            end
 
-               if depthCounter == 0
-                   return index
-               end
+            if depthCounter == 0
+                return index
+            end
 
             index += 1
         end
