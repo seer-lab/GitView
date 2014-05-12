@@ -68,7 +68,7 @@ class ManageQuotes
                 @commentOpen = false
 
                 # Remove Comment
-                line.gsub(/.*\*\//, '')
+                line.gsub!(/.*\*\//, '')
             else
                 # In the middle of a comment, clear the line
                 line = ''
@@ -79,7 +79,7 @@ class ManageQuotes
                 @commentOpen = true
 
                 # Remove the comment on the line
-                line.gsub(/\/\*.*$/, '')
+                line.gsub!(/\/\*.*$/, '')
             end
         end
         return line

@@ -164,6 +164,8 @@ def findMultiLineComments (lines)
 
     quoteManager = ManageQuotes.new
 
+    method_finder = MethodFinder.new(lines)
+
     #linesModified = Array.new
     linesStreak = Hash.new
     linesStreak["-"] = Array.new
@@ -179,7 +181,6 @@ def findMultiLineComments (lines)
     totalComment = 0
 
     lineCount = 0
-
 
     #puts patches
     #puts lines[0]
@@ -202,6 +203,12 @@ def findMultiLineComments (lines)
             #puts "open = #{quoteManager.prevQuote}"
             #puts "multi = #{multiLine}"
             #puts ""
+        end
+
+        # Identify if the current line is a method
+        if method_finder.methodFinderManager(lineCount)
+            # Find length of the method
+            method_finder.methodEndFinder(lineCount+method_finder.delta+1)
         end
 
         if multiLine
@@ -342,7 +349,7 @@ def findMultiLineComments (lines)
 
                     # TODO actually call correct method for finding methods
                     #methodFinder(lines, lineCount)
-
+                    
                     if line[0][0] == "+"
                         patchPosStreak += 1
                         #puts "patch add streak #{patchPosStreak}"
@@ -521,6 +528,7 @@ def findMultiLineComments (lines)
         
         #a = $stdin.gets
         lineCount += 1
+        method_finder.iterate
     }
     return [[totalComment, totalCode], codeLines, lineCounter, codeChurn]
 end

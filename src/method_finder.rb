@@ -175,12 +175,10 @@ text = 'public void onItemClick(AdapterView<?> parent, View view, int position,
 // public int divide(int x, int y) { return x / y; }
 public int divide(int x, int y) {
     return x / y; }
-/*
-public int multiply(int x, int y)
+/*public int multiply(int x, int y)
 {
     return x * y;
-}
-*/
+}*/
 '
 text = text[0..-1]
 lines = text.split(/\n/)
@@ -193,15 +191,14 @@ lines.each do |line|
     puts "i = #{i}, found = #{value}, delta = #{fm.delta}"
 
     if value
-        puts "######### method: start = #{i} end = #{fm.methodEndFinder(i+fm.delta+1)} #########"
+        end_value = fm.methodEndFinder(i+fm.delta+1)
+        puts "######### method: start = #{i} end = #{end_value} #########"
+
+        puts lines[i..end_value]
     end
 
     i+= 1
     fm.iterate
 end
 
-# Start + delta + 1 == first line after method signature
-#puts "First method: start = 0, end = #{fm.methodEndFinder(0+1+1)}"
-
-#puts "Second method: start = 26, end = #{fm.methodEndFinder(26+2+1)}"
 =end
