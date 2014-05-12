@@ -17,6 +17,8 @@ $BAD_FILE_ARRAY = Array.new
 repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, true
 $low_threshold, $size_threshold = 0.8, 20
 $log = true
+$test_merge = false
+$test_tag = false
 
 if ARGV.size == 8
 	repo_owner, repo_name = ARGV[0], ARGV[1]
@@ -208,12 +210,26 @@ def findMultiLineComments (lines)
         # Identify if the current line is a method
         if method_finder.methodFinderManager(lineCount)
             # Find length of the method
-            method_finder.methodEndFinder(lineCount+method_finder.delta+1)
+            m_end = method_finder.methodEndFinder(lineCount+method_finder.delta+1)
+
+            if $test
+                puts "lines length = #{lines.length}"
+                puts "m_end = #{m_end}"
+                #puts lines[lineCount..lineCount+2]
+                puts "###### method_start #{lineCount} ######"
+                puts lines[lineCount..m_end]
+                puts "####### method_end #{m_end} #######"
+            end
+
+            #Lines contained by the method lines[lineCount..m_end]
         end
 
         if multiLine
-            #TODO check if this should be quoteless
-            result = line[0].scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
+
+            # A mutli-line comment has started but not finished. Check if it has ended.
+
+            #TODO handle code proceeding the end of the multi-line comment
+            result = quoteLessLine.scan(JAVA_MULTI_LINE_SECOND_HALF)[0]
             if result == nil
                 #Still part of the multi-line, terminating line has not be found
                 result = line
@@ -232,6 +248,7 @@ def findMultiLineComments (lines)
                 lineCounter.multiLineComment(1)
                 #puts "end of multi"
             end
+            
             if line[0][0] == "+"
                 patchPosStreak += 1
                 #puts "patch add streak #{patchPosStreak}"
@@ -247,17 +264,14 @@ def findMultiLineComments (lines)
                 totalComment-=1
                 codeChurn.commentDeleted(1)
             end
-
-            #puts "X#{result[0]}X"
-            #puts "Here #{comments[index]}"
             
             #Set the grouping to the comment
             grouped.setComment("\n#{result[0]}")
             #comments[index] += "\n#{result[0]}"
         else
+            # Check for whether there is a comment in the given line
 
             #Remove the quotes prior to checking it
-            #quoteLessLine = quoteManager.removeQuotes(line[0])
             result = quoteLessLine.scan(JAVA_MULTI_LINE_FULL)
             
             result = result[0]
@@ -319,9 +333,9 @@ def findMultiLineComments (lines)
 
             else
 
-                #quoteLessLine = quoteManager.removeQuotes(line[0])
+                # Check if it is the beginning of a multi-line comment
 
-                # Check for part of multi line comment
+                #TODO handle multi-line comment starting on a line of code 
                 result = quoteLessLine.scan(JAVA_MULTI_LINE_FIRST_HALF)
                 if result[0] != nil
                     #There is a multi-line comment starting here
@@ -344,11 +358,7 @@ def findMultiLineComments (lines)
                     end
 
                 else
-                    #This line is not a comment
-                    #lineCounter.linesOfCode(1)
-
-                    # TODO actually call correct method for finding methods
-                    #methodFinder(lines, lineCount)
+                    #There is no comment on this line handle is a purely code
                     
                     if line[0][0] == "+"
                         patchPosStreak += 1
@@ -540,7 +550,7 @@ def mergePatch(lines, patch, name)
         # A file that does not have a new line at the end will have
         # '\ No newline at end of file' at the very end
 
-        if $test
+        if $test_merge
             puts "#{patch}"
         end
 
@@ -572,7 +582,7 @@ def mergePatch(lines, patch, name)
         patches.each { |patchLine|
             #begin
             
-                if $test
+                if $test_merge
                     puts "#{patchLine}"
                     #puts "patchDiff #{patchlines}"
 
@@ -606,7 +616,7 @@ def mergePatch(lines, patch, name)
 
                     check = patchLine[2].scan(PATCH_LINE_NUM_OLD)
                 
-                    if $test
+                    if $test_merge
                         if check[0] == nil
                             #Handle bad patch
                             puts "check #{check}"
@@ -629,7 +639,7 @@ def mergePatch(lines, patch, name)
                     end
                 end
 
-                if $test
+                if $test_merge
                     #puts lines[currentLine-1][0]
                     #a = gets
 
@@ -639,14 +649,14 @@ def mergePatch(lines, patch, name)
                 end
         }
     elsif patch == nil
-        if $test
+        if $test_merge
             # Patch is empty
             puts "nothing in patch!?"
         end
     else 
     	$NOT_FOUND += 1
         $BAD_FILE_ARRAY.push([lines, patch])
-    	if $test
+    	if $test_merge
     	    puts "File request error"
     	    puts "This has happened #{$NOT_FOUND}"
 
@@ -705,7 +715,7 @@ tags = Github_database.getTags(con, repo_name, repo_owner)
 tags.each { |sha, tag_name, tag_desc, tag_date|
     if !$test
         Stats_db.insertTag(stats_con, repo_id, sha, tag_name, tag_desc, tag_date)
-    else
+    elsif $test_tag
         puts "sha = #{sha}"
         puts "tag_name = #{tag_name}"
         puts "tag_desc = #{tag_desc}"
