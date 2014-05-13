@@ -1,7 +1,11 @@
 require_relative 'manage_quotes'
 
 class MethodFinder
-    attr_accessor :actual_start#, :plus_minus
+    # Actual start indicates the actual starting line which contains the method's signature
+    # Comment start indicates the starting position of the comments preceeding the method.
+    # *note that white space may preceed the comment.
+    # *note that the lack of a comment preceeding a method is denoted by a -1
+    attr_accessor :actual_start, :comment_start#, :plus_minus
 
     def initialize(lines)
         @delta = 0
@@ -10,11 +14,13 @@ class MethodFinder
         @mq = ManageQuotes.new
         @plus_minus = false
         @actual_start = 0
+        @comment_start = -1
     end
 
     def findMethod(index)
         start = index
         @actual_start = index
+        @comment_start = -1
         found = false
 
         # Identify the method
@@ -28,8 +34,17 @@ class MethodFinder
 
         while !found && index < @lines.length
 
-            quoteLess = @mq.cleanLine(@lines[index][0])
+            quoteLess = @mq.removeQuotes(@lines[index][0])
 
+            # Check if the line contains a comment
+            if quoteLess.match(/(\/\/)|(\/\*)/)
+                @comment_start = index
+            end
+
+            quoteLess = @mq.removeComments(quoteLess)
+
+            # TODO handle deleted statement
+            # TODO handle added statment
             if quoteLess[0] == '-'
                 next
             end
@@ -51,13 +66,14 @@ class MethodFinder
                 index = start
                 break
             else
-                #TODO remove +/- inside the statement
+                #TODO remove +/- inside the statement, currently just removing
                 #TODO handle +/- properly
                 fullStatement = "#{fullStatement} #{quoteLess[1..-1]}"
 
                 if quoteLess.match(/\{/)
                     
-                    if fullStatement.match(/\s(new)\s+/) || fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)                    
+                    if fullStatement.match(/\s(new)\s+/) ||
+                        fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
                         # Not a statement since it has has built-in command as part of it
                         index = start
                         break

@@ -217,6 +217,7 @@ def findMultiLineComments (lines)
                 puts "m_end = #{m_end}"
                 # Identifies the actual start of the method (prior is either white space or comments)
                 puts "actual_start = #{method_finder.actual_start}"
+                puts "comment_start = #{method_finder.comment_start}"
                 puts "###### method_start #{lineCount} ######"
                 puts lines[lineCount..m_end]
                 puts "####### method_end #{m_end} #######"

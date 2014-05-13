@@ -43,6 +43,11 @@ class ManageQuotes
         return line
     end
 
+    def removeComments(line)
+        line = removeSingleLineComment(line)
+        return removeMultComment(line)
+    end
+
     # Call all cleaning methods
     def cleanLine(line)
         line = removeQuotes(line)
