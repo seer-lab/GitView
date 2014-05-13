@@ -37,7 +37,7 @@ class MethodFinder
             quoteLess = @mq.removeQuotes(@lines[index][0])
 
             # Check if the line contains a comment
-            if quoteLess.match(/(\/\/)|(\/\*)/)
+            if quoteLess.match(/(\/\/)|(\/\*)/) && @comment_start == -1
                 @comment_start = index
             end
 
