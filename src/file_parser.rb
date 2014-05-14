@@ -6,6 +6,7 @@ require_relative 'manage_quotes'
 require_relative 'method_finder'
 require_relative 'code_parser'
 require_relative 'merger'
+require_relative 'progress'
 
 # Possible reasons for negative files
 # - Files that could not be retreived (404/403 etc)
@@ -42,8 +43,7 @@ else
 	abort("Invalid parameters")
 end
 
-$orig_std = $stdout.clone
-$prev_precent = nil
+progress_indicator = Progress.new
 
 # Set the output file to the given parameter
 $stdout.reopen(outputFile, "a")
@@ -67,30 +67,21 @@ def mergeThreshold(threshold)
     return threshold
 end
 
-def precentComplete(name, files, fileCount)
-    cur_precent = (fileCount.to_f/files)*100
-        
-    $orig_std.puts "\033c"
-
-    $orig_std.puts "Working on Files..."
-    if name
-        $orig_std.puts "Current File: #{name}"
-    end
-    $orig_std.puts "Precent Compelete #{format("%.1f",cur_precent)}%"
-end
-
 con = Github_database.createConnection()
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
-$orig_std.puts "Loading Files..."
+progress_indicator.puts "Loading Files..."
 files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner)
 
 if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
 end
 
-$orig_std.puts "Loading Tags..."
+# Set the progress indicator's max value
+progress_indicator.total_length = files.length
+
+progress_indicator.puts "Loading Tags..."
 tags = Github_database.getTags(con, repo_name, repo_owner)
 
 tags.each { |sha, tag_name, tag_desc, tag_date|
@@ -130,7 +121,7 @@ codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_
 #Map file name to the array of stats about that file.
 files.each do |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
     #file = files[0][0]
-    precentComplete(file_name, files.length, fileCount)
+    progress_indicator.precentComplete(file_name)
 
     current_commit = current_commit_id
 
@@ -198,7 +189,7 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
     fileCount+=1
 end
 
-precentComplete(nil, files.length, fileCount)
+progress_indicator.precentComplete(nil)
 puts "filesize = #{files.length}"
 #puts "Bad files count #{$NOT_FOUND}"
 #puts ""
