@@ -41,13 +41,15 @@ class MethodFinder
                 @comment_start = index
             end
 
-            quoteLess = @mq.removeComments(quoteLess)
-
             # TODO handle deleted statement
             # TODO handle added statment
             if quoteLess[0] == '-'
+                # Skip
+                index += 1
                 next
             end
+
+            quoteLess = @mq.removeComments(quoteLess)
 
             # Check if there is a '{' in the sanitized statement
             
@@ -143,45 +145,70 @@ class MethodFinder
 
         # Assume that a method has been found. Therefore assume count('}') == count('{') + 1
         depthCounter = 1
+        start = index
+        test = 0
 
-        while index < @lines.length
+        begin
+            index = start
+            while index < @lines.length
 
-            #puts "Line = #{@lines[index][0]}"
-            #puts "index = #{index}"
+                if test == 1
+                    puts "Line = #{@lines[index][0]}"
+                    puts "index = #{index}"
+                end
 
-            quoteLess = @mq.cleanLine(@lines[index][0])
-            #puts "inComment? = #{@mq.commentOpen}"
-            #puts "depth = #{depthCounter}"
-            #puts "quoteLess = #{quoteLess}"
+                quoteLess = @mq.removeQuotes(@lines[index][0])
 
-            result = quoteLess.scan(/\{|\}/)
+                # TODO handle deleted statement
+                # TODO handle added statment
+                if quoteLess[0] == '-'
+                    # Skip
+                    index += 1
+                    next
+                end
 
-            result.each do |cur|
+                quoteLess = @mq.removeComments(quoteLess)
 
-                if cur == '}'
-                    # Decrement the count by 1
-                    depthCounter -= 1
+                result = quoteLess.scan(/\{|\}/)
 
-                    # Check for depth condition
-                    if depthCounter == 0
-                        break
+                if test == 1
+                    puts "inComment? = #{@mq.commentOpen}"
+                    puts "depth = #{depthCounter}"
+                    puts "quoteLess = #{quoteLess}"
+                    puts "Brackets = #{result}"
+                end
+                
+                result.each do |cur|
+
+                    if cur == '}'
+                        # Decrement the count by 1
+                        depthCounter -= 1
+
+                        # Check for depth condition
+                        if depthCounter == 0
+                            break
+                        end
+                    end
+                   
+                    if cur == '{'
+                        # Increment the count by 1
+                        depthCounter += 1
+                        #puts "depth Increased at #{@lines[index][0]}"
+                        #puts "WITH #{result} and #{cur}"
                     end
                 end
-               
-                if cur == '{'
-                    # Increment the count by 1
-                    depthCounter += 1
-                    #puts "depth Increased at #{@lines[index][0]}"
-                    #puts "WITH #{result} and #{cur}"
+
+                if depthCounter == 0
+                    return index
                 end
+
+                index += 1
             end
 
-            if depthCounter == 0
-                return index
-            end
+            test += 1
 
-            index += 1
-        end
+        end while test <= 1
+
         # No end found
         return nil
     end

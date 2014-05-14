@@ -105,31 +105,37 @@ class Linker
 end
 
 class CodeParser
-    attr_accessor :test, :log, :high_threshold, :low_threshold, :size_threshold, :one_to_many
+    attr_accessor :test, :log, :high_threshold, 
+        :low_threshold, :size_threshold, :one_to_many, :method_errors
 
     def initialize(test, log, high_threshold, low_threshold, size_threshold, one_to_many)
         @test = test
         @log = log
-        @high_threshold = high_threshold        
+        @high_threshold = high_threshold
         @low_threshold = low_threshold
         @size_threshold = size_threshold
-        @one_to_many = one_to_many        
+        @one_to_many = one_to_many
+        @method_errors = 0
     end
+
     # Identifies lines that have been added, deleted (and soon modified)
     # Also the line is classified as a comment or code. 
     # Note: the regular expression to identify comments and code require that the code
     # is changed (eg. removing the blocks of quoted text) inorder to be accurate
     def findMultiLineComments (lines)
         multiLine = false
+        #TODO evaluate usefuless
         lineCounter = LineCounter.new
-        codeLines = Array.new
         codeChurn = CodeChurn.new
+        #TODO evaluate usefuless
         grouped = Linker.new
+
+        #TODO evaluate usefuless
         commentLookingForMultiChild = false
         commentLookingForChild = false
 
+        #TODO make class attribute
         quoteManager = ManageQuotes.new
-
         method_finder = MethodFinder.new(lines)
 
         #linesModified = Array.new
@@ -171,16 +177,33 @@ class CodeParser
 
             # Identify if the current line is a method
             if method_finder.methodFinderManager(lineCount)
+
+                #if @test
+                #    puts lines[lineCount..lineCount+method_finder.delta]
+                #    puts "delta = #{method_finder.delta}"
+                #end
+
                 # Find length of the method
                 m_end = method_finder.methodEndFinder(lineCount+method_finder.delta+1)
 
-                if @test
-                    # Identifies the actual start of the method (prior is either white space or comments)
-                    puts "actual_start = #{method_finder.actual_start}"
-                    puts "comment_start = #{method_finder.comment_start}"
-                    puts "###### method_start #{lineCount} ######"
-                    puts lines[lineCount..m_end]
-                    puts "####### method_end #{m_end} #######"
+                # Check if m_end is valid, otherwise ignore
+                if m_end
+                    if @test
+                        puts "m_end = #{m_end}"
+                        # Identifies the actual start of the method (prior is either white space or comments)
+                        puts "actual_start = #{method_finder.actual_start}"
+                        puts "comment_start = #{method_finder.comment_start}"
+                        puts "###### method_start #{lineCount} ######"
+                        puts lines[lineCount..m_end]
+                        puts "####### method_end #{m_end} #######"
+                    end
+                else
+
+                    @method_errors += 1
+                    
+                    if @test
+                        puts "No end found, # so far #{method_errors}" 
+                    end
                 end
             end
 
@@ -338,8 +361,6 @@ class CodeParser
                                 totalCode-=1
                             end
                         end
-
-                        #codeLines.push(line[0])
                         
                         if commentLookingForChild
                             #Code found store it in the grouping
@@ -353,6 +374,7 @@ class CodeParser
                 end
             end
 
+            #TODO move to method
             if patchNegStreak > 0 && patchPosStreak > 0
                 #puts "neg #{patchNegStreak}"
                 #puts "pos #{patchPosStreak}"
@@ -500,6 +522,6 @@ class CodeParser
             lineCount += 1
             method_finder.iterate
         }
-        return [[totalComment, totalCode], codeLines, lineCounter, codeChurn]
+        return [[totalComment, totalCode], codeChurn]
     end
 end

@@ -42,6 +42,9 @@ else
 	abort("Invalid parameters")
 end
 
+$orig_std = $stdout.clone
+$prev_precent = nil
+
 # Set the output file to the given parameter
 $stdout.reopen(outputFile, "a")
 $stderr.reopen(outputFile, "a")
@@ -64,16 +67,30 @@ def mergeThreshold(threshold)
     return threshold
 end
 
+def precentComplete(name, files, fileCount)
+    cur_precent = (fileCount.to_f/files)*100
+        
+    $orig_std.puts "\033c"
+
+    $orig_std.puts "Working on Files..."
+    if name
+        $orig_std.puts "Current File: #{name}"
+    end
+    $orig_std.puts "Precent Compelete #{format("%.1f",cur_precent)}%"
+end
+
 con = Github_database.createConnection()
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
+$orig_std.puts "Loading Files..."
 files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner)
 
 if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
 end
 
+$orig_std.puts "Loading Tags..."
 tags = Github_database.getTags(con, repo_name, repo_owner)
 
 tags.each { |sha, tag_name, tag_desc, tag_date|
@@ -87,6 +104,8 @@ tags.each { |sha, tag_name, tag_desc, tag_date|
     end
 }
 
+fileCount = 0
+
 prev_commit = files[0][2]
 current_commit = 0
 commit_comments = 0
@@ -94,15 +113,13 @@ commit_code = 0
 
 commit_id = nil
 
-churn = Hash.new()
-churn["CommentAdded"] = 0
-churn["CommentDeleted"] = 0
-churn["CommentModified"] = 0
-churn["CodeAdded"] = 0
-churn["CodeDeleted"] = 0
-churn["CodeModified"] = 0
-churn["TotalComment"] = 0
-churn["TotalCode"] = 0
+METRICS = ["CommentAdded", "CommentDeleted", "CommentModified", "CodeAdded", "CodeDeleted", "CodeModified", "TotalComment", "TotalCode"]
+
+churn = Hash.new
+
+METRICS.each do |metric|
+    churn[metric] = 0
+end
 
 fileHashTable = Hash.new
 
@@ -111,9 +128,10 @@ merger = Merger.new($test_merge)
 codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
 #Map file name to the array of stats about that file.
-files.each { |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
+files.each do |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
     #file = files[0][0]
-    
+    precentComplete(file_name, files.length, fileCount)
+
     current_commit = current_commit_id
 
     if $test
@@ -132,12 +150,12 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
 
     comments = codeParser.findMultiLineComments(lines)
 
-    churn["CommentAdded"] += comments[3].commentAdded(0)
-    churn["CommentDeleted"] += comments[3].commentDeleted(0)
-    churn["CommentModified"] += comments[3].commentModified(0)
-    churn["CodeAdded"] += comments[3].codeAdded(0)
-    churn["CodeDeleted"] += comments[3].codeDeleted(0)
-    churn["CodeModified"] += comments[3].codeModified(0)
+    churn["CommentAdded"] += comments[1].commentAdded(0)
+    churn["CommentDeleted"] += comments[1].commentDeleted(0)
+    churn["CommentModified"] += comments[1].commentModified(0)
+    churn["CodeAdded"] += comments[1].codeAdded(0)
+    churn["CodeDeleted"] += comments[1].codeDeleted(0)
+    churn["CodeModified"] += comments[1].codeModified(0)
 
     churn["TotalComment"] += comments[0][0]
     churn["TotalCode"] += comments[0][1]
@@ -147,7 +165,7 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
         puts comments[0][1] #The total number of lines of code in the file
     end
 
-    sum = comments[3].commentAdded(0) + comments[3].commentDeleted(0) + comments[3].codeAdded(0) + comments[3].codeDeleted(0) + comments[3].commentModified(0)  + comments[3].codeModified(0)
+    sum = comments[1].commentAdded(0) + comments[1].commentDeleted(0) + comments[1].codeAdded(0) + comments[1].codeDeleted(0) + comments[1].commentModified(0)  + comments[1].codeModified(0)
     #Get the path and the name of the file.
     package, name = parsePackages(file_name)
     
@@ -160,7 +178,7 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
 
             commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
         end
-        Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[3].commentAdded(0), comments[3].commentDeleted(0), comments[3].commentModified(0), comments[3].codeAdded(0), comments[3].codeDeleted(0), comments[3].codeModified(0))
+        Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
     end
     
     if prev_commit != current_commit
@@ -171,19 +189,16 @@ files.each { |file, file_name, current_commit_id, date, body, patch, com_name, a
             Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
         end
         commit_id = nil
-        churn["CommentAdded"] = 0
-        churn["CommentDeleted"] = 0
-        churn["CommentModified"] = 0
-        churn["CodeAdded"] = 0
-        churn["CodeDeleted"] = 0        
-        churn["CodeModified"] = 0
-        churn["TotalComment"] = 0
-        churn["TotalCode"] = 0
-        #commit_comments = 0
-        #commit_code = 0
-    end
-}
 
+        METRICS.each do |metric|
+            churn[metric] = 0
+        end
+    end
+    
+    fileCount+=1
+end
+
+precentComplete(nil, files.length, fileCount)
 puts "filesize = #{files.length}"
 #puts "Bad files count #{$NOT_FOUND}"
 #puts ""

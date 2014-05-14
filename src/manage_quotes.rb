@@ -8,7 +8,52 @@ class ManageQuotes
 
     # Removes the quoted sections quotes for the line.
     def removeQuotes(line)
-        return line.gsub(/".*"/,'')
+        length = line.scan(/"/).length
+        if length < 2
+            # Nothing change
+            return line
+        elsif length == 2
+            return line.gsub(/".*"/,'')
+        else
+            # Best attempt, will still fail given:
+            # "System.out.println(\"\\\"+ \"the sunny\\\" day\");"
+            # Since the first one is block "\\" is picked up as not ending
+            # This is because there is no difference between (as far as ruby is concerned) 
+            # with "\\" and "\". The second would not compile in Java. However both would
+            # be represented with \"\\\" in ruby (since ruby is forcing it to be a string)
+            # The problem being that \" is used in Java and ruby to show an escaped quote
+            # however ruby then takes that string and converts it to \\\" to indicate an
+            # escaped quote and an escaped forward slash.
+            inQuote = false
+            escape_count = 0
+            newLine = ''
+            line.each_char do |c|
+                #puts "c = #{c}"
+                if inQuote
+                    if c == '\\'
+                        escape_count += 1
+                    elsif c == '"'
+                        if (escape_count+1) % 2 == 0
+                            #puts "HERE"
+                            escape_count = 0
+                        else
+                            inQuote = false
+                        end
+                    else
+                        escape_count = 0
+                    end
+                else
+                    if c == '"'
+
+                        inQuote = true
+                    else
+                        newLine << c
+                    end
+                end
+                #puts "inside = #{inQuote}"
+            end
+            return newLine
+        end
     end
 
     # Remove the single line comment
