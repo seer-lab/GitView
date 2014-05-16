@@ -66,6 +66,15 @@ class CodeChurn
     def codeModified(value)
         @codeModified += value
     end
+
+    def clear
+        @commentAdded = 0
+        @commentDeleted = 0
+        @commentModified = 0
+        @codeAdded = 0
+        @codeDeleted = 0
+        @codeModified = 0
+    end
 end
 
 class Linker
@@ -154,6 +163,8 @@ class CodeParser
 
         lineCount = 0
 
+        #methodCounter = CodeChurn.new
+
         #puts patches
         #puts lines[0]
         #puts ""
@@ -189,10 +200,11 @@ class CodeParser
                 # Check if m_end is valid, otherwise ignore
                 if m_end
                     if @test
-                        puts "m_end = #{m_end}"
+                        #puts "m_end = #{m_end}"
                         # Identifies the actual start of the method (prior is either white space or comments)
                         puts "actual_start = #{method_finder.actual_start}"
                         puts "comment_start = #{method_finder.comment_start}"
+                        puts "deleted_start = #{method_finder.deleted_statement}"
                         puts "###### method_start #{lineCount} ######"
                         puts lines[lineCount..m_end]
                         puts "####### method_end #{m_end} #######"
@@ -219,7 +231,7 @@ class CodeParser
 
                     #Can remove empty comment lines
                     #if line[0].gsub(/\*/, '').match(/^\s*$/) == nil
-                    lineCounter.multiLineComment(1)
+                    
                     
                     #puts "part of multi"
                 else
@@ -228,10 +240,12 @@ class CodeParser
 
                     #Can remove empty ending line
                     #if result[0].gsub(/[\*\/]/, '').match(/^\s*$/) == nil
-                    lineCounter.multiLineComment(1)
+                    #lineCounter.multiLineComment(1)
                     #puts "end of multi"
                 end
                 
+                lineCounter.multiLineComment(1)
+
                 if line[0][0] == "+"
                     patchPosStreak += 1
                     #puts "patch add streak #{patchPosStreak}"

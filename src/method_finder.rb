@@ -5,14 +5,14 @@ class MethodFinder
     # Comment start indicates the starting position of the comments preceeding the method.
     # *note that white space may preceed the comment.
     # *note that the lack of a comment preceeding a method is denoted by a -1
-    attr_accessor :actual_start, :comment_start#, :plus_minus
+    attr_accessor :actual_start, :comment_start, :deleted_statement
 
     def initialize(lines)
         @delta = 0
         @just_run = false
         @lines = lines
         @mq = ManageQuotes.new
-        @plus_minus = false
+        @deleted_statement = 0
         @actual_start = 0
         @comment_start = -1
     end
@@ -22,6 +22,8 @@ class MethodFinder
         @actual_start = index
         @comment_start = -1
         found = false
+        stop_looking = false
+        @deleted_statement = 0
 
         # Identify the method
         # 1. identify that the line is a possible method
@@ -36,60 +38,80 @@ class MethodFinder
 
             quoteLess = @mq.removeQuotes(@lines[index][0])
 
-            # Check if the line contains a comment
-            if quoteLess.match(/(\/\/)|(\/\*)/) && @comment_start == -1
-                @comment_start = index
-            end
-
             # TODO handle deleted statement
-            # TODO handle added statment
             if quoteLess[0] == '-'
                 # Skip
                 index += 1
                 next
             end
 
+            # Check if the line contains a comment
+            if quoteLess.match(/(\/\/)|(\/\*)/) && @comment_start == -1
+                @comment_start = index
+            end
+
             quoteLess = @mq.removeComments(quoteLess)
 
             # Check if there is a '{' in the sanitized statement
             
-            if quoteLess.match(/;\s*(\/\/(.*?)|(\/\*.*?))?$/)
+            if quoteLess.match(/;\s*$/)#(\/\/(.*?)|(\/\*.*?))?$/) # TODO REMOVE
                 # \(.*?;.*?;.*\) could use to remove 'for' semi-colons
                 # Even with the purposed fix the desired goal is already achieved.
                 # The purposed fix would also not handle the following:
                 # for(int i = 0; //<= This would cause it be recognized as a statement
                 #     i < 10; i++) {...}
 
-                # Statement has ended
-                index = start
-                break
+                stop_looking = true
                 # Move onto the next statement
             elsif quoteLess.match(/\}/)
-                index = start
-                break
+                #if !@deleted_statement
+                #index = start
+                #break
+                #end
+                stop_looking = true
             else
                 #TODO remove +/- inside the statement, currently just removing
                 #TODO handle +/- properly
-                fullStatement = "#{fullStatement} #{quoteLess[1..-1]}"
+                temp = "#{fullStatement} #{quoteLess[1..-1]}"
 
                 if quoteLess.match(/\{/)
                     
-                    if fullStatement.match(/\s(new)\s+/) ||
-                        fullStatement.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
+                    if temp.match(/\s(new)\s+/) ||
+                        temp.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
                         # Not a statement since it has has built-in command as part of it
-                        index = start
-                        break
-                    elsif fullStatement.match(/\(([\w\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
+                        stop_looking = true
+                    elsif temp.match(/\(([\w\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
                         # Note this will not catch interface's declaration of a method (since it has no body)
-                        found = true
-                        break
+                        
+                        if quoteLess[0] == '-'
+                            # A deleted method signature has been found 
+                            @deleted_statement = index
+                        else
+                            found = true
+                            break
+                        end
+
                     else
                         # Not a method declaration
-                        index = start
-                        break
+                        stop_looking = true
                     end
                 end
+
+                # Undo changes made by a negative line
+                if quoteLess[0] == '-'
+                    fullStatement = temp
+                end
             end
+
+            if stop_looking && quoteLess[0] != '-'
+                fullStatement = temp
+                index = start
+                break
+            else
+                # Undo changes made by a negative line
+                stop_looking = false
+            end
+
             index += 1
 
             if fullStatement.lstrip == ""
