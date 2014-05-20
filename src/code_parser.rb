@@ -205,7 +205,7 @@ class CodeParser
                         puts "actual_start = #{method_finder.actual_start}"
                         puts "comment_start = #{method_finder.comment_start}"
                         puts "deleted_start = #{method_finder.deleted_statement}"
-                        puts "###### method_start #{lineCount} ######"
+                        puts "###### method_start #{lineCount}, type = #{method_finder.methodHistory} ######"
                         puts lines[lineCount..m_end]
                         puts "####### method_end #{m_end} #######"
                     end

@@ -5,25 +5,37 @@ class MethodFinder
     # Comment start indicates the starting position of the comments preceeding the method.
     # *note that white space may preceed the comment.
     # *note that the lack of a comment preceeding a method is denoted by a -1
-    attr_accessor :actual_start, :comment_start, :deleted_statement
+    attr_accessor :actual_start, :comment_start, :deleted_statement, :methodHistory
+
+    DELETED_DEFAULT = -1
+    COMMENT_DEFAULT = -1
+
+    UNCHANGED = 0
+    ONLY_ADDED = 1
+    ONLY_DELETED = 2
+    MODIFIED = 3
+
 
     def initialize(lines)
         @delta = 0
         @just_run = false
         @lines = lines
         @mq = ManageQuotes.new
-        @deleted_statement = 0
+        @deleted_statement = DELETED_DEFAULT
         @actual_start = 0
-        @comment_start = -1
+        @comment_start = COMMENT_DEFAULT
+        @methodHistory = UNCHANGED
     end
 
     def findMethod(index)
         start = index
         @actual_start = index
-        @comment_start = -1
+        @comment_start = COMMENT_DEFAULT
         found = false
         stop_looking = false
-        @deleted_statement = 0
+        @deleted_statement = DELETED_DEFAULT
+        @onlyAddition = UNCHANGED
+        #end_of_block = false
 
         # Identify the method
         # 1. identify that the line is a possible method
@@ -39,14 +51,26 @@ class MethodFinder
             quoteLess = @mq.removeQuotes(@lines[index][0])
 
             # TODO handle deleted statement
-            if quoteLess[0] == '-'
-                # Skip
-                index += 1
-                next
+            #if quoteLess[0] == '-' && false
+            #    # Skip
+            #    index += 1
+            #    next
+            #end
+            if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '+'
+                # Modified statement
+                # Look for another method signature with + preceeding it
+            elsif @deleted_statement != DELETED_DEFAULT && quoteLess[0] != ' '
+                # Statement is only deleted continue where it was previously left at
+                index = @deleted_statement
+                found = true
+                break
             end
 
+            updateHistory(quoteLess)
+            #puts "QuoteLess = #{quoteLess}"
+
             # Check if the line contains a comment
-            if quoteLess.match(/(\/\/)|(\/\*)/) && @comment_start == -1
+            if quoteLess[0] != '-' && quoteLess.match(/(\/\/)|(\/\*)/) && @comment_start == -1
                 @comment_start = index
             end
 
@@ -73,6 +97,7 @@ class MethodFinder
                 #TODO remove +/- inside the statement, currently just removing
                 #TODO handle +/- properly
                 temp = "#{fullStatement} #{quoteLess[1..-1]}"
+                #puts "full = #{fullStatement}"
 
                 if quoteLess.match(/\{/)
                     
@@ -90,7 +115,6 @@ class MethodFinder
                             found = true
                             break
                         end
-
                     else
                         # Not a method declaration
                         stop_looking = true
@@ -98,13 +122,14 @@ class MethodFinder
                 end
 
                 # Undo changes made by a negative line
-                if quoteLess[0] == '-'
+                if quoteLess[0] != '-'
                     fullStatement = temp
                 end
             end
 
-            if stop_looking && quoteLess[0] != '-'
-                fullStatement = temp
+            #puts "Stop #{stop_looking}"
+            if stop_looking && @deleted_statement == DELETED_DEFAULT #&& quoteLess[0] != '-'
+                #fullStatement = temp
                 index = start
                 break
             else
@@ -128,6 +153,22 @@ class MethodFinder
         #    - Can ignore the check for method for the number of lines the method signature takes up
         # - number of lines the method takes up
         return found
+    end
+
+    def updateHistory(line)
+        if line[0] == '-'
+            if @methodHistory == UNCHANGED
+                @methodHistory = ONLY_DELETED
+            elsif @methodHistory == ONLY_ADDED
+                @methodHistory = MODIFIED
+            end
+        elsif line[0] == '+'
+            if @methodHistory == UNCHANGED
+                @methodHistory = ONLY_ADDED
+            elsif @methodHistory == ONLY_DELETED
+                @methodHistory = MODIFIED
+            end
+        end
     end
 
     def methodFinderManager(index)
@@ -181,13 +222,15 @@ class MethodFinder
 
                 quoteLess = @mq.removeQuotes(@lines[index][0])
 
+                updateHistory(quoteLess) 
+
                 # TODO handle deleted statement
                 # TODO handle added statment
-                if quoteLess[0] == '-'
-                    # Skip
-                    index += 1
-                    next
-                end
+                #if quoteLess[0] == '-'
+                #    # Skip
+                #    index += 1
+                #    next
+                #end
 
                 quoteLess = @mq.removeComments(quoteLess)
 
@@ -271,6 +314,17 @@ public int divide(int x, int y) {
 {
     return x * y;
 }*/
+
+- public void findMenthod(String lines) {
+-   return "";    
+-}
+
+- public void findMenthod(String lines) {
+-   return "Hello";
++ public int findDonut(int lines) {
+   return "";    
+}
+
 '
 text = text[0..-1]
 lines = text.split(/\n/)
@@ -281,12 +335,14 @@ lines.each do |line|
     value = fm.methodFinderManager(i)
     #fm.methodFinderManager(i)
     puts "i = #{i}, found = #{value}, delta = #{fm.delta}"
+    puts "deletedstatment = #{fm.deleted_statement}"
 
     if value
         end_value = fm.methodEndFinder(i+fm.delta+1)
-        puts "######### method: start = #{i} end = #{end_value} #########"
+        puts "######### method: start = #{i}, type = #{fm.methodHistory} #########"
 
         puts lines[i..end_value]
+        puts "######### method_end #{end_value} #########"
     end
 
     i+= 1
