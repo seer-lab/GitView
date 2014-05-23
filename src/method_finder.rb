@@ -1,4 +1,5 @@
 require_relative 'manage_quotes'
+require_relative 'regex'
 
 class MethodFinder
     # Actual start indicates the actual starting line which contains the method's signature
@@ -10,6 +11,7 @@ class MethodFinder
     DELETED_DEFAULT = -1
     COMMENT_DEFAULT = -1
 
+    INITIAL = -1
     UNCHANGED = 0
     ONLY_ADDED = 1
     ONLY_DELETED = 2
@@ -24,7 +26,7 @@ class MethodFinder
         @deleted_statement = DELETED_DEFAULT
         @actual_start = 0
         @comment_start = COMMENT_DEFAULT
-        @methodHistory = UNCHANGED
+        @methodHistory = INITIAL
     end
 
     def findMethod(index)
@@ -34,7 +36,7 @@ class MethodFinder
         found = false
         stop_looking = false
         @deleted_statement = DELETED_DEFAULT
-        @onlyAddition = UNCHANGED
+        @methodHistory = INITIAL
         #end_of_block = false
 
         # Identify the method
@@ -157,15 +159,23 @@ class MethodFinder
 
     def updateHistory(line)
         if line[0] == '-'
-            if @methodHistory == UNCHANGED
-                @methodHistory = ONLY_DELETED
-            elsif @methodHistory == ONLY_ADDED
+            if @methodHistory == INITIAL
+                @methodHistory = ONLY_DELETED 
+            elsif @methodHistory == ONLY_ADDED || @methodHistory == UNCHANGED
                 @methodHistory = MODIFIED
             end
         elsif line[0] == '+'
-            if @methodHistory == UNCHANGED
+            if @methodHistory == INITIAL
                 @methodHistory = ONLY_ADDED
-            elsif @methodHistory == ONLY_DELETED
+            elsif @methodHistory == ONLY_DELETED || @methodHistory == UNCHANGED
+                @methodHistory = MODIFIED
+            end
+        elsif line[1..-1] && line[1..-1].match(WHITE_SPACE) != nil &&
+            @methodHistory != UNCHANGED #&& line[0] == ' '
+            # Ensure the line isnt empty
+            if @methodHistory == INITIAL
+                @methodHistory = UNCHANGED
+            else
                 @methodHistory = MODIFIED
             end
         end
@@ -226,11 +236,11 @@ class MethodFinder
 
                 # TODO handle deleted statement
                 # TODO handle added statment
-                #if quoteLess[0] == '-'
-                #    # Skip
-                #    index += 1
-                #    next
-                #end
+                if quoteLess[0] == '-' && @methodHistory == MODIFIED
+                    # Skip
+                    index += 1
+                    next
+                end
 
                 quoteLess = @mq.removeComments(quoteLess)
 
@@ -276,6 +286,23 @@ class MethodFinder
 
         # No end found
         return nil
+    end
+
+    # Calculates how many statements were added, deleted or unchanged (will not work for modified since it 
+    # just counts all the statements that are part of the method).
+    # Also does not take into account comments vs code
+    def method_length(method_end)
+        length = 0
+
+        # Capture comments within the count
+        if @comment_start != -1
+            length += actual_start - @comment_start
+        end
+
+        length += method_end - @actual_start
+
+        # Convert from index to length
+        length += 1
     end
 end
 

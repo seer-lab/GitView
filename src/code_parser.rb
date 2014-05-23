@@ -163,6 +163,8 @@ class CodeParser
 
         lineCount = 0
 
+        methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
+
         #methodCounter = CodeChurn.new
 
         #puts patches
@@ -182,6 +184,7 @@ class CodeParser
 
             if @test
                 puts "line = #{line[0]}"
+                #puts "type = #{method_finder.methodHistory}"
                 #puts "multi = #{multiLine}"
                 #puts ""
             end
@@ -199,13 +202,33 @@ class CodeParser
 
                 # Check if m_end is valid, otherwise ignore
                 if m_end
+
+                    if method_finder.methodHistory == MethodFinder::ONLY_ADDED
+                            # New method
+                        methodCounter['+'] += 1
+                    elsif method_finder.methodHistory == MethodFinder::ONLY_DELETED
+                        # Deleted method
+                        methodCounter['-'] += 1
+                    elsif method_finder.methodHistory == MethodFinder::MODIFIED
+                        # Modified method
+                        methodCounter['~'] += 1
+                    elsif method_finder.methodHistory == MethodFinder::UNCHANGED ||
+                        method_finder.methodHistory == MethodFinder::INITIAL
+                        # Modified method
+                        methodCounter['*'] += 1
+                    end
+
+                    length = method_finder.method_length(m_end)
+
                     if @test
-                        #puts "m_end = #{m_end}"
                         # Identifies the actual start of the method (prior is either white space or comments)
                         puts "actual_start = #{method_finder.actual_start}"
                         puts "comment_start = #{method_finder.comment_start}"
                         puts "deleted_start = #{method_finder.deleted_statement}"
-                        puts "###### method_start #{lineCount}, type = #{method_finder.methodHistory} ######"
+
+                        puts "+ = #{methodCounter['+']}, - = #{methodCounter['-']}, ~ = #{methodCounter['~']}, * = #{methodCounter['*']}"
+
+                        puts "###### method_start #{lineCount}, type = #{method_finder.methodHistory}, length = #{length} ######"
                         puts lines[lineCount..m_end]
                         puts "####### method_end #{m_end} #######"
                     end
@@ -389,6 +412,8 @@ class CodeParser
             end
 
             #TODO move to method
+
+            #TODO Fix, doesnt work if an added comment is inbetween two sections of added code
             if patchNegStreak > 0 && patchPosStreak > 0
                 #puts "neg #{patchNegStreak}"
                 #puts "pos #{patchPosStreak}"

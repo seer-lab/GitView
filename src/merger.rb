@@ -81,7 +81,8 @@ class Merger
                         deletions = 0
                     else
                         if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
-                elsif patchLine[0] == nil && patchLine[2] == ""
+                        
+                        elsif patchLine[0] == nil && patchLine[2] == ""
 
                         else 
                             #Context
@@ -96,7 +97,7 @@ class Merger
                         #a = gets
 
                         #puts lines[0]
-                        puts "deletions #{deletions}"
+                        #puts "deletions #{deletions}"
                         puts ""
                     end
             }
@@ -104,6 +105,10 @@ class Merger
             if @test
                 # Patch is empty
                 puts "nothing in patch!?"
+                # TODO ignore files without changes
+            end
+            lines.each do |line|
+                line[0] = " #{line[0]}"
             end
         else 
             $NOT_FOUND += 1
