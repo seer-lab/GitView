@@ -60,6 +60,36 @@ CREATE TABLE file
     CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE method
+(
+    method_id BIGINT UNSIGNED AUTO_INCREMENT,
+    file_reference BIGINT UNSIGNED,
+    new_methods INT,
+    deleted_methods INT,
+    modified_methods INT,
+    PRIMARY KEY(method_id),
+    CONSTRAINT fkey_method_1 FOREIGN KEY (file_reference) REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE method_statements
+(
+    statement_id BIGINT UNSIGNED AUTO_INCREMENT,
+    file_reference BIGINT UNSIGNED,
+
+    new_code INT,
+    new_comment INT,
+
+    deleted_code INT,
+    deleted_comment INT,
+
+    modified_code_added INT,
+    modified_comment_added INT,
+    modified_code_deleted INT,
+    modified_comment_deleted INT,
+    PRIMARY KEY(statement_id),
+    CONSTRAINT fkey_statement_1 FOREIGN KEY (file_reference) REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE tags
 (
     tag_id INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,

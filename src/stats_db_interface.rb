@@ -2,6 +2,7 @@ require 'mysql'
 
 module Stats_db
     require_relative 'utility'
+    require_relative 'method_statement_counter'
 
     $DATABASE = 'project_stats'
     HOST = 'localhost'
@@ -12,6 +13,8 @@ module Stats_db
     REPO = 'repositories'
     COMMITS = 'commits'
     FILE = 'file'
+    METHOD = 'method'
+    METHOD_STATEMENT = 'method_statements'
 
     # Repo
     REPO_ID = 'repo_id'
@@ -53,6 +56,25 @@ module Stats_db
     ADDED_CODE = 'code_addition'
     DELETED_CODE = 'code_deletion'
     MODIFIED_CODE = 'code_modified'
+
+    # Method
+    METHOD_ID = 'method_id'
+    FILE_REFERENCE = 'file_reference'
+    NEW_METHODS = 'new_methods'
+    DELETED_METHODS = 'deleted_methods'
+    MODIFIED_METHODS = 'modified_methods'
+
+    # Method Statements
+    STATEMENT_ID = 'statement_id'
+    #FILE_REFERENCE = 'file_reference'
+    NEW_CODE = 'new_code'
+    NEW_COMMENT = 'new_comment'
+    REMOVED_CODE = 'deleted_code'
+    REMOVED_COMMENT = 'deleted_comment'
+    MODIFIED_CODE_ADDED = 'modified_code_added'
+    MODIFIED_COMMENT_ADDED = 'modified_comment_added'
+    MODIFIED_CODE_DELETED = 'modified_code_deleted'
+    MODIFIED_COMMENT_DELETED = 'modified_comment_deleted'
 
     # Tag
     TAG = 'tags'
@@ -240,5 +262,21 @@ module Stats_db
 
         #There should be only 1 id return anyways.
         return results
+    end
+
+    def Stats_db.insertMethod(con, file_id, method_counter)
+        pick = con.prepare("INSERT INTO #{METHOD} (#{FILE_REFERENCE}, #{NEW_METHODS}, #{DELETED_METHODS}, #{MODIFIED_METHODS}) VALUES (?, ?, ?, ?)")
+
+        pick.execute(file_id, method_counter['+'], method_counter['-'], method_counter['~'])
+
+        return Utility.toInteger(pick.insert_id)
+    end
+
+    def Stats_db.insertMethodStatement(con, file_id, statement_counter)
+        pick = con.prepare("INSERT INTO #{METHOD_STATEMENT} (#{FILE_REFERENCE}, #{NEW_CODE}, #{NEW_COMMENT}, #{REMOVED_CODE}, #{REMOVED_COMMENT}, #{MODIFIED_CODE_ADDED}, #{MODIFIED_COMMENT_ADDED}, #{MODIFIED_CODE_DELETED}, #{MODIFIED_COMMENT_DELETED}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
+        pick.execute(file_id, statement_counter.new_method['code'], statement_counter.new_method['comment'], statement_counter.deleted_method['code'], statement_counter.deleted_method['comment'], statement_counter.modified_method['code_added'], statement_counter.modified_method['comment_added'], statement_counter.modified_method['code_deleted'], statement_counter.modified_method['comment_deleted'])
+
+        return Utility.toInteger(pick.insert_id)
     end
 end
