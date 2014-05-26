@@ -3,7 +3,7 @@ require_relative 'regex'
 require_relative 'stats_db_interface'
 require_relative 'matchLines'
 require_relative 'manage_quotes'
-require_relative 'method_finder'
+
 require_relative 'code_parser'
 require_relative 'merger'
 require_relative 'progress'

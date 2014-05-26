@@ -1,3 +1,8 @@
+require_relative 'method_finder'
+require_relative 'method_statement_counter'
+require_relative 'method_types'
+
+
 class LineCounter
     def initialize()
         @singleLineComment = 0
@@ -114,6 +119,9 @@ class Linker
 end
 
 class CodeParser
+
+    include MethodTypes
+
     attr_accessor :test, :log, :high_threshold, 
         :low_threshold, :size_threshold, :one_to_many, :method_errors
 
@@ -164,6 +172,8 @@ class CodeParser
         lineCount = 0
 
         methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
+        statementCounter = MethodStatementCounter.new
+
 
         #methodCounter = CodeChurn.new
 
@@ -184,6 +194,7 @@ class CodeParser
 
             if @test
                 puts "line = #{line[0]}"
+                puts "s+ = #{statementCounter.new_method}, s- = #{statementCounter.deleted_method}, s~ = #{statementCounter.modified_method}"
                 #puts "type = #{method_finder.methodHistory}"
                 #puts "multi = #{multiLine}"
                 #puts ""
@@ -203,28 +214,41 @@ class CodeParser
                 # Check if m_end is valid, otherwise ignore
                 if m_end
 
-                    if method_finder.methodHistory == MethodFinder::ONLY_ADDED
-                            # New method
+                    if method_finder.methodHistory == MethodTypes::ONLY_ADDED
+                        # New method
                         methodCounter['+'] += 1
-                    elsif method_finder.methodHistory == MethodFinder::ONLY_DELETED
+
+                        #if method_comment?
+                        #    statementCounter.new_method['comment'] += method_finder.comment_length
+                        #end
+                    elsif method_finder.methodHistory == MethodTypes::ONLY_DELETED
                         # Deleted method
                         methodCounter['-'] += 1
-                    elsif method_finder.methodHistory == MethodFinder::MODIFIED
+
+                        #if method_comment?
+                        #    statementCounter.deleted_method['comment'] += method_finder.comment_length
+                        #end
+                    elsif method_finder.methodHistory == MethodTypes::MODIFIED
                         # Modified method
                         methodCounter['~'] += 1
-                    elsif method_finder.methodHistory == MethodFinder::UNCHANGED ||
-                        method_finder.methodHistory == MethodFinder::INITIAL
+
+                        # Since modifications could be either added or deleted best to use the actual parsing to check.
+
+                    elsif method_finder.methodHistory == MethodTypes::UNCHANGED ||
+                        method_finder.methodHistory == MethodTypes::INITIAL
                         # Modified method
                         methodCounter['*'] += 1
                     end
 
                     length = method_finder.method_length(m_end)
 
+                    statementCounter.push_state(method_finder.methodHistory, length)
+
                     if @test
                         # Identifies the actual start of the method (prior is either white space or comments)
-                        puts "actual_start = #{method_finder.actual_start}"
-                        puts "comment_start = #{method_finder.comment_start}"
-                        puts "deleted_start = #{method_finder.deleted_statement}"
+                        #puts "actual_start = #{method_finder.actual_start}"
+                        #puts "comment_start = #{method_finder.comment_start}"
+                        #puts "deleted_start = #{method_finder.deleted_statement}"
 
                         puts "+ = #{methodCounter['+']}, - = #{methodCounter['-']}, ~ = #{methodCounter['~']}, * = #{methodCounter['*']}"
 
@@ -270,19 +294,29 @@ class CodeParser
                 lineCounter.multiLineComment(1)
 
                 if line[0][0] == "+"
+                    
+                    # Added comment
                     patchPosStreak += 1
-                    #puts "patch add streak #{patchPosStreak}"
                     linesCommentStreak["+"].push(line[0][1..-1])
                     
                     totalComment+=1
                     codeChurn.commentAdded(1)
+
+                    statementCounter.count_line(MethodStatementCounter::COMMENT,
+                        MethodStatementCounter::ADDED)
+
                 elsif line[0][0] == "-"
+                    
+                    # Deleted Comment
                     patchNegStreak += 1
-                    #puts "patch neg streak #{patchNegStreak}"
                     linesCommentStreak["-"].push(line[0][1..-1])
 
                     totalComment-=1
                     codeChurn.commentDeleted(1)
+
+                    
+                    statementCounter.count_line(MethodStatementCounter::COMMENT,
+                        MethodStatementCounter::DELETED)
                 end
                 
                 #Set the grouping to the comment
@@ -303,17 +337,26 @@ class CodeParser
 
                         # Determine whether the line was added or deleted
                         if line[0][0] == "+"
+                            
+                            # Comment Added
                             patchPosStreak += 1
-                            #puts "patch add streak #{patchPosStreak}"
                             linesCommentStreak["+"].push(line[0][1..-1])
                             codeChurn.commentAdded(1)
                             totalComment+=1
+
+                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                                MethodStatementCounter::ADDED)
+
                         elsif line[0][0] == "-"
+                            
+                            # Comment Deleted
                             patchNegStreak += 1
-                            #puts "patch neg streak #{patchNegStreak}"
                             linesCommentStreak["-"].push(line[0][1..-1])
                             codeChurn.commentDeleted(1)
                             totalComment-=1
+
+                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                                MethodStatementCounter::DELETED)
                         end
                         
                         # Single Comment 'In-line'
@@ -331,17 +374,23 @@ class CodeParser
                         if (result[3] != nil && result[3][1..-1] != nil && result[3][1..-1].match(WHITE_SPACE) == nil) || (result[0] != nil && result[0][1..-1] != nil && result[0][1..-1].match(WHITE_SPACE) == nil)
 
                             if line[0][0] == "+"
-                                #patchPosStreak += 1
-                                #puts "patch add streak #{patchPosStreak}"
+                                
+                                # Code added
                                 linesStreak["+"].push(line[0][1..-1])
                                 codeChurn.codeAdded(1)
                                 totalCode+=1
+
+                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                    MethodStatementCounter::ADDED)
                             elsif line[0][0] == "-"
-                                #patchNegStreak += 1
-                                #puts "patch neg streak #{patchNegStreak}"
+                                
+                                # Code Deleted
                                 linesStreak["-"].push(line[0][1..-1])
                                 codeChurn.codeDeleted(1)
                                 totalCode-=1
+
+                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                    MethodStatementCounter::DELETED)
                             end
                             #Stop looking for the code                        
                             commentLookingForChild = false
@@ -364,17 +413,26 @@ class CodeParser
                         #comments.push(result[0][0])
                         #lineCounter.multiLineComment(1)
                         if line[0][0] == "+"
+                            
+                            # Comment Added
                             patchPosStreak += 1
-                            #puts "patch add streak #{patchPosStreak}"
                             linesCommentStreak["+"].push(line[0][1..-1])
                             codeChurn.commentAdded(1)
                             totalComment+=1
+                            
+                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                                    MethodStatementCounter::ADDED)
+
                         elsif line[0][0] == "-"
+                            
+                            # Comment Deleted
                             patchNegStreak += 1
-                            #puts "patch neg streak #{patchNegStreak}"
                             linesCommentStreak["-"].push(line[0][1..-1])
                             codeChurn.commentDeleted(1)
                             totalComment-=1
+                            
+                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                                    MethodStatementCounter::DELETED)
                         end
 
                     else
@@ -382,20 +440,27 @@ class CodeParser
                         
                         if line[0][0] == "+"
                             patchPosStreak += 1
-                            #puts "patch add streak #{patchPosStreak}"
                             linesStreak["+"].push(line[0][1..-1])
 
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                                # Code Added
                                 codeChurn.codeAdded(1)
                                 totalCode+=1
+
+                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                    MethodStatementCounter::ADDED)
                             end
                         elsif line[0][0] == "-"
                             patchNegStreak += 1
-                            #puts "patch neg streak #{patchNegStreak}"
                             linesStreak["-"].push(line[0][1..-1])
+
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
+                                # Code deleted
                                 codeChurn.codeDeleted(1)
                                 totalCode-=1
+                                
+                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                    MethodStatementCounter::DELETED)
                             end
                         end
                         

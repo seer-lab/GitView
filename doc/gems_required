@@ -1,5 +1,5 @@
 gem install mysql
 gem install github_api -v 0.9.7
 gem install nokogiri
-gem install socket
+gem install socket 		# pre 2.0.3
 gem install json -v 1.7.7

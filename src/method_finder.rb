@@ -1,7 +1,10 @@
 require_relative 'manage_quotes'
 require_relative 'regex'
+require_relative 'method_types'
 
 class MethodFinder
+
+    include MethodTypes
     # Actual start indicates the actual starting line which contains the method's signature
     # Comment start indicates the starting position of the comments preceeding the method.
     # *note that white space may preceed the comment.
@@ -11,13 +14,6 @@ class MethodFinder
     DELETED_DEFAULT = -1
     COMMENT_DEFAULT = -1
 
-    INITIAL = -1
-    UNCHANGED = 0
-    ONLY_ADDED = 1
-    ONLY_DELETED = 2
-    MODIFIED = 3
-
-
     def initialize(lines)
         @delta = 0
         @just_run = false
@@ -26,7 +22,7 @@ class MethodFinder
         @deleted_statement = DELETED_DEFAULT
         @actual_start = 0
         @comment_start = COMMENT_DEFAULT
-        @methodHistory = INITIAL
+        @methodHistory = MethodTypes::INITIAL
     end
 
     def findMethod(index)
@@ -36,7 +32,7 @@ class MethodFinder
         found = false
         stop_looking = false
         @deleted_statement = DELETED_DEFAULT
-        @methodHistory = INITIAL
+        @methodHistory = MethodTypes::INITIAL
         #end_of_block = false
 
         # Identify the method
@@ -159,24 +155,24 @@ class MethodFinder
 
     def updateHistory(line)
         if line[0] == '-'
-            if @methodHistory == INITIAL
-                @methodHistory = ONLY_DELETED 
-            elsif @methodHistory == ONLY_ADDED || @methodHistory == UNCHANGED
-                @methodHistory = MODIFIED
+            if @methodHistory == MethodTypes::INITIAL
+                @methodHistory = MethodTypes::ONLY_DELETED 
+            elsif @methodHistory == MethodTypes::ONLY_ADDED || @methodHistory == MethodTypes::UNCHANGED
+                @methodHistory = MethodTypes::MODIFIED
             end
         elsif line[0] == '+'
-            if @methodHistory == INITIAL
-                @methodHistory = ONLY_ADDED
-            elsif @methodHistory == ONLY_DELETED || @methodHistory == UNCHANGED
-                @methodHistory = MODIFIED
+            if @methodHistory == MethodTypes::INITIAL
+                @methodHistory = MethodTypes::ONLY_ADDED
+            elsif @methodHistory == MethodTypes::ONLY_DELETED || @methodHistory == MethodTypes::UNCHANGED
+                @methodHistory = MethodTypes::MODIFIED
             end
         elsif line[1..-1] && line[1..-1].match(WHITE_SPACE) != nil &&
-            @methodHistory != UNCHANGED #&& line[0] == ' '
+            @methodHistory != MethodTypes::UNCHANGED #&& line[0] == ' '
             # Ensure the line isnt empty
-            if @methodHistory == INITIAL
-                @methodHistory = UNCHANGED
+            if @methodHistory == MethodTypes::INITIAL
+                @methodHistory = MethodTypes::UNCHANGED
             else
-                @methodHistory = MODIFIED
+                @methodHistory = MethodTypes::MODIFIED
             end
         end
     end
@@ -203,6 +199,14 @@ class MethodFinder
 
     def reset_delta
         @delta = 0
+    end
+
+    def in_method?
+        return delta != 0
+    end
+
+    def method_comment? 
+        return comment_start != COMMENT_DEFAULT
     end
 
     def iterate
@@ -236,7 +240,7 @@ class MethodFinder
 
                 # TODO handle deleted statement
                 # TODO handle added statment
-                if quoteLess[0] == '-' && @methodHistory == MODIFIED
+                if quoteLess[0] == '-' && @methodHistory == MethodTypes::MODIFIED
                     # Skip
                     index += 1
                     next
@@ -288,6 +292,10 @@ class MethodFinder
         return nil
     end
 
+    def comment_length
+        return @actual_start - @comment_start
+    end
+
     # Calculates how many statements were added, deleted or unchanged (will not work for modified since it 
     # just counts all the statements that are part of the method).
     # Also does not take into account comments vs code
@@ -296,7 +304,7 @@ class MethodFinder
 
         # Capture comments within the count
         if @comment_start != -1
-            length += actual_start - @comment_start
+            length += comment_length
         end
 
         length += method_end - @actual_start
