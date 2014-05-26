@@ -123,7 +123,8 @@ class CodeParser
     include MethodTypes
 
     attr_accessor :test, :log, :high_threshold, 
-        :low_threshold, :size_threshold, :one_to_many, :method_errors
+        :low_threshold, :size_threshold, :one_to_many, :method_errors,
+        :methodCounter, :statementCounter
 
     def initialize(test, log, high_threshold, low_threshold, size_threshold, one_to_many)
         @test = test
@@ -133,6 +134,11 @@ class CodeParser
         @size_threshold = size_threshold
         @one_to_many = one_to_many
         @method_errors = 0
+
+        @methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
+        @statementCounter = MethodStatementCounter.new
+
+        @codeChurn = CodeChurn.new
     end
 
     # Identifies lines that have been added, deleted (and soon modified)
@@ -141,11 +147,13 @@ class CodeParser
     # is changed (eg. removing the blocks of quoted text) inorder to be accurate
     def findMultiLineComments (lines)
         multiLine = false
-        #TODO evaluate usefuless
-        lineCounter = LineCounter.new
-        codeChurn = CodeChurn.new
+        
+        @codeChurn = CodeChurn.new
+        
         #TODO evaluate usefuless
         grouped = Linker.new
+        #TODO evaluate usefuless
+        lineCounter = LineCounter.new
 
         #TODO evaluate usefuless
         commentLookingForMultiChild = false
@@ -171,9 +179,8 @@ class CodeParser
 
         lineCount = 0
 
-        methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
-        statementCounter = MethodStatementCounter.new
-
+        @methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
+        @statementCounter = MethodStatementCounter.new
 
         #methodCounter = CodeChurn.new
 
@@ -194,7 +201,7 @@ class CodeParser
 
             if @test
                 puts "line = #{line[0]}"
-                puts "s+ = #{statementCounter.new_method}, s- = #{statementCounter.deleted_method}, s~ = #{statementCounter.modified_method}"
+                #puts "s+ = #{@statementCounter.new_method}, s- = #{@statementCounter.deleted_method}, s~ = #{@statementCounter.modified_method}"
                 #puts "type = #{method_finder.methodHistory}"
                 #puts "multi = #{multiLine}"
                 #puts ""
@@ -216,33 +223,33 @@ class CodeParser
 
                     if method_finder.methodHistory == MethodTypes::ONLY_ADDED
                         # New method
-                        methodCounter['+'] += 1
+                        @methodCounter['+'] += 1
 
                         #if method_comment?
-                        #    statementCounter.new_method['comment'] += method_finder.comment_length
+                        #    @statementCounter.new_method['comment'] += method_finder.comment_length
                         #end
                     elsif method_finder.methodHistory == MethodTypes::ONLY_DELETED
                         # Deleted method
-                        methodCounter['-'] += 1
+                        @methodCounter['-'] += 1
 
                         #if method_comment?
-                        #    statementCounter.deleted_method['comment'] += method_finder.comment_length
+                        #    @statementCounter.deleted_method['comment'] += method_finder.comment_length
                         #end
                     elsif method_finder.methodHistory == MethodTypes::MODIFIED
                         # Modified method
-                        methodCounter['~'] += 1
+                        @methodCounter['~'] += 1
 
                         # Since modifications could be either added or deleted best to use the actual parsing to check.
 
                     elsif method_finder.methodHistory == MethodTypes::UNCHANGED ||
                         method_finder.methodHistory == MethodTypes::INITIAL
                         # Modified method
-                        methodCounter['*'] += 1
+                        @methodCounter['*'] += 1
                     end
 
                     length = method_finder.method_length(m_end)
 
-                    statementCounter.push_state(method_finder.methodHistory, length)
+                    @statementCounter.push_state(method_finder.methodHistory, length)
 
                     if @test
                         # Identifies the actual start of the method (prior is either white space or comments)
@@ -250,7 +257,7 @@ class CodeParser
                         #puts "comment_start = #{method_finder.comment_start}"
                         #puts "deleted_start = #{method_finder.deleted_statement}"
 
-                        puts "+ = #{methodCounter['+']}, - = #{methodCounter['-']}, ~ = #{methodCounter['~']}, * = #{methodCounter['*']}"
+                        puts "+ = #{@methodCounter['+']}, - = #{@methodCounter['-']}, ~ = #{@methodCounter['~']}, * = #{@methodCounter['*']}"
 
                         puts "###### method_start #{lineCount}, type = #{method_finder.methodHistory}, length = #{length} ######"
                         puts lines[lineCount..m_end]
@@ -300,9 +307,9 @@ class CodeParser
                     linesCommentStreak["+"].push(line[0][1..-1])
                     
                     totalComment+=1
-                    codeChurn.commentAdded(1)
+                    @codeChurn.commentAdded(1)
 
-                    statementCounter.count_line(MethodStatementCounter::COMMENT,
+                    @statementCounter.count_line(MethodStatementCounter::COMMENT,
                         MethodStatementCounter::ADDED)
 
                 elsif line[0][0] == "-"
@@ -312,10 +319,10 @@ class CodeParser
                     linesCommentStreak["-"].push(line[0][1..-1])
 
                     totalComment-=1
-                    codeChurn.commentDeleted(1)
+                    @codeChurn.commentDeleted(1)
 
                     
-                    statementCounter.count_line(MethodStatementCounter::COMMENT,
+                    @statementCounter.count_line(MethodStatementCounter::COMMENT,
                         MethodStatementCounter::DELETED)
                 end
                 
@@ -341,10 +348,10 @@ class CodeParser
                             # Comment Added
                             patchPosStreak += 1
                             linesCommentStreak["+"].push(line[0][1..-1])
-                            codeChurn.commentAdded(1)
+                            @codeChurn.commentAdded(1)
                             totalComment+=1
 
-                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                            @statementCounter.count_line(MethodStatementCounter::COMMENT,
                                 MethodStatementCounter::ADDED)
 
                         elsif line[0][0] == "-"
@@ -352,10 +359,10 @@ class CodeParser
                             # Comment Deleted
                             patchNegStreak += 1
                             linesCommentStreak["-"].push(line[0][1..-1])
-                            codeChurn.commentDeleted(1)
+                            @codeChurn.commentDeleted(1)
                             totalComment-=1
 
-                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                            @statementCounter.count_line(MethodStatementCounter::COMMENT,
                                 MethodStatementCounter::DELETED)
                         end
                         
@@ -377,19 +384,19 @@ class CodeParser
                                 
                                 # Code added
                                 linesStreak["+"].push(line[0][1..-1])
-                                codeChurn.codeAdded(1)
+                                @codeChurn.codeAdded(1)
                                 totalCode+=1
 
-                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                @statementCounter.count_line(MethodStatementCounter::CODE,
                                     MethodStatementCounter::ADDED)
                             elsif line[0][0] == "-"
                                 
                                 # Code Deleted
                                 linesStreak["-"].push(line[0][1..-1])
-                                codeChurn.codeDeleted(1)
+                                @codeChurn.codeDeleted(1)
                                 totalCode-=1
 
-                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                @statementCounter.count_line(MethodStatementCounter::CODE,
                                     MethodStatementCounter::DELETED)
                             end
                             #Stop looking for the code                        
@@ -417,10 +424,10 @@ class CodeParser
                             # Comment Added
                             patchPosStreak += 1
                             linesCommentStreak["+"].push(line[0][1..-1])
-                            codeChurn.commentAdded(1)
+                            @codeChurn.commentAdded(1)
                             totalComment+=1
                             
-                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                            @statementCounter.count_line(MethodStatementCounter::COMMENT,
                                     MethodStatementCounter::ADDED)
 
                         elsif line[0][0] == "-"
@@ -428,10 +435,10 @@ class CodeParser
                             # Comment Deleted
                             patchNegStreak += 1
                             linesCommentStreak["-"].push(line[0][1..-1])
-                            codeChurn.commentDeleted(1)
+                            @codeChurn.commentDeleted(1)
                             totalComment-=1
                             
-                            statementCounter.count_line(MethodStatementCounter::COMMENT,
+                            @statementCounter.count_line(MethodStatementCounter::COMMENT,
                                     MethodStatementCounter::DELETED)
                         end
 
@@ -444,10 +451,10 @@ class CodeParser
 
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
                                 # Code Added
-                                codeChurn.codeAdded(1)
+                                @codeChurn.codeAdded(1)
                                 totalCode+=1
 
-                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                @statementCounter.count_line(MethodStatementCounter::CODE,
                                     MethodStatementCounter::ADDED)
                             end
                         elsif line[0][0] == "-"
@@ -456,10 +463,10 @@ class CodeParser
 
                             if line[0].match(WHITE_SPACE) == nil && line[0][1..-1].match(WHITE_SPACE) == nil
                                 # Code deleted
-                                codeChurn.codeDeleted(1)
+                                @codeChurn.codeDeleted(1)
                                 totalCode-=1
                                 
-                                statementCounter.count_line(MethodStatementCounter::CODE,
+                                @statementCounter.count_line(MethodStatementCounter::CODE,
                                     MethodStatementCounter::DELETED)
                             end
                         end
@@ -476,121 +483,13 @@ class CodeParser
                 end
             end
 
-            #TODO move to method
-
             #TODO Fix, doesnt work if an added comment is inbetween two sections of added code
             if patchNegStreak > 0 && patchPosStreak > 0
                 #puts "neg #{patchNegStreak}"
                 #puts "pos #{patchPosStreak}"
                 if patchNegPrev == patchNegStreak && patchPosPrev == patchPosStreak
-                    
-                    if @test || @log
-                        #puts "streak over"
-
-                        puts "Code Modified:"
-                        linesStreak["-"].each { |negLine|
-                            puts "- #{negLine}"
-                        }
-                        linesStreak["+"].each { |posLine|
-                            puts "+ #{posLine}"
-                        }
-
-                        puts "Comment Modified:"
-                        linesCommentStreak["-"].each { |negLine|
-                            puts "- #{negLine}"
-                        }
-                        linesCommentStreak["+"].each { |posLine|
-                            puts "+ #{posLine}"
-                        }
-                    end
-
-                    # Please Note:
-                    # Code modifications may be influenced by the comments being modified
-                    # As well as comment modifications being influenced by the code being modified
-                    # Example:
-                    # - System.out.println("Hello World!"); //This line tells the world hello really loud
-                    # + System.out.println("Hello World!"); //This prints out Hello World
-                    # Currently this will show up as a modificiation for both code and comment
-                    codeMod = Hash.new
-                    commentMod = Hash.new
-                    codeModLength = 0
-                    
-                    code_pid = Thread.new do
-                        codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], @high_threshold, @low_threshold, @size_threshold, @one_to_many)
-
-                        found = Hash.new
-                        codeMod.each {|i,v|
-                            v.each {|k, d|
-                                if found[k] ==nil
-                                    found[k] = true
-                                end
-                            }
-                        }
-                        codeModLength = found.length
-                    end
-
-                    #comment_pid = fork do
-                    commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], @high_threshold, @low_threshold, @size_threshold, @one_to_many)
-                    #end
-
-                    found = Hash.new
-                    commentMod.each {|i,v|
-                        v.each {|k, d|
-                            if found[k] ==nil
-                                found[k] = true
-                            end
-                        }
-                    }
-                    commentModLength = found.length
-
-                    # Wait for the results
-                    code_pid.join
-                    #Process.wait code_pid
-                    #Process.wait comment_pid
-
-                    #codeModLength = codeMod.length
-                    #commentModLength = commentMod.length
-                    
-                    if @test || @log
-                        codeMod.each { |n, v|
-                            v.each{ |p, d|
-                                puts "PosLine = #{linesStreak["+"][p]} => NegLine = #{linesStreak["-"][n]} => distance = #{d}"
-                            }
-                        }
-
-                        commentMod.each { |n, v|
-                            v.each{ |p, d|
-                                puts "PosLine = #{linesCommentStreak["+"][p]} => NegLine = #{linesCommentStreak["-"][n]} => distance = #{d}"
-                            }
-                        }
-
-                        puts "Number of calc code modifications #{codeModLength}"
-                        puts "Number of calc comment modifications #{commentModLength}"
-                    end
-
-                    codeChurn.codeModified(codeMod.length)
-                    codeChurn.commentModified(commentMod.length)
-
-                    #comments added = comments added - # of positive lines modified
-                    codeChurn.commentAdded((-1)*commentModLength)
-                    #comments deleted = comments deleted - # of lines modified(since the mapping is 1 Negative to many Positve lines)
-                    codeChurn.commentDeleted((-1)*commentMod.length)
-
-                    codeChurn.codeAdded((-1)*codeModLength)
-                    codeChurn.codeDeleted((-1)*codeMod.length)
-
-                    #puts "mods = #{mods}"
-                    #patchNegStreak, patchPosStreak = 0, 0
-
-                    # Reset arrays 
-                    #linesStreak["+"] = Array.new
-                    #linesStreak["-"] = Array.new
-                    #linesCommentStreak["+"] = Array.new
-                    #linesCommentStreak["-"] = Array.new
-
-                    #a = $stdin.gets 
+                    handleModified(linesStreak, linesCommentStreak)
                 end
-                
             end
 
             if patchNegStreak > 0 || patchPosStreak > 0
@@ -606,6 +505,7 @@ class CodeParser
                     linesCommentStreak["-"] = Array.new
                 end
             end
+            
             #puts "Comment #{grouped.getComment}"
             #puts "Code #{grouped.getSourceCode}"
             #puts ""
@@ -616,16 +516,114 @@ class CodeParser
             #puts "multi #{lineCounter.multiLineComment(0)}"
             #puts "code #{lineCounter.linesOfCode(0)}"
 
-            #puts "commentAdded = #{codeChurn.commentAdded(0)}"
-            #puts "commentDeleted = #{codeChurn.commentDeleted(0)}"
-            #puts "codeAdded = #{codeChurn.codeAdded(0)}"
-            #puts "codeDeleted = #{codeChurn.codeDeleted(0)}"
+            #puts "commentAdded = #{@codeChurn.commentAdded(0)}"
+            #puts "commentDeleted = #{@codeChurn.commentDeleted(0)}"
+            #puts "codeAdded = #{@codeChurn.codeAdded(0)}"
+            #puts "codeDeleted = #{@codeChurn.codeDeleted(0)}"
             #puts ""
             
-            #a = $stdin.gets
             lineCount += 1
             method_finder.iterate
         }
-        return [[totalComment, totalCode], codeChurn]
+        return [[totalComment, totalCode], @codeChurn]
     end
+end
+
+def handleModified(linesStreak, linesCommentStreak)
+            
+    if @test || @log
+        #puts "streak over"
+
+        puts "Code Modified:"
+        linesStreak["-"].each { |negLine|
+            puts "- #{negLine}"
+        }
+        linesStreak["+"].each { |posLine|
+            puts "+ #{posLine}"
+        }
+
+        puts "Comment Modified:"
+        linesCommentStreak["-"].each { |negLine|
+            puts "- #{negLine}"
+        }
+        linesCommentStreak["+"].each { |posLine|
+            puts "+ #{posLine}"
+        }
+    end
+
+    # Please Note:
+    # Code modifications may be influenced by the comments being modified
+    # As well as comment modifications being influenced by the code being modified
+    # Example:
+    # - System.out.println("Hello World!"); //This line tells the world hello really loud
+    # + System.out.println("Hello World!"); //This prints out Hello World
+    # Currently this will show up as a modificiation for both code and comment
+    codeMod = Hash.new
+    commentMod = Hash.new
+    codeModLength = 0
+    
+    code_pid = Thread.new do
+        codeMod = findShortestDistance(linesStreak["+"], linesStreak["-"], @high_threshold, @low_threshold, @size_threshold, @one_to_many)
+
+        found = Hash.new
+        codeMod.each {|i,v|
+            v.each {|k, d|
+                if found[k] ==nil
+                    found[k] = true
+                end
+            }
+        }
+        codeModLength = found.length
+    end
+
+    #comment_pid = fork do
+    commentMod = findShortestDistance(linesCommentStreak["+"], linesCommentStreak["-"], @high_threshold, @low_threshold, @size_threshold, @one_to_many)
+    #end
+
+    found = Hash.new
+    commentMod.each {|i,v|
+        v.each {|k, d|
+            if found[k] ==nil
+                found[k] = true
+            end
+        }
+    }
+    commentModLength = found.length
+
+    # Wait for the results
+    code_pid.join
+    #Process.wait code_pid
+    #Process.wait comment_pid
+
+    #codeModLength = codeMod.length
+    #commentModLength = commentMod.length
+    
+    if @test || @log
+        codeMod.each { |n, v|
+            v.each{ |p, d|
+                puts "PosLine = #{linesStreak["+"][p]} => NegLine = #{linesStreak["-"][n]} => distance = #{d}"
+            }
+        }
+
+        commentMod.each { |n, v|
+            v.each{ |p, d|
+                puts "PosLine = #{linesCommentStreak["+"][p]} => NegLine = #{linesCommentStreak["-"][n]} => distance = #{d}"
+            }
+        }
+
+        puts "Number of calc code modifications #{codeModLength}"
+        puts "Number of calc comment modifications #{commentModLength}"
+    end
+
+    @codeChurn.codeModified(codeMod.length)
+    @codeChurn.commentModified(commentMod.length)
+
+    #comments added = comments added - # of positive lines modified
+    @codeChurn.commentAdded((-1)*commentModLength)
+    #comments deleted = comments deleted - # of lines modified(since the mapping is 1 Negative to many Positve lines)
+    @codeChurn.commentDeleted((-1)*commentMod.length)
+
+    @codeChurn.codeAdded((-1)*codeModLength)
+    @codeChurn.codeDeleted((-1)*codeMod.length)
+
 end

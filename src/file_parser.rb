@@ -141,6 +141,10 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
 
     comments = codeParser.findMultiLineComments(lines)
 
+    method_churn = codeParser.methodCounter
+
+    method_statement_churn = codeParser.statementCounter
+
     churn["CommentAdded"] += comments[1].commentAdded(0)
     churn["CommentDeleted"] += comments[1].commentDeleted(0)
     churn["CommentModified"] += comments[1].commentModified(0)
@@ -154,6 +158,8 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
     if $test
         puts comments[0][0] #The total number of lines of comments in the file
         puts comments[0][1] #The total number of lines of code in the file
+        puts "method_churn = #{method_churn}"
+        puts "method_statement_churn = #{method_statement_churn}"
     end
 
     sum = comments[1].commentAdded(0) + comments[1].commentDeleted(0) + comments[1].codeAdded(0) + comments[1].codeDeleted(0) + comments[1].commentModified(0)  + comments[1].codeModified(0)
@@ -169,7 +175,13 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
 
             commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
         end
-        Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
+        file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
+
+        # Insert the method churn count
+        Stats_db.insertMethod(stats_con, file_id, method_churn)
+
+        # Insert the method statement churn count
+        Stats_db.insertMethodStatement(stats_con, file_id, method_statement_churn)
     end
     
     if prev_commit != current_commit

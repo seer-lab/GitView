@@ -65,4 +65,8 @@ class MethodStatementCounter
     def pop_state
         @states.pop
     end
+
+    def to_s
+        return "s+ = #{@new_method}, s- = #{@deleted_method}, s~ = #{@modified_method}"
+    end
 end
