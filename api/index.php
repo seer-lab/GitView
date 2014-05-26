@@ -15,10 +15,46 @@ $app->get('/commitsChurn/:user/:repo/:group/:committer/:path', 'getCommitsChurnA
 $app->get('/packages/:user/:repo/:commiter', 'getRepoPackages');
 $app->get('/committers/:user/:repo/:path', 'getRepoCommitter');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
+$app->get('/commits/method/:user/:repo/:committer/:path', 'getMethod');
+$app->get('/commits/statement/:user/:repo/:committer/:path', 'getMethodStatement');
 $app->get('/stats/:user/:repo/:path', 'getStats');
 $app->get('/newrepo/:user/:repo/', 'getNewRepo');
 
 $app->run();
+
+function getMethod($user, $repo, $committer, $path)
+{
+	global $db_user, $db_pass, $db_stats;
+
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+	$path = cleanPackage($path);
+	$committer = cleanUser($committer);
+
+	echo json_encode(array(getMethodChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
+}
+
+function getMethodStatement($user, $repo, $committer, $path)
+{
+	global $db_user, $db_pass, $db_stats;
+
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+	$path = cleanPackage($path);
+	$committer = cleanUser($committer);
+
+	echo json_encode(array(getMethodStatementChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
+}
 
 function getCommitsAPI()
 {

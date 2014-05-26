@@ -36,6 +36,108 @@ function getAllRepos($mysqli)
 }
 
 /**
+ * TODO document
+ */
+function getMethodChurn($mysqli, $user, $repo, $path, $committer)
+{
+        $results = array('date'                => array(),
+                        'newMethods'           => array(),
+                        'deletedMethods'       => array(),
+                        'modifiedMethods'      => array(),
+                        'committer_name'       => array(),
+                        'author_name'          => array(),
+                    );
+    // TODO change to use only 1 repo
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_methods), SUM(m.deleted_methods), SUM(m.modified_methods), com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY commit_id ORDER BY c.commit_date"))
+    
+    {       
+        $path = $path . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('ssss', $repo, $user, $path, $committer);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($date, $newMethods, $deletedMethods, $modifiedMethods, $commiter_name, $author_name);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results['date'][$i] = $date;
+            $results['newMethods'][$i] = $newMethods;
+            $results['deletedMethods'][$i] = $deletedMethods;
+            $results['modifiedMethods'][$i] = $modifiedMethods;
+            $results['committer_name'][$i] = $commiter_name;   
+            $results['author_name'][$i] = $author_name;
+
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
+ * TODO document
+ */
+function getMethodStatementChurn($mysqli, $user, $repo, $path, $committer)
+{
+        $results = array('date'                     => array(),
+                        'new_code'                  => array(),
+                        'new_comment'               => array(),
+                        'deleted_code'              => array(),
+                        'deleted_comment'           => array(),
+                        'modified_code_added'       => array(),
+                        'modified_comment_added'    => array(),
+                        'modified_code_deleted'     => array(),
+                        'modified_comment_deleted'  => array(),
+                        'committer_name'            => array(),
+                        'author_name'               => array(),
+                    );
+    // TODO change to use only 1 repo
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_code), SUM(m.new_comment), SUM(m.deleted_code), SUM(m.deleted_comment), SUM(m.modified_code_added), SUM(m.modified_comment_added), SUM(m.modified_code_deleted), SUM(m.modified_comment_deleted), com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method_statements as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY commit_id ORDER BY c.commit_date"))
+    
+    {       
+        $path = $path . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('ssss', $repo, $user, $path, $committer);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($date, $new_code, $new_comment, $deleted_code, $deleted_comment, $modified_code_added, $modified_comment_added, $modified_code_deleted, $modified_comment_deleted, $commiter_name, $author_name);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results['date'][$i] = $date;
+            $results['new_code'][$i] = $new_code;
+            $results['new_comment'][$i] = $new_comment;
+            $results['deleted_code'][$i] = $deleted_code;
+            $results['deleted_comment'][$i] = $deleted_comment;
+            $results['modified_code_added'][$i] = $modified_code_added;
+            $results['modified_comment_added'][$i] = $modified_comment_added;
+            $results['modified_code_deleted'][$i] = $modified_code_deleted;
+            $results['modified_comment_deleted'][$i] = $modified_comment_deleted;
+            $results['committer_name'][$i] = $commiter_name;
+            $results['author_name'][$i] = $author_name;
+
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
+/**
  * Get the stats for comments and code added and deleted per commit
  * @param $mysqli the mysql connection.
  * @param $user the owner of the repository.
@@ -304,7 +406,7 @@ function getPackages($mysqli, $user, $repo, $committer)
  *  - /src/org/test
  *  - /src/org/main
  *  - /src/lists
- * would return:
+ * would return a list containing the following items
  *  - /src/
  *  - /src/org/
  *  - /src/org/test
