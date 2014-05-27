@@ -12,8 +12,28 @@ global $selectedOwner, $selectedRepo;
 <div class="container-fluid" id="seperator">
    <div class="row-fluid">
     <div class="span6">
-<form class="form-horizontal" accept-charset="UTF-8">
-      <div class="control-group">
+      <form class="form-horizontal" accept-charset="UTF-8">
+        <div id="level_select" class="control-group">
+          <label for="level" class="control-label">Repository</label>
+              <div class="controls">
+                <select id="level" name="level" class="input-xlarge">
+
+                    <?php
+                        /*
+                         * Options will be:
+                         * - Month
+                         * - Day
+                         * - Commit (None)
+                         */
+
+                        echo '<option selected="selected">' . $NO_AGGR . '</option>';
+                        echo '<option>' . $METHOD_AGGR . '</option>';
+                        echo '<option>' . $STATEMENT_AGGR . '</option>';
+                    ?>
+                </select>
+            </div>
+        </div>   
+        <div id="repo_select" class="control-group">
           <label for="repo" class="control-label">Repository</label>
               <div class="controls">
                 <select id="repo" name="repo" class="input-xlarge">
@@ -44,7 +64,7 @@ global $selectedOwner, $selectedRepo;
                 </select>
             </div>
         </div>    
-      <div class="control-group">
+        <div id="group_select" class="control-group">
           <label for="group" class="control-label">Group</label>
               <div class="controls">
                 <select id="group" name="group" class="input-xlarge">
@@ -64,7 +84,7 @@ global $selectedOwner, $selectedRepo;
                 </select>
             </div>
         </div>
-      <div class="control-group">
+        <div id="package_select" class="control-group">
           <label for="package" class="control-label">Package</label>
               <div class="controls">
                 <select id="package" name="package" class="input-xlarge">
@@ -91,7 +111,7 @@ global $selectedOwner, $selectedRepo;
                 </select>
             </div>
         </div>
-        <div class="control-group">
+        <div id="committer_select" class="control-group">
           <label for="committer" class="control-label">Committer</label>
               <div class="controls">
                 <select id="committer" name="committer" class="input-xlarge">

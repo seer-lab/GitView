@@ -179,6 +179,54 @@ function refreshCommitter(repo, pack, committer)
 
 }
 
+function handleLevel(repo, pack, user) {
+
+    var level = $('#level').val();
+
+    var type;
+    var title;
+
+    if(level == 'Method')
+    {
+        type = 'method/';
+        title = 'Method churn';
+    }
+    else if (level == 'Statement')
+    {
+        type = "statement/";
+        title = 'Method statement churn';
+    }
+    else {
+        // Handle default
+        return false;
+    }
+
+    console.log(rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
+    $.ajax({
+        type: 'GET',
+        url: rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack),
+        dataType: "json", // data type of response
+        success: function(data) {
+            //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
+            var values = plotChurn(data, true);
+            var statsArray = values[0];
+            var tagArray = values[1];
+            
+            var series;
+            if(level == 'Method') {
+                series = getMethodSeries(statsArray, tagArray);
+            }
+            else {
+                series = getStatementSeries(statsArray, tagArray);
+            }
+            areaPlotChurn("container", title, repo, series, getYAxis(false));
+        }
+    });
+
+    // True
+    return true; 
+}
+
 function plotSelectedValues()
 {
     /* Get the unique session id and POST data */
@@ -194,8 +242,11 @@ function plotSelectedValues()
     $('#commit_info_panel').hide();
 
     pack = pack.replace(/\//g, '!');
-    //console.log(pack)
-    getChurn(repo, group, pack, user);
+
+    if(!handleLevel(repo, pack, user)) {
+        getChurn(repo, group, pack, user);
+    }
+    
     getStats(repo, pack);
 }
 
@@ -226,15 +277,18 @@ function getChurn(repo, group, pack, user) {
         dataType: "json", // data type of response
         success: function(data) {
             //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
-            plotChurn(data, repo, group, pack);
+            var values = plotChurn(data, false);
+            var statsArray = values[0];
+            var tagArray = values[1];
+            var title = "Comments and Code Churn Per " + group;
+
+            var series = getCommitSeries(statsArray, tagArray)
+            areaPlotChurn("container", title, repo, series, getYAxis(true));
         }
     });
 }
 
-function plotChurn(data, repo, group, pack) {
-    console.log(pack);
-    //console.log(encodeURIComponent(pack));
-    //console.log(data);
+function plotChurn(data, level) {
 
     churnData = data[0];
     tagData = data[1];
@@ -295,7 +349,7 @@ function plotChurn(data, repo, group, pack) {
             }  
 
         }
-        if (commit_level)
+        if (commit_level && !level)
         {
             //break;
             //user[moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf()] = churnData[keys[k]][j];
@@ -329,8 +383,8 @@ function plotChurn(data, repo, group, pack) {
     }
     
     //console.log(tagArray);
-    
-    areaPlotChurn("container", statsArray, repo, group, tagArray);
+    //areaPlotChurn("container", statsArray, repo, group, tagArray);
+    return [statsArray, tagArray];
 }
 
 var PageHeight;
@@ -346,17 +400,17 @@ $(document).ready(function(){
     }
 });
 
-function areaPlotChurn(id, stats, repo, group, tagInfo) {
+function areaPlotChurn(id, title, repo, series, yaxis) {
 
     //
-    var chart = $('#container').highcharts('StockChart', {
+    var chart = $("#" + id).highcharts('StockChart', {
         chart: {
             //,
             //zoomType: 'x'
             //xAxis: data["date"]
         },
         title: {
-            text: 'Comments and Code Churn Per ' + group
+            text: title
         },
         subtitle: {
             text: '<a href="http://github.com/' + repo + '" target="_blank">'+repo+'</a>',
@@ -404,9 +458,6 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                 count: 6,
                 text: '6m'
             }, {
-                type: 'ytd',
-                text: 'YTD'
-            }, {
                 type: 'year',
                 count: 1,
                 text: '1y'
@@ -417,31 +468,7 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
         },
 
         //TODO get the height of the container and store is as a varaible to use here
-        yAxis: [{
-            title: {
-                text: 'Number of Lines'
-            },
-            labels: {
-                formatter: function() {
-                    return this.value / 1000 +'k';
-                }
-            },
-            height: PageHeight*0.45,
-            lineWidth: 2
-        },{ // Secondary yAxis
-            title: {
-                text: 'Total Number of Lines'
-            },
-            labels: {
-                formatter: function() {
-                    return this.value / 1000 +'k';
-                }
-            },
-            top: PageHeight*0.57,
-            height: PageHeight*0.20,
-            offset: 0,
-            lineWidth: 2
-        }],
+        yAxis: yaxis,
         tooltip: {
             formatter: function() {
 
@@ -499,7 +526,79 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                 }
             }
         },
-        series: [{
+        series: series
+    }, function(chart){
+
+            // apply the date pickers
+            setTimeout(function () {
+                $('input.highcharts-range-selector', $(chart.container).parent())
+                    .datepicker();
+            }, 0);
+    });
+}
+
+$(function() {
+    // Set the datepicker's date format
+    $.datepicker.setDefaults({
+        dateFormat: 'yy-mm-dd',
+        onSelect: function(dateText) {
+            this.onchange();
+            this.onblur();
+        }
+    });
+});
+
+function getYAxis(showSecond) {
+
+    if (showSecond) {
+        return [{
+            opposite: false,
+            title: {
+                text: 'Number of Lines'
+            },
+            labels: {
+
+                formatter: function() {
+                    return this.value / 1000 +'k';
+                }
+            },
+            height: PageHeight*0.45,
+            lineWidth: 2
+        }, { // Secondary yAxis
+            opposite: false,
+            title: {
+                text: 'Total Number of Lines'
+            },
+            labels: {
+                formatter: function() {
+                    return this.value / 1000 +'k';
+                }
+            },
+            top: PageHeight*0.57,
+            height: PageHeight*0.20,
+            offset: 0,
+            lineWidth: 2
+        }];
+    }
+    return {
+            opposite: false,
+            title: {
+                text: 'Number of Lines'
+            },
+            labels: {
+
+                formatter: function() {
+                    return this.value;
+                }
+            },
+            height: PageHeight*0.65,
+            lineWidth: 2
+        };
+}
+
+function getCommitSeries(stats, tagInfo) {
+
+    return [{
             type: 'spline',
             name: 'Comments Added',
             data: stats["commentsAdded"],
@@ -666,27 +765,180 @@ function areaPlotChurn(id, stats, repo, group, tagInfo) {
                 approximation: "average"
             }
             //color: 'rgba(255, 255, 255, 0.7)'
-        }]
-    }, function(chart){
-
-            // apply the date pickers
-            setTimeout(function () {
-                $('input.highcharts-range-selector', $(chart.container).parent())
-                    .datepicker();
-            }, 0);
-    });
+        }];
 }
 
-$(function() {
-    // Set the datepicker's date format
-    $.datepicker.setDefaults({
-        dateFormat: 'yy-mm-dd',
-        onSelect: function(dateText) {
-            this.onchange();
-            this.onblur();
-        }
-    });
-});
+function getMethodSeries(stats, tagInfo) {
+
+    return [{
+            type: 'spline',
+            name: 'Added Methods',
+            data: stats["newMethods"],
+            color: 'rgba(205,92,92, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }, {
+            type: 'spline',
+            name: 'Deleted Methods',
+            data: stats["deletedMethods"],
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Modified Methods',
+            data: stats["modifiedMethods"],
+            color: 'rgba(0,0,128, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'flags',
+            data: tagInfo,
+            shape: 'circlepin',
+            title: "Releases",
+            name: "Releases"
+        }, {
+            type: 'spline',
+            name: 'ExtraData',
+            data: stats["ExtraData"],
+            color: 'rgba(255,255,255, 0.0)',
+            //stack: 'comment',
+            //visible: false,
+            showInLegend: false,
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }];
+}
+
+function getStatementSeries(stats, tagInfo) {
+
+    return [{
+            type: 'spline',
+            name: 'New Code',
+            data: stats["new_code"],
+            color: 'rgba(205,92,92, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }, {
+            type: 'spline',
+            name: 'New Comments',
+            data: stats["new_comment"],
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Removed Code',
+            data: stats["deleted_code"],
+            color: 'rgba(0,0,128, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Removed Comments',
+            data: stats["deleted_comment"],
+            color: 'rgba(205,92,92, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }, {
+            type: 'spline',
+            name: 'Added Code',
+            data: stats["modified_code_added"],
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Added Comments',
+            data: stats["modified_comment_added"],
+            color: 'rgba(0,0,128, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Deleted Code',
+            data: stats["modified_code_deleted"],
+            color: 'rgba(70,130,180, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'spline',
+            name: 'Deleted Comments',
+            data: stats["modified_comment_deleted"],
+            color: 'rgba(0,0,128, 0.9)',
+            yAxis: 0,
+            stack: 'comment',
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+        }, {
+            type: 'flags',
+            data: tagInfo,
+            shape: 'circlepin',
+            title: "Releases",
+            name: "Releases"
+        }, {
+            type: 'spline',
+            name: 'ExtraData',
+            data: stats["ExtraData"],
+            color: 'rgba(255,255,255, 0.0)',
+            //stack: 'comment',
+            //visible: false,
+            showInLegend: false,
+            dataGrouping: {
+                //enabled: false,
+                approximation: "average"
+            }
+            //color: 'rgba(255, 255, 255, 0.7)'
+        }];
+}
 
 /*function getTypeOfPie(type, repo)
 {

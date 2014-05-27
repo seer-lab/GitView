@@ -17,6 +17,8 @@ $app->get('/committers/:user/:repo/:path', 'getRepoCommitter');
 //$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/commits/method/:user/:repo/:committer/:path', 'getMethod');
 $app->get('/commits/statement/:user/:repo/:committer/:path', 'getMethodStatement');
+
+// Parse request api calls
 $app->get('/stats/:user/:repo/:path', 'getStats');
 $app->get('/newrepo/:user/:repo/', 'getNewRepo');
 
