@@ -774,7 +774,7 @@ function getMethodSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Added Methods',
             data: stats["newMethods"],
-            color: 'rgba(205,92,92, 0.9)',
+            color: 'rgba(0,204,0, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -786,7 +786,7 @@ function getMethodSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Deleted Methods',
             data: stats["deletedMethods"],
-            color: 'rgba(70,130,180, 0.9)',
+            color: 'rgba(204,0,0, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -797,7 +797,7 @@ function getMethodSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Modified Methods',
             data: stats["modifiedMethods"],
-            color: 'rgba(0,0,128, 0.9)',
+            color: 'rgba(0,0,204, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -832,7 +832,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'New Code',
             data: stats["new_code"],
-            color: 'rgba(205,92,92, 0.9)',
+            color: 'rgba(0,102,0, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -844,7 +844,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'New Comments',
             data: stats["new_comment"],
-            color: 'rgba(70,130,180, 0.9)',
+            color: 'rgba(102,255,102, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -855,7 +855,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Removed Code',
             data: stats["deleted_code"],
-            color: 'rgba(0,0,128, 0.9)',
+            color: 'rgba(153,0,0, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -878,7 +878,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Added Code',
             data: stats["modified_code_added"],
-            color: 'rgba(70,130,180, 0.9)',
+            color: 'rgba(0,204,204, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -889,7 +889,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Added Comments',
             data: stats["modified_comment_added"],
-            color: 'rgba(0,0,128, 0.9)',
+            color: 'rgba(102,255,255, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -900,7 +900,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Deleted Code',
             data: stats["modified_code_deleted"],
-            color: 'rgba(70,130,180, 0.9)',
+            color: 'rgba(153,0,76, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
@@ -911,7 +911,7 @@ function getStatementSeries(stats, tagInfo) {
             type: 'spline',
             name: 'Deleted Comments',
             data: stats["modified_comment_deleted"],
-            color: 'rgba(0,0,128, 0.9)',
+            color: 'rgba(255,102,178, 0.9)',
             yAxis: 0,
             stack: 'comment',
             dataGrouping: {
