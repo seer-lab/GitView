@@ -1,4 +1,5 @@
 # Ignore output log files
+parse_log
 testlog
 
 # Ignore back up files
@@ -19,3 +20,6 @@ database
 *.png
 
 doc/poster/
+
+# Ignore js libraries
+js/lib
