@@ -134,7 +134,7 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
         file += "\n"
     end
 
-    lines = file.scan(LINE_EXPR)
+    lines = file.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').scan(LINE_EXPR)
 
     lines = merger.mergePatch(lines, patch)
     #pass the lines of code and the related patch
