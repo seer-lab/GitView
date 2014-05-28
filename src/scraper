@@ -1,40 +1,51 @@
 #!/bin/bash
 
-LOCATION=
+#LOCATION=/home/joseph/source_code/GitHubMining/
 
 # The directory where the log files will go
-LOGDIR="$LOCATION"testlog/
+LOGDIR=../testlog/
 # The file that the log will be saved to. Format: testmmddyyyy_HHMM
 LOGFILE=test$(date +"%m%d%Y_%H%M")
 
 # Full path of the file
 FULLPATH=$LOGDIR$LOGFILE
 
-# The username used to login with for github api
-#USERNAME=dataBaseError
-
-# The password for that user
-#read -s -p "Password: " password
-# Extra echo so everything following will begin on a new line
-#echo
-
 # The repo to be scraped and then parsed.
 REPO_OWNER=$1
 REPO_NAME=$2
 
+# The username used to login with for github api
+read -p "Username: " USERNAME
+#USERNAME=dataBaseError
+#echo
+
+# The password for that user
+read -s -p "Password: " password
+# Extra echo so everything following will begin on a new line
+echo
+
 # Make the directory if it doesnt already exist
-#mkdir -p $LOGDIR
+mkdir -p $LOGDIR
 
 #echo $REPO_OWNER $REPO_NAME
 
 touch $FULLPATH
 
 # Run the script in a virtual screen to allow for access to the server still
-ruby1.9.1 "$LOCATION"src/github_api.rb $REPO_OWNER $REPO_NAME 2>&1 | tee $FULLPATH
+ruby1.9.1 github_api.rb $REPO_OWNER $REPO_NAME $USERNAME $password 2>&1 | tee $FULLPATH
 #ruby1.9.1 /home/joseph/source_code/GitHubMining/src/test.rb $REPO_OWNER $REPO_NAME 2>&1 $FULLPATH
+
+# Clear the value stored in password
+password=
 
 # Store the error code of the scraping ruby script
 RESULT=$?
+
+if [[ $? == 0 ]]; then
+	echo github_api.rb finished successfully
+else
+	echo github_api.rb with exit code $RESULT
+fi
 
 # Show the location of the log file for the scraping
 echo log file: $FULLPATH
@@ -43,11 +54,11 @@ echo log file: $FULLPATH
 #ls . 2>&1 | tee $FULLPATH
 
 # If the github scrap was successful move on to parsing the file
-if [[ $RESULT == 0 ]]; then
-	ruby1.9.1 "$LOCATION"src/file_parser.rb $REPO_OWNER $REPO_NAME true $FULLPATH
-
-	# If the test parse does not yeild an error then run the actual thing (not as a test) to store in the db
-	if [[ $? == 0 ]]; then		
-		ruby1.9.1 "$LOCATION"src/file_parser.rb $REPO_OWNER $REPO_NAME false $FULLPATH
-	fi
-fi
+#if [[ $RESULT == 0 ]]; then
+#	ruby1.9.1 file_parser.rb $REPO_OWNER $REPO_NAME true $FULLPATH
+#
+#	# If the test parse does not yeild an error then run the actual thing (not as a test) to store in the db
+#	if [[ $? == 0 ]]; then		
+#		ruby1.9.1 file_parser.rb $REPO_OWNER $REPO_NAME false $FULLPATH
+#	fi
+#fi
