@@ -14,7 +14,7 @@ global $selectedOwner, $selectedRepo;
     <div class="span6">
       <form class="form-horizontal" accept-charset="UTF-8">
         <div id="level_select" class="control-group">
-          <label for="level" class="control-label">Repository</label>
+          <label for="level" class="control-label">Level</label>
               <div class="controls">
                 <select id="level" name="level" class="input-xlarge">
 
