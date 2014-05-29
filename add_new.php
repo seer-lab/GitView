@@ -8,6 +8,6 @@ include 'templates/request_header.php';
 include 'templates/request.php';
 
 
-include 'templates/footer.php';
+include 'templates/request_footer.php';
 exit();
 ?>
