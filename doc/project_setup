@@ -1,18 +1,17 @@
 Setting up to run the project:
 
 1. Install ruby1.9.1
+    - Might work with 1.9.3 (need to test github_api)
+    - Cant get Mysql to work with 2.0.3 yet
+    
     1. installing rubygems1.9.1
         - It could still be an old version
             - install rubygem updater
                 - $ sudo gem install rubygems-update
             - run the updater $ sudo update rubygems
                 - Will show all the improvements that have been made...
-        - Install gems
     2. Gems to install:
-    - sudo gem install mysql
-    - json ~> 1.7.7
-    - nokogiri
-    - github_api
+        - see gems_required
 
 2. Install MySQL
     1. Create github_data database (store retrieved github data). 
