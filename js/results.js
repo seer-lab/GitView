@@ -459,7 +459,9 @@ function areaPlotChurn(id, title, repo, series, yaxis) {
                             s += '<br>Release </br>';
                         }
                         else {
-                            if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column' && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column')
+                            if(point.series.name !== 'Total Comments Column' && point.series.name !== 'Total Comments Modified Column'
+                                && point.series.name !== 'Total Code Column' && point.series.name !== 'Total Code Modified Column'
+                                && point.series.name !== 'ExtraData')
                             {
                                 s += '<br>Number of Lines of ' + point.series.name + ': <b> ' + Math.round(point.y) + '</b></br>';
                             }

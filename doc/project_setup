@@ -21,6 +21,7 @@ Setting up to run the project:
         2. Create database user
         3. Grant reduced set of privileges to user
         4. Create each table in the database (in order)
+        5. Insert the supported file type 'java' into the database (see database.sql insert query)
 
 
     2. Create project_stats database (store parsed stats about each project). Using stats_database.sql
