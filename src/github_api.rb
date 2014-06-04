@@ -13,6 +13,7 @@ $stdout.sync = true
 $stderr.sync = true
 
 HOUR = 3600
+APP_TITLE = "Github Scraper"
 
 #Command line arguements in order
 repo_owner, repo_name, username, password = "", "", "", ""
@@ -138,7 +139,7 @@ end
 
 def getAllCommits(con, github, username, repo_name)
     
-    progress_indicator = Progress.new
+    progress_indicator = Progress.new(APP_TITLE)
 
     progress_indicator.puts "Getting all commits..."
     #rate = Rate.new(github)
@@ -163,7 +164,7 @@ def getAllCommits(con, github, username, repo_name)
 
     allCommits.body.each { |commit|
 
-        progress_indicator.percentComplete(nil)
+        progress_indicator.percentComplete(nil,"Storing Commits")
 
         # Get the commit's sha
         sha = commit["sha"]
@@ -219,7 +220,7 @@ def getAllCommits(con, github, username, repo_name)
         setFiles(con, github, commit["url"], commit_id)
     }
 
-    progress_indicator.puts 'working on tags'
+    #progress_indicator.puts 'working on tags'
 
     begin
 
@@ -231,7 +232,7 @@ def getAllCommits(con, github, username, repo_name)
 
         tagList.body.each { |tag|
 
-            progress_indicator.percentComplete(nil)
+            progress_indicator.percentComplete(nil, "Storing Tags")
 
             sha, name, message, date = "", "", "", ""
             begin

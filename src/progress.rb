@@ -5,19 +5,29 @@ class Progress
     BAR_LENGTH = 78
     OFFSET = 2
 
-    def initialize
+    def initialize(title=nil)
         @orig_std = $stdout.clone
         @total_length = 0
         @count = 0
+        @app_title = title
     end
 
-    def percentComplete(name)
+    def percentComplete(name, working_title=nil)
         cur_percent = (@count.to_f/@total_length)*100
 
         # Print clear character since system "clear" does not work from bash script
-        @orig_std.puts "\033c"
+        @orig_std.print "\033c"
 
-        @orig_std.puts "Working on Files..."
+        if @app_title
+            @orig_std.puts @app_title
+        end
+
+        if working_title
+            @orig_std.puts "Working on #{working_title}..."
+        else
+            @orig_std.puts "Working on Files..."
+        end
+
         if name
             @orig_std.puts "Current File: #{name}"
         end

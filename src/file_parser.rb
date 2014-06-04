@@ -12,6 +12,8 @@ require_relative 'progress'
 # - Files that could not be retreived (404/403 etc)
 # - Files that are renamed (path is adjusted)
 
+APP_TITLE = "Project Analizer"
+
 $NOT_FOUND = 0
 
 $BAD_FILE_ARRAY = Array.new
@@ -43,7 +45,7 @@ else
 	abort("Invalid parameters")
 end
 
-progress_indicator = Progress.new
+progress_indicator = Progress.new(APP_TITLE)
 
 # Set the output file to the given parameter
 $stdout.reopen(outputFile, "a")
@@ -121,7 +123,7 @@ codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_
 #Map file name to the array of stats about that file.
 files.each do |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
     #file = files[0][0]
-    progress_indicator.percentComplete(file_name)
+    progress_indicator.percentComplete(file_name, "Analizing Files")
 
     current_commit = current_commit_id
 
