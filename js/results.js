@@ -485,6 +485,9 @@ function areaPlotChurn(id, title, repo, series, yaxis) {
                 marker: {
                     enabled: false
                 }
+            },
+            column: {
+                stacking: 'normal'
             }
         },
         series: series
@@ -647,7 +650,7 @@ function getCommitSeries(stats, tagInfo) {
             dataGrouping: {
                 approximation: "average"
             }
-        }, {
+        }, /*{
             id: 'Total Comments Modified',
             type: 'spline',
             name: 'Total Comments Modified',
@@ -667,7 +670,7 @@ function getCommitSeries(stats, tagInfo) {
             dataGrouping: {
                 approximation: "average"
             }
-        }, {
+        },*/ {
             id: 'Total Code',
             type: 'spline',
             name: 'Total Code',
@@ -687,7 +690,7 @@ function getCommitSeries(stats, tagInfo) {
             dataGrouping: {
                 approximation: "average"
             }
-        }, {
+        }, /*{
             id: 'Total Code Modified',
             type: 'spline',
             name: 'Total Code Modified',
@@ -707,7 +710,7 @@ function getCommitSeries(stats, tagInfo) {
             dataGrouping: {
                 approximation: "average"
             }
-        }, {
+        },*/ {
             type: 'flags',
             data: tagInfo,
             shape: 'circlepin',
@@ -732,7 +735,7 @@ function getCommitSeries(stats, tagInfo) {
 function getMethodSeries(stats, tagInfo) {
 
     return [{
-            type: 'spline',
+            type: 'column',
             name: 'Added Methods',
             data: stats["newMethods"],
             color: 'rgba(0,204,0, 0.9)',
@@ -744,7 +747,7 @@ function getMethodSeries(stats, tagInfo) {
             }
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Deleted Methods',
             data: stats["deletedMethods"],
             color: 'rgba(204,0,0, 0.9)',
@@ -755,7 +758,7 @@ function getMethodSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Modified Methods',
             data: stats["modifiedMethods"],
             color: 'rgba(0,0,204, 0.9)',
@@ -790,7 +793,7 @@ function getMethodSeries(stats, tagInfo) {
 function getStatementSeries(stats, tagInfo) {
 
     return [{
-            type: 'spline',
+            type: 'column',
             name: 'New Code',
             data: stats["new_code"],
             color: 'rgba(0,102,0, 0.9)',
@@ -802,7 +805,7 @@ function getStatementSeries(stats, tagInfo) {
             }
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'New Comments',
             data: stats["new_comment"],
             color: 'rgba(102,255,102, 0.9)',
@@ -813,7 +816,7 @@ function getStatementSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Removed Code',
             data: stats["deleted_code"],
             color: 'rgba(153,0,0, 0.9)',
@@ -824,7 +827,7 @@ function getStatementSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Removed Comments',
             data: stats["deleted_comment"],
             color: 'rgba(205,92,92, 0.9)',
@@ -836,7 +839,7 @@ function getStatementSeries(stats, tagInfo) {
             }
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Added Code',
             data: stats["modified_code_added"],
             color: 'rgba(0,204,204, 0.9)',
@@ -847,7 +850,7 @@ function getStatementSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Added Comments',
             data: stats["modified_comment_added"],
             color: 'rgba(102,255,255, 0.9)',
@@ -858,7 +861,7 @@ function getStatementSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Deleted Code',
             data: stats["modified_code_deleted"],
             color: 'rgba(153,0,76, 0.9)',
@@ -869,7 +872,7 @@ function getStatementSeries(stats, tagInfo) {
                 approximation: "average"
             }
         }, {
-            type: 'spline',
+            type: 'column',
             name: 'Deleted Comments',
             data: stats["modified_comment_deleted"],
             color: 'rgba(255,102,178, 0.9)',
