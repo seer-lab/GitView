@@ -7,6 +7,7 @@ require 'socket'    # Required to catch socket error
 require_relative 'database_interface'
 require_relative 'utility'
 require_relative 'regex'
+require_relative 'progress'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -21,7 +22,7 @@ if ARGV.size == 4
     username, password = ARGV[2], ARGV[3]
 end
 
-
+#TODO redirect error output to log file.
 
 class Rate
     def initialize(github)
@@ -94,7 +95,6 @@ github = Github.new do | config |
     config.password = password
 end
 
-
 #rate = Rate.new(github)
 
 #puts rate.rate()
@@ -138,7 +138,9 @@ end
 
 def getAllCommits(con, github, username, repo_name)
     
-    puts "Getting all commits..."
+    progress_indicator = Progress.new
+
+    progress_indicator.puts "Getting all commits..."
     #rate = Rate.new(github)
     # Get the repo's commits
 
@@ -152,12 +154,16 @@ def getAllCommits(con, github, username, repo_name)
         retry
     end
 
+    progress_indicator.total_length = allCommits.body.length
+
     #puts rate.getTimeRemaining(Time.now)
 
     # Get the repo's database Id
     repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
 
     allCommits.body.each { |commit|
+
+        progress_indicator.percentComplete(nil)
 
         # Get the commit's sha
         sha = commit["sha"]
@@ -213,13 +219,19 @@ def getAllCommits(con, github, username, repo_name)
         setFiles(con, github, commit["url"], commit_id)
     }
 
-    puts 'working on tags'
+    progress_indicator.puts 'working on tags'
+
     begin
 
         # Get all the tags
         tagList = github.git_data.references.list username, repo_name, ref:'tags'
 
+        progress_indicator.total_length = tagList.body.length
+        progress_indicator.count = 0
+
         tagList.body.each { |tag|
+
+            progress_indicator.percentComplete(nil)
 
             sha, name, message, date = "", "", "", ""
             begin
@@ -254,14 +266,13 @@ def getAllCommits(con, github, username, repo_name)
     end
 
     # Set the types of files this project uses
-    puts "settings file types."
+    progress_indicator.puts "settings file types."
     Github_database.setFileTypes(con, repo_name, username)
 
 end
 
 def setFiles(con, github, commitUrl, commit_id)
-    # TODO decide on whether to ignore /doc folder or not, since the projects im looking for should have source code documentation (so /doc would be duplication or not what im looking for)
-    puts 'working on files'
+    #puts 'working on files'
 
     begin
         waitOnRate(con, github, 2)
@@ -426,9 +437,7 @@ getAllCommits(con, github, repo_owner, repo_name)
 finish_time = Time.now
 
 # Calculate the run time
-total_time = "Number of seconds = #{finish_time - start_time}"
-
-puts total_time
+puts "Number of seconds = #{finish_time - start_time}"
 
 rate = Rate.new(github)
 

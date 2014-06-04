@@ -35,6 +35,9 @@ class Progress
 
         @orig_std.print "|"
 
+        # Force the next print line to be on a new line
+        @orig_std.print "\n"
+
         @count += 1
     end
 
