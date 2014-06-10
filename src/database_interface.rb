@@ -98,6 +98,22 @@ module Github_database
         return results
     end
 
+
+    # Get the repo id if the given repository or nil if it does not exist.
+    # Params:
+    # +con+:: the database connection used. 
+    # +name+:: the name of the repository
+    # +owner+:: the owner of the repository
+    def Github_database.getRepoExist(con, name, owner)
+        pick = con.prepare("SELECT #{REPO_ID} FROM #{REPO} WHERE #{REPO_NAME} LIKE ? AND #{REPO_OWNER} LIKE ?")
+        pick.execute(name, owner)
+
+        result = pick.fetch
+
+        #There should be only 1 id return anyways.
+        return Utility.toInteger(result)
+    end 
+
     # Get the repository's id stored in the database with the given name
     # Params:
     # +con+:: the database connection used. 
@@ -238,6 +254,18 @@ module Github_database
         pick.execute(commit.repo, commit.commiter, commit.author, commit.body, commit.sha)
 
         return Utility.toInteger(pick.insert_id)
+    end
+
+    # Get the most recent commit's sha hash from the database. 
+    # +con+:: the database connection used. 
+    # +repo_id+:: the id of the repository.
+    def Github_database.getLastCommit(con, repo_id)
+
+        pick = con.prepare("select c.#{SHA} from #{COMMITS} as c INNER JOIN #{USERS} as com ON c.COMMITER_REFERENCE = com.#{USER_ID} where c.#{REPO_REFERENCE} = ? ORDER BY com.#{DATE} DESC LIMIT 1")
+
+        pick.execute(repo_id)
+
+        return Utility.toValue(pick.fetch)
     end
 
     # Get the commit id If the commit is not found it will be added to the db

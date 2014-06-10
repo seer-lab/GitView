@@ -129,6 +129,45 @@ end
 #a = github.repos.list_tags 'torvalds', 'linux'
 
 #con = createConnection()
+
+def findLastCommit(con, commits, repo_id)
+
+    # Get the latest commit and look for it
+    # *Note it is possible that the developers re-based their project
+    # and the commit no longer exists, however this is unlikely 
+    # and also this would prob. require a fresh mining
+    sha = Github_database.getLastCommit(con, repo_id)
+    
+    index = 0
+    # Go through each commit until 
+    commits.each do |commit|
+        if commit["sha"] == sha
+            #puts index
+            break
+        end
+        index += 1
+    end
+
+    # Check if finding the last commit was successful
+    if index == commits.size
+
+        # Commit not found, suggest deleting the data and starting from scratch.
+        return nil
+    end
+
+    # Adjust to start at the latest commit not dealt with.
+    index -= 1
+
+    if index == -1
+
+        # Repository is completely up-to-date already nothing to do.
+        return nil
+    end
+
+    # We want to only parse from index forward
+    return commits[0..index]
+end
+
 def waitOnRate(con, github, amount)
     while github.ratelimit_remaining < amount
         con.close()
@@ -153,16 +192,32 @@ def getAllCommits(con, github, username, repo_name)
     rescue Exception => e
         puts e
         retry
+    end    
+
+    # Get the repo_id if it exists
+
+    repo_id = Github_database.getRepoExist(con, repo_name, username)
+
+    if repo_id
+        # Select only the latest commits to parse
+        commits = findLastCommit(con, allCommits.body, repo_id)
+    else
+        commits = allCommits.body
+
+        # Get the repo's database Id
+        repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
     end
 
-    progress_indicator.total_length = allCommits.body.length
+    if !commits
+        # No commits to parse
+        return nil
+    end
+
+    progress_indicator.total_length = commits.length
 
     #puts rate.getTimeRemaining(Time.now)
 
-    # Get the repo's database Id
-    repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
-
-    allCommits.body.each { |commit|
+    commits.each { |commit|
 
         progress_indicator.percentComplete(nil,"Storing Commits")
 

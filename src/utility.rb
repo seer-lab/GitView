@@ -7,4 +7,8 @@ module Utility
             return array
         end
     end
+
+    def Utility.toValue(array)
+    	return Utility.toInteger(array)
+    end
 end
