@@ -51,6 +51,20 @@ progress_indicator = Progress.new(APP_TITLE)
 $stdout.reopen(outputFile, "a")
 $stderr.reopen(outputFile, "a")
 
+def findLastCommit(con, owner, repo)
+
+    repo_id = Stats_db.getRepoExist(con, repo, owner)
+
+    if repo_id
+        # Get the latest commit and look for it
+        # *Note it is possible that the developers re-based their project
+        # and the commit no longer exists, however this is unlikely 
+        # and also this would prob. require a fresh mining
+        return Stats_db.getLastCommit(con, repo_id)
+    end
+    return nil
+end
+
 # Parse the path of each file for their package.
 # Return the package and the file name (with extention)
 def parsePackages(path)
@@ -74,7 +88,11 @@ con = Github_database.createConnection()
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
 progress_indicator.puts "Loading Files..."
-files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner)
+
+# Get the sha hash from the last commit
+sha = findLastCommit(stats_con, repo_owner, repo_name)
+
+files = Github_database.getFileForParsing(con, JAVA, repo_name, repo_owner, sha)
 
 if !$test
     repo_id = Stats_db.getRepoId(stats_con, repo_name, repo_owner)
@@ -84,16 +102,24 @@ end
 progress_indicator.total_length = files.length
 
 progress_indicator.puts "Loading Tags..."
-tags = Github_database.getTags(con, repo_name, repo_owner)
 
-tags.each { |sha, tag_name, tag_desc, tag_date|
+if sha
+    date = Stats_db.getLatestTags(con, repo_id)
+    tags = Github_database.getNewestTags(con, repo_id, date)
+else
+    tags = Github_database.getTags(con, repo_name, repo_owner)
+end
+
+
+tags.each { |sha, tag_name, tag_desc, tag_date, commit_sha|
     if !$test
-        Stats_db.insertTag(stats_con, repo_id, sha, tag_name, tag_desc, tag_date)
+        Stats_db.insertTag(stats_con, repo_id, sha, tag_name, tag_desc, tag_date, commit_sha)
     elsif $test_tag
         puts "sha = #{sha}"
         puts "tag_name = #{tag_name}"
         puts "tag_desc = #{tag_desc}"
         puts "tag_date = #{tag_date}"
+        puts "commit_sha = #{commit_sha}"
     end
 }
 
@@ -121,7 +147,7 @@ merger = Merger.new($test_merge)
 codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
 #Map file name to the array of stats about that file.
-files.each do |file, file_name, current_commit_id, date, body, patch, com_name, aut_name|
+files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
     #file = files[0][0]
     progress_indicator.percentComplete(file_name, "Analizing Files")
 
@@ -175,7 +201,7 @@ files.each do |file, file_name, current_commit_id, date, body, patch, com_name, 
             committer_id = Stats_db.getUserId(stats_con, com_name)
             author_id = Stats_db.getUserId(stats_con, com_name)
 
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
+            commit_id = Stats_db.insertCommit(stats_con, repo_id, sha, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
         end
         file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
 

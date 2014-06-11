@@ -24,6 +24,7 @@ CREATE TABLE commits
 (
     commit_id BIGINT UNSIGNED AUTO_INCREMENT,
     repo_reference INTEGER UNSIGNED,
+    sha_hash VARCHAR(64),
     commit_date DATETIME,
     committer_id BIGINT UNSIGNED,
     author_id BIGINT UNSIGNED,
@@ -71,7 +72,7 @@ CREATE TABLE method
     CONSTRAINT fkey_method_1 FOREIGN KEY (file_reference) REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE method_statements
+CREATE TABLE method_statement
 (
     statement_id BIGINT UNSIGNED AUTO_INCREMENT,
     file_reference BIGINT UNSIGNED,
@@ -97,10 +98,13 @@ CREATE TABLE tags
     tag_sha VARCHAR(64),
     tag_name TEXT,
     tag_description TEXT,
-    tag_date DATETIME, 
+    tag_date DATETIME,
+    commit_sha TEXT, 
     CONSTRAINT fkey_tags_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+DROP TABLE method_statement;
+DROP TABLE method;
 DROP TABLE file;
 DROP TABLE tags;
 DROP TABLE commits;

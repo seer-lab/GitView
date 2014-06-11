@@ -24,6 +24,7 @@ module Stats_db
     # Commits
     COMMIT_ID = 'commit_id'
     REPO_REFERENCE ='repo_reference'
+    SHA = 'sha_hash'
     COMMIT_DATE = 'commit_date'
     COMMITTER_ID = 'committer_id'
     AUTHOR_ID = 'author_id'
@@ -84,6 +85,7 @@ module Stats_db
     TAG_NAME = 'tag_name'
     TAG_DESC = 'tag_description'
     TAG_DATE = 'tag_date'
+    COMMIT_SHA = 'commit_sha'
 
     def Stats_db.createConnection()
         Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
@@ -100,6 +102,20 @@ module Stats_db
         Mysql.new(HOST, USERNAME, PASSWORD, tempDB)
     end
 
+    # Get the repo id if the given repository or nil if it does not exist.
+    # Params:
+    # +con+:: the database connection used. 
+    # +name+:: the name of the repository
+    # +owner+:: the owner of the repository
+    def Stats_db.getRepoExist(con, name, owner)
+        pick = con.prepare("SELECT #{REPO_ID} FROM #{REPO} WHERE #{REPO_NAME} LIKE ? AND #{REPO_OWNER} LIKE ?")
+        pick.execute(name, owner)
+
+        result = pick.fetch
+
+        #There should be only 1 id return anyways.
+        return Utility.toInteger(result)
+    end 
 
     # Get the repository's id stored in the database with the given name
     # Params:
@@ -162,6 +178,18 @@ module Stats_db
         return results
     end
 
+    # Get the most recent commit's sha hash from the database. 
+    # +con+:: the database connection used. 
+    # +repo_id+:: the id of the repository.
+    def Stats_db.getLastCommit(con, repo_id)
+
+        pick = con.prepare("select c.#{SHA} from #{COMMITS} as c where c.#{REPO_REFERENCE} = ? ORDER BY c.#{COMMIT_DATE} DESC LIMIT 1")
+
+        pick.execute(repo_id)
+
+        return Utility.toValue(pick.fetch)
+    end
+
     # Insert the given commits to the database
     # +con+:: the database connection used. 
     # +repo_name+:: the name of the repository
@@ -169,10 +197,10 @@ module Stats_db
     # +body+:: the commit message
     # +comments+:: the number of lines of comments in the commit
     # +code+:: the number of lines of code in the commit
-    def Stats_db.insertCommit(con, repo_id, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
+    def Stats_db.insertCommit(con, repo_id, sha, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
-        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{BODY}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        pick.execute(repo_id, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
+        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{SHA}, #{BODY}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(repo_id, sha, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
         return Utility.toInteger(pick.insert_id)
     end
@@ -240,11 +268,19 @@ module Stats_db
 
     end
 
-    def Stats_db.insertTag(con, repo_id, sha, name, description, date)
-        pick = con.prepare("INSERT INTO #{TAG} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?, ?)")
-        pick.execute(repo_id, sha, name, description, date)
+    def Stats_db.insertTag(con, repo_id, sha, name, description, date, commit_sha)
+        pick = con.prepare("INSERT INTO #{TAG} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA}) VALUES (?, ?, ?, ?, ?, ?)")
+        pick.execute(repo_id, sha, name, description, date, commit_sha)
      
         return Utility.toInteger(pick.insert_id)
+    end
+
+    def Github_database.getLastTag(con, repo_id)
+        pick = con.prepare("select t.#{TAG_DATE} from #{TAG} as t where t.#{REPO_REFERENCE} = ? ORDER BY t.#{TAG_DATE} DESC LIMIT 1")
+
+        pick.execute(repo_id)
+
+        return Utility.toValue(pick.fetch)
     end
 
     # Get the commit totals stored in the database
