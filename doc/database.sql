@@ -6,6 +6,11 @@ CREATE DATABASE github_data;
 
 CREATE USER 'git_miner'@'localhost' IDENTIFIED BY 'pickaxe';
 
+#Postgresql
+CREATE USER git_miner WITH NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN ENCRYPTED PASSWORD 'pickaxe';
+
+DROP ROLE git_miner
+
 GRANT ALL ON github_data.* to 'git_miner'@'localhost';
 
 /*
@@ -22,6 +27,8 @@ CREATE TABLE repositories
     repo_owner VARCHAR(64),
     PRIMARY KEY(repo_id)
 );
+
+# INTEGER UNSIGNED -> serial, BIGINT UNSIGNED -> bigserial
 
 /**
  * The create table command for users retrieved from github
@@ -112,7 +119,8 @@ CREATE TABLE tags
     tag_sha VARCHAR(64),
     tag_name TEXT,
     tag_description TEXT,
-    tag_date DATETIME, 
+    tag_date DATETIME,
+    commit_sha TEXT, 
     CONSTRAINT fkey_tags_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -133,7 +141,7 @@ CREATE TABLE repo_file_types
 );
 
 
-INSERT INTO file_types (type) VALUES ('py'),('rb'),('java');
+INSERT INTO file_types (type) VALUES ('java');
 /*
  * The commands for dropping the tables.
  */

@@ -65,6 +65,7 @@ module Github_database
     TAG_NAME = 'tag_name'
     TAG_DESC = 'tag_description'
     TAG_DATE = 'tag_date'
+    COMMIT_SHA = 'commit_sha'
 
     # File_types
     TYPE_ID = 'type_id'
@@ -261,7 +262,7 @@ module Github_database
     # +repo_id+:: the id of the repository.
     def Github_database.getLastCommit(con, repo_id)
 
-        pick = con.prepare("select c.#{SHA} from #{COMMITS} as c INNER JOIN #{USERS} as com ON c.COMMITER_REFERENCE = com.#{USER_ID} where c.#{REPO_REFERENCE} = ? ORDER BY com.#{DATE} DESC LIMIT 1")
+        pick = con.prepare("select c.#{SHA} from #{COMMITS} as c INNER JOIN #{USERS} as com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} where c.#{REPO_REFERENCE} = ? ORDER BY com.#{DATE} DESC LIMIT 1")
 
         pick.execute(repo_id)
 
@@ -365,9 +366,20 @@ module Github_database
         return results
     end
 
-    def Github_database.getFileForParsing(con, extension, repo_name, repo_owner)
-        pick = con.prepare("SELECT f.#{FILE}, f.#{NAME}, c.#{COMMIT_ID}, com.#{DATE}, c.#{BODY}, f.#{PATCH}, com.#{NAME}, aut.#{NAME} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ? ORDER BY com.#{DATE}")
-        pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}")
+    def Github_database.getFileForParsing(con, extension, repo_name, repo_owner, sha_hash)
+
+        stmt = ""
+        if sha_hash
+            stmt = "AND com.#{DATE} > (SELECT com.#{DATE} FROM #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND c.#{SHA} = ?)"
+        end
+
+        pick = con.prepare("SELECT f.#{FILE}, c.#{SHA}, f.#{NAME}, c.#{COMMIT_ID}, com.#{DATE}, c.#{BODY}, f.#{PATCH}, com.#{NAME}, aut.#{NAME} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ? #{stmt} ORDER BY com.#{DATE}")
+
+        if sha_hash
+            pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}", repo_name, repo_owner, sha_hash)
+        else
+            pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}")
+        end
 
         rows = pick.num_rows
         results = Array.new(rows)
@@ -384,8 +396,8 @@ module Github_database
     # +tag+:: the +Tag+ containing all the relatvent information about the tag.
     def Github_database.insertTag(con, tag)
 
-        pick = con.prepare("INSERT INTO #{TAGS} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}) VALUES (?, ?, ?, ?, ?)")
-        pick.execute(tag.repo_id, tag.sha, tag.tag_name, tag.tag_description, tag.tag_date)
+        pick = con.prepare("INSERT INTO #{TAGS} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA}) VALUES (?, ?, ?, ?, ?, ?)")
+        pick.execute(tag.repo_id, tag.sha, tag.tag_name, tag.tag_description, tag.tag_date, tag.commit_sha)
      
         return Utility.toInteger(pick.insert_id)
     end
@@ -395,7 +407,7 @@ module Github_database
     # +con+:: the database connection used. 
     def Github_database.getTags(con)
 
-        pick = con.prepare("SELECT * FROM #{TAGS}")
+        pick = con.prepare("SELECT #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA} FROM #{TAGS}")
         
         rows = pick.num_rows
         results = Array.new(rows)
@@ -405,6 +417,17 @@ module Github_database
         end
 
         return results
+    end
+
+    # Get the most recent tag's sha hash from the database. 
+    # +con+:: the database connection used. 
+    # +repo_id+:: the id of the repository.
+    def Github_database.getLastTag(con, repo_id)
+        pick = con.prepare("select t.#{TAG_SHA} from #{TAG} as t where t.#{REPO_REFERENCE} = ? ORDER BY t.#{TAG_DATE} DESC LIMIT 1")
+
+        pick.execute(repo_id)
+
+        return Utility.toValue(pick.fetch)
     end
 
     def Github_database.setFileTypes(con, repo_name, repo_owner)
@@ -449,6 +472,20 @@ module Github_database
     def Github_database.getTags(con, repo_name, repo_owner)
         pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{REPO} AS r INNER JOIN #{TAG} AS t ON r.#{REPO_ID} = t.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
         pick.execute(repo_name, repo_owner)
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        return results
+    end
+
+    def Github_database.getNewestTags(con, repo_id, date)
+        pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{TAG} AS t WHERE t.#{REPO_REFERENCE} LIKE ? AND t.#{TAG_DATE} > ? ORDER BY t.#{TAG_DATE}")
+        pick.execute(repo_name, repo_owner, date)
 
         rows = pick.num_rows
         results = Array.new(rows)
@@ -542,12 +579,13 @@ class Sourcefile
 end
 
 class Tag
-    def initialize(repo_id, sha, tag_name, tag_description, tag_date)
+    def initialize(repo_id, sha, tag_name, tag_description, tag_date, commit_sha)
         @repo_id = repo_id
         @sha = sha
         @tag_name = tag_name
         @tag_description = tag_description
         @tag_date = tag_date
+        @commit_sha = commit_sha
     end
 
     def repo_id()
@@ -568,5 +606,9 @@ class Tag
 
     def tag_date()
         @tag_date        
+    end
+
+    def commit_sha
+        @commit_sha
     end
 end

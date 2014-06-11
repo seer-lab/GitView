@@ -168,6 +168,48 @@ def findLastCommit(con, commits, repo_id)
     return commits[0..index]
 end
 
+def findLastTag(con, tags, repo_id)
+
+    # Get the latest commit and look for it
+    # *Note it is possible that the developers re-based their project
+    # and the commit no longer exists, however this is unlikely 
+    # and also this would prob. require a fresh mining
+    sha = Github_database.getLastTag(con, repo_id)
+
+    puts "sha = #{sha}"
+    
+    index = 0
+    # Go through each commit until 
+    tags.each do |tag|
+        if tag["object"]["sha"] == sha
+            #puts index
+            break
+        end
+        index += 1
+    end
+
+    puts "index = #{index}"
+
+    # Check if finding the last commit was successful
+    #if index == tags.size
+
+        # Commit not found, suggest deleting the data and starting from scratch.
+    #   return nil
+    #end
+
+    # Adjust to start at the latest commit not dealt with.
+    index -= 1
+
+    if index == -1
+
+        # Repository is completely up-to-date already nothing to do.
+        return nil
+    end
+
+    # We want to only parse from index forward
+    return tags[0..index]
+end
+
 def waitOnRate(con, github, amount)
     while github.ratelimit_remaining < amount
         con.close()
@@ -192,11 +234,13 @@ def getAllCommits(con, github, username, repo_name)
     rescue Exception => e
         puts e
         retry
-    end    
+    end
 
     # Get the repo_id if it exists
 
-    repo_id = Github_database.getRepoExist(con, repo_name, username)
+    repo_exists = Github_database.getRepoExist(con, repo_name, username)
+
+    repo_id = repo_exists
 
     if repo_id
         # Select only the latest commits to parse
@@ -208,92 +252,106 @@ def getAllCommits(con, github, username, repo_name)
         repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
     end
 
-    if !commits
-        # No commits to parse
-        return nil
+    if commits
+
+        progress_indicator.total_length = commits.length
+
+        #puts rate.getTimeRemaining(Time.now)
+
+        commits.each { |commit|
+
+            progress_indicator.percentComplete(nil,"Storing Commits")
+
+            # Get the commit's sha
+            sha = commit["sha"]
+
+            # Get the author's info
+            # Insert the author (if not already inserted)
+            
+            #todo check if commit["author"] == nil
+            author_name = nil
+            if commit["author"] == nil
+                author_name = commit["commit"]["author"]["name"]
+            else
+                author_name = commit["author"]["login"]
+            end
+            author_date = commit["commit"]["author"]["date"]
+
+            author_id = Utility.toInteger(Github_database.getUserId(con, User.new(author_name, author_date)))
+
+            
+            #puts "author_id = #{author_id}"
+
+            # Get the commiter's info
+            # Insert the committer (if not already inserted)
+            
+            commiter_name = nil
+            if commit["committer"] == nil
+                commiter_name = commit["commit"]["committer"]["name"]
+            else
+                commiter_name = commit["committer"]["login"]
+            end
+
+            commiter_date = commit["commit"]["committer"]["date"]
+
+            commiter_id = Utility.toInteger(Github_database.getUserId(con, User.new(commiter_name, commiter_date)))
+
+            #puts "commiter_id = #{commiter_id}"
+
+            # Get the commit message
+            message = commit["commit"]["message"]
+
+            # Insert the commits into the database.
+
+            # Get the insert id
+            commit_id = Utility.toInteger(Github_database.insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha)))
+        
+            #parentHash = Array.new
+            # Insert the parents
+            commit["parents"].each { |parent|
+                #parentHash.push parent["sha"]
+                Github_database.insertParent(con, commit_id, parent["sha"])
+            }
+
+            setFiles(con, github, commit["url"], commit_id)
+        }
     end
 
-    progress_indicator.total_length = commits.length
-
-    #puts rate.getTimeRemaining(Time.now)
-
-    commits.each { |commit|
-
-        progress_indicator.percentComplete(nil,"Storing Commits")
-
-        # Get the commit's sha
-        sha = commit["sha"]
-
-        # Get the author's info
-        # Insert the author (if not already inserted)
-        
-        #todo check if commit["author"] == nil
-        author_name = nil
-        if commit["author"] == nil
-            author_name = commit["commit"]["author"]["name"]
-        else
-            author_name = commit["author"]["login"]
-        end
-        author_date = commit["commit"]["author"]["date"]
-
-        author_id = Utility.toInteger(Github_database.getUserId(con, User.new(author_name, author_date)))
-
-        
-        #puts "author_id = #{author_id}"
-
-        # Get the commiter's info
-        # Insert the committer (if not already inserted)
-        
-        commiter_name = nil
-        if commit["committer"] == nil
-            commiter_name = commit["commit"]["committer"]["name"]
-        else
-            commiter_name = commit["committer"]["login"]
-        end
-
-        commiter_date = commit["commit"]["committer"]["date"]
-
-        commiter_id = Utility.toInteger(Github_database.getUserId(con, User.new(commiter_name, commiter_date)))
-
-        #puts "commiter_id = #{commiter_id}"
-
-        # Get the commit message
-        message = commit["commit"]["message"]
-
-        # Insert the commits into the database.
-
-        # Get the insert id
-        commit_id = Utility.toInteger(Github_database.insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha)))
-    
-        #parentHash = Array.new
-        # Insert the parents
-        commit["parents"].each { |parent|
-            #parentHash.push parent["sha"]
-            Github_database.insertParent(con, commit_id, parent["sha"])
-        }
-
-        setFiles(con, github, commit["url"], commit_id)
-    }
-
-    #progress_indicator.puts 'working on tags'
+    progress_indicator.puts 'Getting Tags...'
 
     begin
 
         # Get all the tags
         tagList = github.git_data.references.list username, repo_name, ref:'tags'
 
-        progress_indicator.total_length = tagList.body.length
+        if repo_exists
+            tags = findLastTag(con, tagList.body, repo_id)
+        else
+            tags = tagList.body
+        end
+
+        if !tags
+            # No tags to parse
+            return nil
+        end
+
+        progress_indicator.puts "Working on Tags..."
+
+        progress_indicator.total_length = tags.length
         progress_indicator.count = 0
 
-        tagList.body.each { |tag|
+        tags.each { |tag|
 
             progress_indicator.percentComplete(nil, "Storing Tags")
 
-            sha, name, message, date = "", "", "", ""
+            # Get the tag's sha
+            sha = tag["object"]["sha"]
+            commit_sha, name, message, date = "", "", "", ""
             begin
-               tagMore = (github.git_data.tags.get username, repo_name, tag["object"]["sha"]).body
-                # Get the commit sha
-                sha = tagMore["object"]["sha"]
+               tagMore = (github.git_data.tags.get username, repo_name, sha).body
+                
+                # The commit sha
+                commit_sha = tagMore["object"]["sha"]
 
                 # Get the tag name
                 name = tagMore["tag"]
@@ -309,13 +367,13 @@ def getAllCommits(con, github, username, repo_name)
                 date = tagMore["tagger"]["date"]
 
             rescue Github::Error::NotFound => e
-                sha = tag["object"]["sha"]
+                #sha = tag["object"]["sha"]
                 name = tag["ref"].scan(TAG_REGEX)[0][0]
-                commit = github.repos.commits.get(username, repo_name, tag["object"]["sha"])
-                message = commit.body["commit"]["message"]
-                date = commit.body["commit"]["committer"]["date"]
+                #commit = github.repos.commits.get(username, repo_name, tag["object"]["sha"])
+                #message = commit.body["commit"]["message"]
+                #date = commit.body["commit"]["committer"]["date"]
             end
-            Github_database.insertTag(con, Tag.new(repo_id, sha, name, message, date))
+            Github_database.insertTag(con, Tag.new(repo_id, sha, name, message, date, commit_sha))
         }
     rescue Github::Error::GithubError => e
         puts e.message
