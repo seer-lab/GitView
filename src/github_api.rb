@@ -369,9 +369,10 @@ def getAllCommits(con, github, username, repo_name)
             rescue Github::Error::NotFound => e
                 #sha = tag["object"]["sha"]
                 name = tag["ref"].scan(TAG_REGEX)[0][0]
-                #commit = github.repos.commits.get(username, repo_name, tag["object"]["sha"])
-                #message = commit.body["commit"]["message"]
-                #date = commit.body["commit"]["committer"]["date"]
+                commit = github.repos.commits.get(username, repo_name, tag["object"]["sha"])
+                message = commit.body["commit"]["message"]
+                date = commit.body["commit"]["committer"]["date"]
+                commit_sha = tag["object"]["sha"]
             end
             Github_database.insertTag(con, Tag.new(repo_id, sha, name, message, date, commit_sha))
         }

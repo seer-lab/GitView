@@ -9,7 +9,7 @@ $DESC = "DESC";
  */
 function getAllRepos($mysqli)
 {
-     $results = array(array('repo_name'   => "",
+    $results = array(array('repo_name'   => "",
                             'repo_owner'  => ""
                      ));
 
@@ -107,7 +107,7 @@ function getMethodStatementChurn($mysqli, $user, $repo, $path, $committer)
                         'author_name'               => array(),
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_code), SUM(m.new_comment), SUM(m.deleted_code), SUM(m.deleted_comment), SUM(m.modified_code_added), SUM(m.modified_comment_added), SUM(m.modified_code_deleted), SUM(m.modified_comment_deleted), com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method_statements as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_code), SUM(m.new_comment), SUM(m.deleted_code), SUM(m.deleted_comment), SUM(m.modified_code_added), SUM(m.modified_comment_added), SUM(m.modified_code_deleted), SUM(m.modified_comment_deleted), com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method_statement as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
