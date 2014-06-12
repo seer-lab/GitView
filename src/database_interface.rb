@@ -370,7 +370,7 @@ module Github_database
 
         stmt = ""
         if sha_hash
-            stmt = "AND com.#{DATE} > (SELECT com.#{DATE} FROM #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND c.#{SHA} = ?)"
+            stmt = "AND com.#{DATE} > (SELECT com.#{DATE} FROM #{COMMITS} AS c INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND c.#{SHA} = ?)"
         end
 
         pick = con.prepare("SELECT f.#{FILE}, c.#{SHA}, f.#{NAME}, c.#{COMMIT_ID}, com.#{DATE}, c.#{BODY}, f.#{PATCH}, com.#{NAME}, aut.#{NAME} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ? #{stmt} ORDER BY com.#{DATE}")
@@ -483,9 +483,20 @@ module Github_database
         return results
     end
 
-    def Github_database.getNewestTags(con, repo_id, date)
-        pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{TAG} AS t WHERE t.#{REPO_REFERENCE} LIKE ? AND t.#{TAG_DATE} > ? ORDER BY t.#{TAG_DATE}")
-        pick.execute(repo_name, repo_owner, date)
+    def Github_database.getNewestTags(con, repo_name, repo_owner, date)
+
+        stmt = ""
+        if date
+            stmt = "AND t.#{TAG_DATE} > ?"
+        end
+
+        pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{TAG} AS t INNER JOIN #{REPO} as r ON t.#{REPO_REFERENCE} = r.#{REPO_ID} WHERE r.#{REPO_OWNER} LIKE ? AND r.#{REPO_NAME} = ? #{stmt} ORDER BY t.#{TAG_DATE}")
+
+        if date
+            pick.execute(repo_owner, repo_name, date)
+        else
+            pick.execute(repo_owner, repo_name)
+        end
 
         rows = pick.num_rows
         results = Array.new(rows)

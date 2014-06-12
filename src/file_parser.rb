@@ -104,12 +104,11 @@ progress_indicator.total_length = files.length
 progress_indicator.puts "Loading Tags..."
 
 if sha
-    date = Stats_db.getLatestTags(con, repo_id)
-    tags = Github_database.getNewestTags(con, repo_id, date)
+    date = Stats_db.getLastTag(stats_con, repo_id)
+    tags = Github_database.getNewestTags(con, repo_name, repo_owner, date)
 else
     tags = Github_database.getTags(con, repo_name, repo_owner)
 end
-
 
 tags.each { |sha, tag_name, tag_desc, tag_date, commit_sha|
     if !$test
@@ -123,114 +122,116 @@ tags.each { |sha, tag_name, tag_desc, tag_date, commit_sha|
     end
 }
 
-fileCount = 0
+if files && files.length > 0
+    fileCount = 0
 
-prev_commit = files[0][2]
-current_commit = 0
-commit_comments = 0
-commit_code = 0
+    prev_commit = files[0][2]
+    current_commit = 0
+    commit_comments = 0
+    commit_code = 0
 
-commit_id = nil
+    commit_id = nil
 
-METRICS = ["CommentAdded", "CommentDeleted", "CommentModified", "CodeAdded", "CodeDeleted", "CodeModified", "TotalComment", "TotalCode"]
+    METRICS = ["CommentAdded", "CommentDeleted", "CommentModified", "CodeAdded", "CodeDeleted", "CodeModified", "TotalComment", "TotalCode"]
 
-churn = Hash.new
+    churn = Hash.new
 
-METRICS.each do |metric|
-    churn[metric] = 0
-end
-
-fileHashTable = Hash.new
-
-merger = Merger.new($test_merge)
-
-codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
-
-#Map file name to the array of stats about that file.
-files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
-    #file = files[0][0]
-    progress_indicator.percentComplete(file_name, "Analizing Files")
-
-    current_commit = current_commit_id
-
-    if $test
-        puts "file: #{file_name}"
-        #a = gets
+    METRICS.each do |metric|
+        churn[metric] = 0
     end
 
-    if file[-1] != "\n"
-        file += "\n"
-    end
+    fileHashTable = Hash.new
 
-    lines = file.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').scan(LINE_EXPR)
+    merger = Merger.new($test_merge)
 
-    lines = merger.mergePatch(lines, patch)
-    #pass the lines of code and the related patch
+    codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
-    comments = codeParser.findMultiLineComments(lines)
+    #Map file name to the array of stats about that file.
+    files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
+        #file = files[0][0]
+        progress_indicator.percentComplete(file_name, "Analizing Files")
 
-    method_churn = codeParser.methodCounter
+        current_commit = current_commit_id
 
-    method_statement_churn = codeParser.statementCounter
+        if $test
+            puts "file: #{file_name}"
+            #a = gets
+        end
 
-    churn["CommentAdded"] += comments[1].commentAdded(0)
-    churn["CommentDeleted"] += comments[1].commentDeleted(0)
-    churn["CommentModified"] += comments[1].commentModified(0)
-    churn["CodeAdded"] += comments[1].codeAdded(0)
-    churn["CodeDeleted"] += comments[1].codeDeleted(0)
-    churn["CodeModified"] += comments[1].codeModified(0)
+        if file[-1] != "\n"
+            file += "\n"
+        end
 
-    churn["TotalComment"] += comments[0][0]
-    churn["TotalCode"] += comments[0][1]
+        lines = file.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').scan(LINE_EXPR)
 
-    if $test
-        puts comments[0][0] #The total number of lines of comments in the file
-        puts comments[0][1] #The total number of lines of code in the file
-        puts "method_churn = #{method_churn}"
-        puts "method_statement_churn = #{method_statement_churn}"
-    end
+        lines = merger.mergePatch(lines, patch)
+        #pass the lines of code and the related patch
 
-    sum = comments[1].commentAdded(0) + comments[1].commentDeleted(0) + comments[1].codeAdded(0) + comments[1].codeDeleted(0) + comments[1].commentModified(0)  + comments[1].codeModified(0)
-    #Get the path and the name of the file.
-    package, name = parsePackages(file_name)
-    
-    if !$test && sum > 0
+        comments = codeParser.findMultiLineComments(lines)
+
+        method_churn = codeParser.methodCounter
+
+        method_statement_churn = codeParser.statementCounter
+
+        churn["CommentAdded"] += comments[1].commentAdded(0)
+        churn["CommentDeleted"] += comments[1].commentDeleted(0)
+        churn["CommentModified"] += comments[1].commentModified(0)
+        churn["CodeAdded"] += comments[1].codeAdded(0)
+        churn["CodeDeleted"] += comments[1].codeDeleted(0)
+        churn["CodeModified"] += comments[1].codeModified(0)
+
+        churn["TotalComment"] += comments[0][0]
+        churn["TotalCode"] += comments[0][1]
+
+        if $test
+            puts comments[0][0] #The total number of lines of comments in the file
+            puts comments[0][1] #The total number of lines of code in the file
+            puts "method_churn = #{method_churn}"
+            puts "method_statement_churn = #{method_statement_churn}"
+        end
+
+        sum = comments[1].commentAdded(0) + comments[1].commentDeleted(0) + comments[1].codeAdded(0) + comments[1].codeDeleted(0) + comments[1].commentModified(0)  + comments[1].codeModified(0)
+        #Get the path and the name of the file.
+        package, name = parsePackages(file_name)
         
-        if commit_id == nil
-
-            committer_id = Stats_db.getUserId(stats_con, com_name)
-            author_id = Stats_db.getUserId(stats_con, com_name)
-
-            commit_id = Stats_db.insertCommit(stats_con, repo_id, sha, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
-        end
-        file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
-
-        # Insert the method churn count
-        Stats_db.insertMethod(stats_con, file_id, method_churn)
-
-        # Insert the method statement churn count
-        Stats_db.insertMethodStatement(stats_con, file_id, method_statement_churn)
-    end
-    
-    if prev_commit != current_commit
-        #puts "finished commit"
-        prev_commit = current_commit
-
         if !$test && sum > 0
-            Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
-        end
-        commit_id = nil
+            
+            if commit_id == nil
 
-        METRICS.each do |metric|
-            churn[metric] = 0
+                committer_id = Stats_db.getUserId(stats_con, com_name)
+                author_id = Stats_db.getUserId(stats_con, com_name)
+
+                commit_id = Stats_db.insertCommit(stats_con, repo_id, sha, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
+            end
+            file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
+
+            # Insert the method churn count
+            Stats_db.insertMethod(stats_con, file_id, method_churn)
+
+            # Insert the method statement churn count
+            Stats_db.insertMethodStatement(stats_con, file_id, method_statement_churn)
         end
+        
+        if prev_commit != current_commit
+            #puts "finished commit"
+            prev_commit = current_commit
+
+            if !$test && sum > 0
+                Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
+            end
+            commit_id = nil
+
+            METRICS.each do |metric|
+                churn[metric] = 0
+            end
+        end
+        
+        fileCount+=1
     end
-    
-    fileCount+=1
-end
 
-progress_indicator.percentComplete(nil)
-puts "filesize = #{files.length}"
+    progress_indicator.percentComplete(nil)
+    puts "filesize = #{files.length}"
+end
 #puts "Bad files count #{$NOT_FOUND}"
 #puts ""
 

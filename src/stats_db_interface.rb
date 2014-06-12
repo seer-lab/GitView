@@ -14,7 +14,7 @@ module Stats_db
     COMMITS = 'commits'
     FILE = 'file'
     METHOD = 'method'
-    METHOD_STATEMENT = 'method_statements'
+    METHOD_STATEMENT = 'method_statement'
 
     # Repo
     REPO_ID = 'repo_id'
@@ -199,8 +199,8 @@ module Stats_db
     # +code+:: the number of lines of code in the commit
     def Stats_db.insertCommit(con, repo_id, sha, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
-        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{SHA}, #{BODY}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        pick.execute(repo_id, sha, date, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
+        pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{SHA}, #{BODY}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(repo_id, date, sha, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
         return Utility.toInteger(pick.insert_id)
     end
@@ -275,7 +275,7 @@ module Stats_db
         return Utility.toInteger(pick.insert_id)
     end
 
-    def Github_database.getLastTag(con, repo_id)
+    def Stats_db.getLastTag(con, repo_id)
         pick = con.prepare("select t.#{TAG_DATE} from #{TAG} as t where t.#{REPO_REFERENCE} = ? ORDER BY t.#{TAG_DATE} DESC LIMIT 1")
 
         pick.execute(repo_id)
