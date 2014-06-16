@@ -178,7 +178,7 @@ function handleLevel(repo, pack, user) {
             else {
                 series = getStatementSeries(statsArray, tagArray);
             }
-            areaPlotChurn("container", title, repo, series, getYAxis(false));
+            areaPlotChurn("container", title, repo, series, getYAxis(false), 'normal');
         }
     });
 
@@ -242,7 +242,7 @@ function getChurn(repo, group, pack, user) {
             var title = "Comments and Code Churn Per " + group;
 
             var series = getCommitSeries(statsArray, tagArray)
-            areaPlotChurn("container", title, repo, series, getYAxis(true));
+            areaPlotChurn("container", title, repo, series, getYAxis(true), null);
         }
     });
 }
@@ -359,7 +359,7 @@ $(document).ready(function(){
     }
 });
 
-function areaPlotChurn(id, title, repo, series, yaxis) {
+function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
 
     //
     var chart = $("#" + id).highcharts('StockChart', {
@@ -487,7 +487,7 @@ function areaPlotChurn(id, title, repo, series, yaxis) {
                 }
             },
             column: {
-                stacking: 'normal'
+                stacking: stacked
             }
         },
         series: series
