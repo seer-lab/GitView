@@ -23,6 +23,18 @@ function checkIfGraphPage()
     }
 }
 
+$('#level').click(function(event) {
+
+    var lvl = $('#level').val();
+
+    if (lvl == 'None') {
+        $('#group_select').show();
+    }
+    else {
+        $('#group_select').hide();
+    }
+});
+
 $('#repo').click(function(event) {
 
     var repo = $('#repo').val(); 
@@ -56,7 +68,7 @@ function refreshPackage(repo, user, path)
 
     var packageList = "";
 
-    console.log(path);
+    //console.log(path);
     if(path == '')
     {
         packageList = "<option selected=\"selected\">All Packages</option>";
@@ -95,7 +107,7 @@ function refreshCommitter(repo, pack, committer)
 {
     var committerList = "";
 
-    console.log(committer);
+    //console.log(committer);
 
     if(committer == '')
     {
@@ -108,7 +120,7 @@ function refreshCommitter(repo, pack, committer)
 
     pack = pack.replace(/\//g, '!');
 
-    console.log(rootURL + '/committers/' + repo + "/" + encodeURIComponent(pack));
+    //console.log(rootURL + '/committers/' + repo + "/" + encodeURIComponent(pack));
 
     $.ajax({
         type: 'GET',
@@ -117,7 +129,7 @@ function refreshCommitter(repo, pack, committer)
         success: function(data) {
             length = data.length;
 
-            console.log(data);
+            //console.log(data);
             for (var i = 0; i < length; i++)
             {
                 if (data[i] == committer)
@@ -160,7 +172,7 @@ function handleLevel(repo, pack, user) {
         return false;
     }
 
-    console.log(rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
+    //console.log(rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
         url: rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack),
@@ -229,7 +241,7 @@ $('#reset').click(function(event) {
 });
 
 function getChurn(repo, group, pack, user) {
-    console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
+    //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
         url: rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack),
@@ -316,7 +328,7 @@ function plotChurn(data, level) {
         }
     }
 
-    console.log(statsArray);
+    //console.log(statsArray);
 
     var tagArray = [];
     tagKeys = Object.keys(tagData);
@@ -355,7 +367,7 @@ $(document).ready(function(){
             $('#container').height($(window).height()*0.8);
         }
         PageHeight = $('#container').height();
-        console.log(PageHeight);
+        //console.log(PageHeight);
     }
 });
 
@@ -404,6 +416,7 @@ function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
 
         rangeSelector:{
             enabled: true,
+            selected: 2,
             buttons: [{
                 type: 'month',
                 count: 1,
