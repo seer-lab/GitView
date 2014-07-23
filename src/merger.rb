@@ -1,9 +1,11 @@
 
 class Merger
-    attr_accessor :test
+    attr_accessor :test, :bad_files, :files_not_found
 
     def initialize(test)
         @test = test
+        @bad_files = Array.new
+        @files_not_found = 0
     end
 
     def mergePatch(lines, patch)
@@ -110,12 +112,12 @@ class Merger
             lines.each do |line|
                 line[0] = " #{line[0]}"
             end
-        else 
-            $NOT_FOUND += 1
-            $BAD_FILE_ARRAY.push([lines, patch])
+        else             
+            @files_not_found += 1
+            @bad_files.push([lines, patch])
             if @test
                 puts "File request error"
-                puts "This has happened #{$NOT_FOUND}"
+                puts "This has happened #{@files_not_found}"
 
                 puts patch != nil
                 puts !lines[0][0].match(/^\d\d\d.*?/)
@@ -126,6 +128,21 @@ class Merger
         
         return lines
     end
+
+=begin
+    puts "Bad files count #{@files_not_found}"
+    puts ""
+
+    bad_files.each { |info|
+
+        info.each { |elements|
+            a = $stdin.gets 
+            puts elements
+            puts ""
+        }
+        
+    }
+=end
 
     # TODO document
     def fillBefore (lines, offset, currentLine)

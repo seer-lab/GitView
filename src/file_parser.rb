@@ -14,11 +14,7 @@ require_relative 'progress'
 
 APP_TITLE = "Project Analizer"
 
-$NOT_FOUND = 0
-
-$BAD_FILE_ARRAY = Array.new
-
-#Command line arguements in order (default $test to true)
+# Command line arguements
 repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, true
 $low_threshold, $size_threshold = 0.8, 20
 $log = true
@@ -45,6 +41,7 @@ else
 	abort("Invalid parameters")
 end
 
+# Create the progress bar for the process
 progress_indicator = Progress.new(APP_TITLE)
 
 # Set the output file to the given parameter
@@ -68,11 +65,7 @@ end
 # Parse the path of each file for their package.
 # Return the package and the file name (with extention)
 def parsePackages(path)
-    package = path.scan(PACKAGE_PARSER)
-    #puts "name #{path}"
-    #puts "package #{package[0]}"
-    #a = gets
-    return package[0]
+    return path.scan(PACKAGE_PARSER)[0]
 end
 
 def mergeThreshold(threshold)
@@ -110,6 +103,7 @@ else
     tags = Github_database.getTags(con, repo_name, repo_owner)
 end
 
+# Collect the tag information
 tags.each { |sha, tag_name, tag_desc, tag_date, commit_sha|
     if !$test
         Stats_db.insertTag(stats_con, repo_id, sha, tag_name, tag_desc, tag_date, commit_sha)
@@ -125,8 +119,8 @@ tags.each { |sha, tag_name, tag_desc, tag_date, commit_sha|
 if files && files.length > 0
     fileCount = 0
 
-    prev_commit = files[0][2]
-    current_commit = 0
+    # Set the previous commit to the current sha hash
+    prev_commit = files[0][1]
     commit_comments = 0
     commit_code = 0
 
@@ -140,24 +134,31 @@ if files && files.length > 0
         churn[metric] = 0
     end
 
-    fileHashTable = Hash.new
-
     merger = Merger.new($test_merge)
 
     codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
-    #Map file name to the array of stats about that file.
+    # Map file name to the array of stats about that file.
     files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
-        #file = files[0][0]
+
         progress_indicator.percentComplete(file_name, "Analizing Files")
 
-        current_commit = current_commit_id
+        if prev_commit != sha
+
+            # The previous commit's files are finished set up the next commit
+            prev_commit = sha
+            commit_id = nil
+
+            METRICS.each do |metric|
+                churn[metric] = 0
+            end
+        end
 
         if $test
             puts "file: #{file_name}"
-            #a = gets
         end
 
+        # Fix any file missing a ending new line
         if file[-1] != "\n"
             file += "\n"
         end
@@ -184,14 +185,16 @@ if files && files.length > 0
         churn["TotalCode"] += comments[0][1]
 
         if $test
-            puts comments[0][0] #The total number of lines of comments in the file
-            puts comments[0][1] #The total number of lines of code in the file
+            puts "Total number of lines of comments = #{comments[0][0]}"
+            puts "Total number of lines of code = #{comments[0][1]}"
+
             puts "method_churn = #{method_churn}"
             puts "method_statement_churn = #{method_statement_churn}"
         end
 
         sum = comments[1].commentAdded(0) + comments[1].commentDeleted(0) + comments[1].codeAdded(0) + comments[1].codeDeleted(0) + comments[1].commentModified(0)  + comments[1].codeModified(0)
-        #Get the path and the name of the file.
+        
+        # Get the path and the name of the file.
         package, name = parsePackages(file_name)
         
         if !$test && sum > 0
@@ -202,6 +205,9 @@ if files && files.length > 0
                 author_id = Stats_db.getUserId(stats_con, com_name)
 
                 commit_id = Stats_db.insertCommit(stats_con, repo_id, sha, date, body, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"], committer_id, author_id)
+
+            else
+                Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
             end
             file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
 
@@ -212,37 +218,9 @@ if files && files.length > 0
             Stats_db.insertMethodStatement(stats_con, file_id, method_statement_churn)
         end
         
-        if prev_commit != current_commit
-            #puts "finished commit"
-            prev_commit = current_commit
-
-            if !$test && sum > 0
-                Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
-            end
-            commit_id = nil
-
-            METRICS.each do |metric|
-                churn[metric] = 0
-            end
-        end
-        
         fileCount+=1
     end
 
     progress_indicator.percentComplete(nil)
     puts "filesize = #{files.length}"
 end
-#puts "Bad files count #{$NOT_FOUND}"
-#puts ""
-
-#$BAD_FILE_ARRAY.each { |info|
-
-#    info.each { |elements|
-#        a = $stdin.gets 
-#        puts elements
-#        puts ""
-#    }
-    
-#}
-
-#puts "hash table = #{fileHashTable}"
