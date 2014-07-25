@@ -332,7 +332,7 @@ module Stats_db
         #SELECT count(*) from github_data.repositories as r INNER JOIN github_data.commits as c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'
 
 
-        pick = con.prepare("SELECT f.#{PATH}, f.#{NAME}, (COUNT(c.#{COMMIT_ID})/ (#{size_of_commits}) ) * 100 as 'File Committed %' FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY f.#{PATH}, f.#{NAME}")
+        pick = con.prepare("SELECT f.#{PATH}, f.#{NAME}, (COUNT(c.#{COMMIT_ID})/ (#{size_of_commits}) ) * 100 as file_percent FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY f.#{PATH}, f.#{NAME} ORDER BY file_percent DESC")
 
         pick.execute(repo_name, repo_owner, repo_name, repo_owner)
 
