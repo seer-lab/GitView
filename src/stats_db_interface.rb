@@ -315,4 +315,42 @@ module Stats_db
 
         return Utility.toInteger(pick.insert_id)
     end
+
+    def Stats_db.getFileCommitPercent(con, repo_owner, repo_name)
+
+        #size_pick = con.prepare
+        size_of_commits = "SELECT COUNT(c.#{COMMIT_ID}) FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?"
+
+        #SELECT count(*) from github_data.repositories as r INNER JOIN github_data.commits as c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'
+
+
+        pick = con.prepare("SELECT f.#{PATH}, f.#{NAME}, (COUNT(c.#{COMMIT_ID})/ (#{size_of_commits}) ) * 100 as 'File Committed %' FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY f.#{PATH}, f.#{NAME}")
+
+        pick.execute(repo_name, repo_owner, repo_name, repo_owner)
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        return results
+    end
+
+    def Stats_db.getCommitMessages(con, repo_owner, repo_name)
+
+        pick = con.prepare("SELECT c.#{COMMIT_ID}, c.#{BODY} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} INNER JOIN #{METHOD} as m ON f.#{FILE_ID} = m.#{FILE_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY c.#{COMMIT_ID}")
+
+        pick.execute(repo_name, repo_owner)
+
+        rows = pick.num_rows
+        results = Array.new(rows)
+
+        rows.times do |x|
+            results[x] = pick.fetch
+        end
+
+        return results
+    end
 end
