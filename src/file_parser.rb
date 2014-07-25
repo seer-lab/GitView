@@ -68,17 +68,9 @@ def parsePackages(path)
     return path.scan(PACKAGE_PARSER)[0]
 end
 
-def mergeThreshold(threshold)
-    threshold = ((threshold.to_f*10).to_i).to_s
-    if threshold.length == 1 
-        threshold = "0#{threshold}"
-    end
-    return threshold
-end
-
 con = Github_database.createConnection()
 
-stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{mergeThreshold($low_threshold)}_#{mergeThreshold($high_threshold)}", $ONE_TO_MANY)
+stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
 progress_indicator.puts "Loading Files..."
 

@@ -54,6 +54,13 @@ class Progress
     def puts(value)
         @orig_std.puts value
     end
+
+ensure
+
+    # Close the output stream
+    if @orig_std
+        @orig_std.close
+    end
 end
 
 =begin

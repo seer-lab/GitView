@@ -87,6 +87,14 @@ module Stats_db
     TAG_DATE = 'tag_date'
     COMMIT_SHA = 'commit_sha'
 
+    def Stats_db.mergeThreshold(threshold)
+        threshold = ((threshold.to_f*10).to_i).to_s
+        if threshold.length == 1 
+            threshold = "0#{threshold}"
+        end
+        return threshold
+    end
+
     def Stats_db.createConnection()
         Mysql.new(HOST, USERNAME, PASSWORD, $DATABASE)
     end
