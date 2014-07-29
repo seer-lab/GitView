@@ -1,6 +1,8 @@
 # Ignore output log files
 parse_log
 testlog
+stats_output
+acra_analysis
 
 # Ignore back up files
 *~

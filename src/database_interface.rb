@@ -1,7 +1,8 @@
 require 'mysql'
-require_relative 'utility'
 
 module Github_database
+    require_relative 'utility'
+
     DATABASE = 'github_data'
     HOST = 'localhost'
     USERNAME = 'git_miner'
@@ -88,15 +89,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{REPO}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
 
@@ -158,32 +151,22 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{USERS}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Get all the users stored in the database
     # Params:
     # +con+:: the database connection used.
-    # +user+:: the user entry into the datase 
+    # +user+:: the user entry into the database 
     def Github_database.getUserId(con, user)
         pick = con.prepare("SELECT #{USER_ID} FROM #{USERS} WHERE #{NAME}=? AND #{DATE}=?")
         pick.execute(user.name, user.date)
 
         result = pick.fetch
 
-        #puts "result #{result}"
         if(result == nil)
             result = insertUser(con, user)
         end
-        #puts "#{user.name} id = #{result}"
 
         return result
     end
@@ -205,15 +188,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{COMMITS}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Insert the given commits to the database
@@ -247,11 +222,6 @@ module Github_database
     def Github_database.insertCommitsIds(con, commit)
 
         pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMITER_REFERENCE}, #{AUTHOR_REFERENCE}, #{BODY}, #{SHA}) VALUES (?, ?, ?, ?, ?)")
-        #puts "repoid = #{commit.repo}"
-        #puts "commiterid = #{commit.commiter}"
-        #puts "authorid = #{commit.author}"
-        #puts "body = #{commit.body}"
-        #puts "sha = #{commit.sha}"
         pick.execute(commit.repo, commit.commiter, commit.author, commit.body, commit.sha)
 
         return Utility.toInteger(pick.insert_id)
@@ -281,7 +251,6 @@ module Github_database
 
         pick = con.prepare("SELECT #{COMMIT_ID} FROM #{COMMITS} WHERE #{SHA}=?")
 
-        #puts "sha = #{sha}"
         pick.execute(sha)
 
         return Utility.toInteger(pick.fetch)
@@ -312,14 +281,7 @@ module Github_database
 
         pick.execute(child_id)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Insert the file into the database
@@ -356,14 +318,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{FILE} WHERE #{COMMIT_REFERENCE} = ?")
         pick.execute(commit_id)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     def Github_database.getFileForParsing(con, extension, repo_name, repo_owner, sha_hash)
@@ -381,14 +336,7 @@ module Github_database
             pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}")
         end
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Insert the given tag into the database
@@ -409,14 +357,7 @@ module Github_database
 
         pick = con.prepare("SELECT #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA} FROM #{TAGS}")
         
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Get the most recent tag's sha hash from the database. 
@@ -459,28 +400,14 @@ module Github_database
 
         pick.execute(repo_name, repo_owner)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     def Github_database.getTags(con, repo_name, repo_owner)
         pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{REPO} AS r INNER JOIN #{TAG} AS t ON r.#{REPO_ID} = t.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
         pick.execute(repo_name, repo_owner)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 
     def Github_database.getNewestTags(con, repo_name, repo_owner, date)
@@ -498,33 +425,23 @@ module Github_database
             pick.execute(repo_owner, repo_name)
         end
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_results(pick)
     end
 end
 
+# Below are data structure classes used to simplify populating the database with the data.
 class User
-        def initialize(repo_name, date)
-            @repo_name = repo_name
-            @date = date
-        end
+    attr_accessor :date, :name
 
-        def name()
-            @repo_name
-        end
-
-        def date()
-            @date
-        end
+    def initialize(repo_name, date)
+        @name = repo_name
+        @date = date
+    end
 end
 
 class Commit
+    attr_accessor :repo, :commiter, :author, :body, :sha
+
     def initialize(repo, commiter, author, body, sha)
         @repo = repo
         @commiter = commiter
@@ -532,29 +449,11 @@ class Commit
         @body = body
         @sha = sha
     end
-
-    def repo()
-        @repo
-    end
-
-    def commiter()
-        @commiter
-    end
-
-    def author()
-        @author
-    end
-
-    def body()
-        @body
-    end
-
-    def sha()
-        @sha
-    end
 end
 
 class Sourcefile
+    attr_accessor :commit, :name, :addition, :deletion, :patch, :file
+
     def initialize(commit, name, addition, deletion, patch, file)
         @commit = commit
         @name = name
@@ -563,33 +462,11 @@ class Sourcefile
         @patch = patch
         @file = file
     end
-
-    def commit ()
-        @commit
-    end
-
-    def name ()
-        @name
-    end
-
-    def addition ()
-        @addition
-    end
-
-    def deletion ()
-        @deletion
-    end
-
-    def patch ()
-        @patch
-    end
-
-    def file ()
-        @file
-    end
 end
 
 class Tag
+    attr_accessor :repo_id, :sha, :tag_name, :tag_description, :tag_date, :commit_sha
+
     def initialize(repo_id, sha, tag_name, tag_description, tag_date, commit_sha)
         @repo_id = repo_id
         @sha = sha
@@ -597,29 +474,5 @@ class Tag
         @tag_description = tag_description
         @tag_date = tag_date
         @commit_sha = commit_sha
-    end
-
-    def repo_id()
-        @repo_id        
-    end
-
-    def sha()
-        @sha        
-    end
-
-    def tag_name()
-        @tag_name
-    end
-
-    def tag_description()
-        @tag_description
-    end
-
-    def tag_date()
-        @tag_date        
-    end
-
-    def commit_sha
-        @commit_sha
     end
 end

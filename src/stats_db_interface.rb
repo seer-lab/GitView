@@ -87,6 +87,15 @@ module Stats_db
     TAG_DATE = 'tag_date'
     COMMIT_SHA = 'commit_sha'
 
+    # reference names
+    
+    FIRST_COMMIT = 'first_commit'
+    LAST_COMMIT = 'last_commit'
+    AVERAGE_METHODS_ADDED = 'average_methods_addded'
+    AVERAGE_DELETED_METHODS = 'average_methods_deleted'
+    AVERAGE_METHODS_MODIFIED = 'average_methods_modified'
+    MONTH = 'month'
+
     def Stats_db.mergeThreshold(threshold)
         threshold = ((threshold.to_f*10).to_i).to_s
         if threshold.length == 1 
@@ -147,15 +156,7 @@ module Stats_db
         pick = con.prepare("SELECT #{REPO_ID}, #{REPO_NAME}, #{REPO_OWNER} FROM #{REPO}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Insert the given repository to the database
@@ -175,15 +176,7 @@ module Stats_db
         pick = con.prepare("SELECT * FROM #{COMMITS}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
     # Get the most recent commit's sha hash from the database. 
@@ -233,15 +226,7 @@ module Stats_db
         pick = con.prepare("SELECT * FROM #{FILE}")
         pick.execute
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #results.each { |x| puts x }
-        return results
+        return Utility.fetch_results(pick)
     end
 
     def Stats_db.insertFile(con, commit_id, path, name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
@@ -266,11 +251,9 @@ module Stats_db
 
         result = pick.fetch
 
-        #puts "result #{result}"
         if(result == nil)
             result = insertUser(con, name)
         end
-        #puts "#{user.name} id = #{result}"
 
         return Utility.toInteger(result)
 
@@ -297,15 +280,7 @@ module Stats_db
         pick = con.prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date")
         pick.execute(repo, user)
     
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        #There should be only 1 id return anyways.
-        return results
+        return Utility.fetch_results(pick)
     end
 
     def Stats_db.insertMethod(con, file_id, method_counter)
@@ -332,18 +307,11 @@ module Stats_db
         #SELECT count(*) from github_data.repositories as r INNER JOIN github_data.commits as c ON r.repo_id = c.repo_reference WHERE r.repo_name LIKE 'acra' AND r.repo_owner LIKE 'ACRA'
 
 
-        pick = con.prepare("SELECT f.#{PATH}, f.#{NAME}, (COUNT(c.#{COMMIT_ID})/ (#{size_of_commits}) ) * 100 as file_percent FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY f.#{PATH}, f.#{NAME} ORDER BY file_percent DESC")
+        pick = con.prepare("SELECT f.#{PATH}, f.#{NAME}, (COUNT(c.#{COMMIT_ID})/ (#{size_of_commits}) ) * 100 as file_percent, MIN(c.#{COMMIT_DATE}) as #{FIRST_COMMIT}, MAX(c.#{COMMIT_DATE}) as #{LAST_COMMIT} FROM #{REPO} AS r INNER JOIN #{COMMITS} AS c ON r.#{REPO_ID} = c.#{REPO_REFERENCE} INNER JOIN #{FILE} AS f ON c.#{COMMIT_ID} = f.#{COMMIT_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? GROUP BY f.#{PATH}, f.#{NAME} ORDER BY file_percent DESC")
 
         pick.execute(repo_name, repo_owner, repo_name, repo_owner)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
-
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
-
-        return results
+        return Utility.fetch_associated(pick)
     end
 
     def Stats_db.getCommitMessages(con, repo_owner, repo_name)
@@ -352,13 +320,24 @@ module Stats_db
 
         pick.execute(repo_name, repo_owner)
 
-        rows = pick.num_rows
-        results = Array.new(rows)
+        return Utility.fetch_associated(pick)
+    end
 
-        rows.times do |x|
-            results[x] = pick.fetch
-        end
+    def Stats_db.getAllRepoMonthAverage(con)
 
-        return results
+        pick = con.prepare("SELECT r.repo_name, r.repo_owner, AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED}, AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS}, AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED} FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE m.new_methods + m.deleted_methods + m.modified_methods != 0 GROUP BY r.repo_name, r.repo_owner")
+
+        pick.execute
+
+        return Utility.fetch_associated(pick)
+    end    
+
+    def Stats_db.getImportantFilesByMethod(con, repo_owner, repo_name, avg_new_methods, avg_deleted_methods, avg_modified_methods)
+
+        pick = con.prepare("SELECT f.path, f.name, DATE_FORMAT(c.commit_date, '%Y-%m') as #{MONTH}, AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED}, AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS}, AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED} FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY f.path, f.name, DATE_FORMAT(c.commit_date, '%Y-%m') HAVING #{AVERAGE_METHODS_ADDED} > ? OR #{AVERAGE_DELETED_METHODS} > ? OR #{AVERAGE_METHODS_MODIFIED} > ?")
+
+        pick.execute(repo_name, repo_owner, avg_new_methods, avg_deleted_methods, avg_modified_methods)
+
+        return Utility.fetch_associated(pick)
     end
 end
