@@ -1,0 +1,24 @@
+#!/bin/bash
+VMARGS=-Xmx256m
+HOME_DIR=~
+ECLIPSE_LOCATION=${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/eclipse
+WORKSPACE=${HOME_DIR}/workspace
+BUILD_FILE_LOCATION=${HOME_DIR}/source_code/acra/build.xml
+
+
+#java ${VMARGS} -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file build.xml
+
+#java ${VMARGS} -launcher ${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/eclipse -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file build.xml
+
+#xvfb-run
+
+#java -Xms128M -Xmx368M -XX:MaxPermSize=256M org.eclipse.core.launcher.Main -DPLUGIN_PATH= -classpath "${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/plugins/net.sourceforge.metrics_1.3.6/metrics.jar" -data ${WORKSPACE} -file ~/source_code/GitHubMining/ant_build/build.xml
+
+#export LD_LIBRARY_PATH="/usr/lib/jvm/jdk1.7.0/jre/lib/amd64"
+
+#./eclipse -console -noSplash -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ~/source_code/GitHubMining/ant_build/build.xml
+
+#./eclipse -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${HOME_DIR}/source_code/acra/build.xml
+
+# Launch eclipse without a ui and run the metrics plug in on it.
+${ECLIPSE_LOCATION} ${VMARGS} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${BUILD_FILE_LOCATION}
