@@ -334,7 +334,9 @@ module Stats_db
 
     def Stats_db.getImportantFilesByMethod(con, repo_owner, repo_name, avg_new_methods, avg_deleted_methods, avg_modified_methods)
 
-        pick = con.prepare("SELECT f.path, f.name, DATE_FORMAT(c.commit_date, '%Y-%m') as #{MONTH}, AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED}, AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS}, AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED} FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY f.path, f.name, DATE_FORMAT(c.commit_date, '%Y-%m') HAVING #{AVERAGE_METHODS_ADDED} > ? OR #{AVERAGE_DELETED_METHODS} > ? OR #{AVERAGE_METHODS_MODIFIED} > ?")
+        #DATE_FORMAT(c.commit_date, '%Y-%m')
+
+        pick = con.prepare("SELECT f.path, f.name, c.commit_id, AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED}, AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS}, AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED} FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY f.path, f.name, c.commit_id HAVING #{AVERAGE_METHODS_ADDED} > ? OR #{AVERAGE_DELETED_METHODS} > ? OR #{AVERAGE_METHODS_MODIFIED} > ?")
 
         pick.execute(repo_name, repo_owner, avg_new_methods, avg_deleted_methods, avg_modified_methods)
 
