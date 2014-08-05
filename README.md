@@ -19,7 +19,7 @@ Mining GitHub projects to learn about open source software development communiti
 5. [Eclipse metrics plugin](http://sourceforge.net/projects/eclipse-metrics/), version 1.3.6
 	- http://sourceforge.net/projects/metrics2/
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
-7. [Eclipse Import tool](https://github.com/seeq12/eclipse-import-projects-plugin) version 053d03988c97e8de2efe9bfb2a3cd3d1fba3a323 (no offical release). The project is very new, runs on startup and currently starts the gui for eclipse.
+7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin) The project is very new, runs on startup and starts the gui for eclipse.
 8. [Maven](https://maven.apache.org/) version 2.2.1
 
 ## Setup notes
