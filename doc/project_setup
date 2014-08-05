@@ -1,17 +1,13 @@
-Setting up to run the project:
+Setting up to run the project
+=============================
 
-1. Install ruby1.9.1
-    - Might work with 1.9.3 (need to test github_api)
-    - Cant get Mysql to work with 2.0.3 yet
-    
-    1. installing rubygems1.9.1
-        - It could still be an old version
-            - install rubygem updater
-                - $ sudo gem install rubygems-update
-            - run the updater $ sudo update rubygems
-                - Will show all the improvements that have been made...
-    2. Gems to install:
-        - see gems_required
+1. Install ruby1.9.3
+
+**Please note**:
+- MySQL's gem does not currently work with Ruby2.0.3
+
+    1. Gems to install:
+        - see the [required gems](doc/gems_required)
 
 2. Install MySQL
     1. Create github_data database (store retrieved github data). 
@@ -55,3 +51,37 @@ Setting up to run the project:
 
 5. Viewing results
     1. The results can be hosting a local website. Once results are parsed (or in the process of being parsed) they will show on the website.
+
+6. Experimental Metric calculations
+
+    1. Add the project to eclipse (To be automated)
+
+    2. Adjust the [build.xml](ant_build/build.xml) so that the values fit the target project (to be automated). For example, if the target project's name is GitHubMining the resulting xml file would be:
+
+    ```
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project name="GitHubMining" default="build" basedir=".">
+        <target name="init">
+           <tstamp/>
+        </target>
+
+        <target name="build" depends="init">
+          <eclipse.refreshLocal resource="GitHubMining" depth="infinite"/>
+          <metrics.enable projectName="GitHubMining"/>
+          <eclipse.build 
+            ProjectName="GitHubMining" 
+            BuildType="full" 
+            errorOut="errors.xml" 
+            errorFormat="xml" 
+            failOnError="true"/>
+          <metrics.export 
+            projectName="GitHubMining"
+            file="metrics-${DSTAMP}-${TSTAMP}.xml"/>
+        </target>
+
+    </project>
+    ```
+
+    3. Adjust the variables in metric_compiler to own setup (ECLIPSE_LOCATION, WORKSPACE, BUILD_FILE_LOCATION)
+
+    4. Run [metric_compiler](ant_build/metric_compiler)
