@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="CrashReport" default="build" basedir=".">
+<project name="<project_name>" default="build" basedir=".">
 	<target name="init">
 	   <tstamp/>
 	</target>
 
 	<target name="build" depends="init">
-	  <eclipse.refreshLocal resource="CrashReport" depth="infinite"/>
-	  <metrics.enable projectName="CrashReport"/>
-	  <eclipse.build 
-	  	ProjectName="CrashReport" 
+	  <eclipse.refreshLocal resource="<project_name>" depth="infinite"/>
+	  <metrics.enable projectName="<project_name>"/>
+	  <!--<eclipse.build 
+	  	ProjectName="<project_name>" 
 	  	BuildType="full" 
 	  	errorOut="errors.xml" 
 	  	errorFormat="xml" 
-	  	failOnError="true"/>
+	  	failOnError="true"/> -->
 	  <metrics.export 
-	  	projectName="CrashReport"
-	  	file="metrics-${DSTAMP}-${TSTAMP}.xml"/>
+	  	projectName="<project_name>"
+	  	file="metrics.xml"/>
 	</target>
 
 </project>

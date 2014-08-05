@@ -1,24 +1,136 @@
 #!/bin/bash
-VMARGS=-Xmx256m
+
 HOME_DIR=~
-ECLIPSE_LOCATION=${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/eclipse
-WORKSPACE=${HOME_DIR}/workspace
-BUILD_FILE_LOCATION=${HOME_DIR}/source_code/acra/build.xml
 
+# Eclipse variables
+#VMARGS=-Xmx256m
+ECLIPSE_LOCATION=${HOME_DIR}/eclipse/eclipse
+WORKSPACE=${HOME_DIR}/workspace_luna
 
-#java ${VMARGS} -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file build.xml
+MAVEN_ID=pom.xml
+ECPLISE_ID=.project
 
-#java ${VMARGS} -launcher ${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/eclipse -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file build.xml
+SCRIPT_LOCATION=${HOME_DIR}/source_code/GitHubMining/ant_build
+PROJECT_REG_FILE=register
+IMPORT_ISSUES=import_issues
+
+# Metrics variables
+BUILD_FILE=build.xml
+TEMPLATE_BUILD_FILE_LOCATION=${SCRIPT_LOCATION}/${BUILD_FILE}
+XML_NAME=metrics.xml
+
+# XML to CSV converter variables
+XML_CONVERTER_PROGRAM=${HOME_DIR}/source_code/eclipse_metrics_xml_reader/src/eclipse_metrics_xml_reader.py
+OUTPUT_FORMAT=csv
+
+# Initial directory
+START_DIR=$PWD
+
+# Root location of the project. Provided by user
+PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
+
+function maven_setup {
+    local project_dir=$1
+
+    mvn -Declipse.workspace="${WORKSPACE}" eclipse:configure-workspace
+
+    cd ${project_dir}
+
+    mvn eclipse:eclipse
+
+    cd ${START_DIR}
+}
+
+function import_project {
+    
+    ${ECLIPSE_LOCATION} -console -noSplash -data ${WORKSPACE} -import ${PROJECT_HOME_FOLDER} -exit_on_finish
+}
+
+# Create the build file for the project
+function create_build_file {
+    # $1 => project location
+    # $2 => project name
+    local project_location=$1
+    local project_name=`basename ${project_location}`
+
+    # Replace project_name with the actual project name
+    sed "s/<project_name>/${project_name}/" ${TEMPLATE_BUILD_FILE_LOCATION} > ${project_location}/${BUILD_FILE}
+}
+
+function calc_metrics {
+    # $1 => location of the project
+    local project_location=$1
+
+    # Launch eclipse without a ui and run the metrics plug in on it.
+    ${ECLIPSE_LOCATION} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${project_location}/${BUILD_FILE}
+}
+
+function convert_xml_to_csv {
+    # $1 => location of the project
+    local project_location=$1
+
+    # Convert the xml to csv
+    python2 ${XML_CONVERTER_PROGRAM} -i ${project_location}/${XML_NAME} -t ${OUTPUT_FORMAT}
+}
 
 #xvfb-run
 
-#java -Xms128M -Xmx368M -XX:MaxPermSize=256M org.eclipse.core.launcher.Main -DPLUGIN_PATH= -classpath "${HOME_DIR}/adt-bundle-linux-x86_64-20140702/eclipse/plugins/net.sourceforge.metrics_1.3.6/metrics.jar" -data ${WORKSPACE} -file ~/source_code/GitHubMining/ant_build/build.xml
+readarray PROJECTS < <(find ${PROJECT_HOME_FOLDER} -name ${MAVEN_ID} -o -name ${ECPLISE_ID})
 
-#export LD_LIBRARY_PATH="/usr/lib/jvm/jdk1.7.0/jre/lib/amd64"
+if [[ ${#PROJECTS[@]} -eq 0 ]]; then
+    echo "No project found"
+else
+    for item in "${PROJECTS[@]}"
+    do
+        # Get the path from the absolute file path
+        dir=${item%/*}
 
-#./eclipse -console -noSplash -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ~/source_code/GitHubMining/ant_build/build.xml
+        if [[ ${item} == *${MAVEN_ID}* ]]; then
+            echo "Setting up the project using Maven"
 
-#./eclipse -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${HOME_DIR}/source_code/acra/build.xml
+            # Set up the eclipse env. using maven
+            maven_setup ${dir}
+        fi
+    done
 
-# Launch eclipse without a ui and run the metrics plug in on it.
-${ECLIPSE_LOCATION} ${VMARGS} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${BUILD_FILE_LOCATION}
+    rm ${SCRIPT_LOCATION}/${PROJECT_REG_FILE}
+
+    # Ensure the register file is alreay created
+    touch ${SCRIPT_LOCATION}/${PROJECT_REG_FILE}
+
+    echo "Importing all projects to Eclipse"
+    import_project > ${SCRIPT_LOCATION}/${IMPORT_ISSUES}
+
+    for item in "${PROJECTS[@]}"
+    do
+        
+        # Get the path from the absolute file path
+        dir=${item%/*}
+        project_name=`basename ${dir}`
+        
+        # Ensure the project successfully imported
+        if grep -q "${project_name} SUCCESS" ${SCRIPT_LOCATION}/${IMPORT_ISSUES}; then
+
+            # Check if the project has already had it's metrics calculated
+            if grep -q ${dir} ${SCRIPT_LOCATION}/${PROJECT_REG_FILE}; then
+                # Project's metrics have been calculated.
+                echo "Project Found at "${dir}" Twice!"
+            else
+                
+                # Project has not already had it's metrics calculated ensure it wont be calculated a second time
+                echo ${dir} | tee -a ${SCRIPT_LOCATION}/${PROJECT_REG_FILE}
+
+                create_build_file ${dir}
+
+                calc_metrics ${dir}
+                
+                convert_xml_to_csv ${dir}
+            fi
+        fi
+
+    done
+fi
+
+# Delete the temporary files
+rm ${SCRIPT_LOCATION}/${PROJECT_REG_FILE}
+rm ${SCRIPT_LOCATION}/${IMPORT_ISSUES}
