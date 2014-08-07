@@ -4,7 +4,7 @@ HIGH_THRESHOLD=0.5
 LOW_THRESHOLD=0.8
 SIZE_THRESHOLD=20
 MUL=true
-TEST=true
+TEST=false
 
 if [ $# -lt 2 ]; then
 	echo "Missing 2 Arguements" $# "providied"	 

@@ -12,7 +12,7 @@ require_relative '../progress/progress'
 # - Files that could not be retreived (404/403 etc)
 # - Files that are renamed (path is adjusted)
 
-APP_TITLE = "Project Analizer"
+project_title = "Project Analizer"
 
 # Command line arguements
 repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, true
@@ -41,8 +41,13 @@ else
 	abort("Invalid parameters")
 end
 
+# Output that a test is underway.
+if $test
+    project_title = "#{project_title}\nTesting YES"
+end
+
 # Create the progress bar for the process
-progress_indicator = Progress.new(APP_TITLE)
+progress_indicator = Progress.new(project_title)
 
 # Set the output file to the given parameter
 $stdout.reopen(outputFile, "a")
