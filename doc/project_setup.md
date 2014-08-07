@@ -30,58 +30,50 @@ Setting up to run the project
     - Depending on the size of the repository this script may take a significant amount of time to complete.
 
     1. Choose the repository that you wish to parse from github: eg.
-        aptana/Pydev
-    2. Run the scraper script with the owner and the repository as arguments from the 'src' folder, eg:
-        bash scraper aptana Pydev
+
+            aptana/Pydev
+
+    2. Run the scraper script with the owner and the repository as arguments from the `src/scraper/` folder, eg:
+
+            bash scraper aptana Pydev
+
     3. Enter your github username when prompted for a username followed by your github password. The credentials are required to increase the rate limit of github api requests (from 100 per hour to 5000 per hour).
+
     4. Wait until the scraping script identifies it finished successfully.
+        - *Note* the progress measure is not in time! The progress bar measures is in files completed. The time it takes to complete 1 file can vary based on the size of the file and the complexity of the patches applied to the files.
 
 4. Parsing the data
     - Depending on the size of the repository this script may take a significant amount of time to complete.
 
-    1. Open parser script (in src/) and change 'REPO_OWNER' and 'REPO_NAME' to their the desired values. Eg:
-        REPO_OWNER=aptana
-        REPO_NAME=Pydev
-    2. (OPTIONAL) If you want to test that the parsing script will work before writing information to the database. Change the 'TEST' variable to 'true'. Please note this will generate a log file which can be fairly large (located in parse_log/). Otherwise set 'TEST' to false to write to the database.
-        TEST=true
-    3. Run the parser script:
-        bash parser
-    4. Wait until the progress bar fills completed or the percent complete reaches 100%.
-        - Note the progress measure is not in time! It is in files completed, the time it takes to complete 1 file can vary based on the size of the file and the complexity of the patches applied to the files.
+    1. Run the parsing script (in `src/parser/`) with the desired repository as arguments. Eg.
 
-5. Viewing results
-    1. The results can be hosting a local website. Once results are parsed (or in the process of being parsed) they will show on the website.
+            bash parser aptana Pydev
 
-6. Experimental Metric calculations
+    2. (OPTIONAL) If you want to test that the parsing script will work before writing information to the database. Pass a third argument as true. Eg.
 
-    1. Add the project to eclipse (To be automated)
+            bash parser aptana Pydev true
 
-    2. Adjust the [build.xml](ant_build/build.xml) so that the values fit the target project (to be automated). For example, if the target project's name is GitHubMining the resulting xml file would be:
+    3. Wait until the progress bar fills completed or the percent complete reaches 100%.
+        - *Note* the progress measure is not in time! The progress bar measures is in files completed. The time it takes to complete 1 file can vary based on the size of the file and the complexity of the patches applied to the files.
 
-    ```
-    <?xml version="1.0" encoding="UTF-8"?>
-    <project name="GitHubMining" default="build" basedir=".">
-        <target name="init">
-           <tstamp/>
-        </target>
+## Viewing the Results
 
-        <target name="build" depends="init">
-          <eclipse.refreshLocal resource="GitHubMining" depth="infinite"/>
-          <metrics.enable projectName="GitHubMining"/>
-          <eclipse.build 
-            ProjectName="GitHubMining" 
-            BuildType="full" 
-            errorOut="errors.xml" 
-            errorFormat="xml" 
-            failOnError="true"/>
-          <metrics.export 
-            projectName="GitHubMining"
-            file="metrics-${DSTAMP}-${TSTAMP}.xml"/>
-        </target>
+1. The results can be viewed on a locally hosted website. Once results are parsed (or in the process of being parsed) they will show on the website. All that is required is either a virtual link to the project folder or placing the project folder in `/var/www/html/`.
 
-    </project>
-    ```
+2. Currently a **Add New** feature is available on the website but should **not** be left available since it can easily be abused. Also, despite the Add New site parsing the targeted GitHub project it will not alert the user who requested it.
 
-    3. Adjust the variables in metric_compiler to own setup (ECLIPSE_LOCATION, WORKSPACE, BUILD_FILE_LOCATION)
+## Experimental Metric calculations
 
-    4. Run [metric_compiler](ant_build/metric_compiler)
+1. Adjust the variables in [metric_compiler](src/metrics_calc/metric_compiler) to own setup (*note* all paths must be absolute):
+
+    * **ECLIPSE_LOCATION**: Location of eclipse binary file.
+    * **WORKSPACE**: Location of eclipse workspace.
+    * **TEMPLATE_BUILD_FILE_LOCATION**: Location of the template [build file](ant_build/build.xml).
+    * **SCRIPT_WORK_DIR**: The directory the script is working in (temporary files will be created and later removed from this folder).
+    * **XML_CONVERTER_PROGRAM**: The path to the eclipse metrics xml reader.
+    * **PROJECT_HOME_FOLDER**: The path to the target project's root folder.
+    * **OUTPUT_FOLDER**: The output folder where the output csv files will be moved to once the script is finished.
+
+2. Run [metric_compiler](src/metrics_calc/metric_compiler)
+
+        bash metrics_compiler
