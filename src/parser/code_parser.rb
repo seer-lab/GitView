@@ -1,6 +1,8 @@
 require_relative 'method_finder'
 require_relative 'method_statement_counter'
 require_relative 'method_types'
+require_relative 'match_lines'
+require_relative 'manage_special_code'
 
 
 class LineCounter
@@ -160,7 +162,7 @@ class CodeParser
         commentLookingForChild = false
 
         #TODO make class attribute
-        quoteManager = ManageQuotes.new
+        quoteManager = ManageSpecialCode.new
         method_finder = MethodFinder.new(lines)
 
         #linesModified = Array.new

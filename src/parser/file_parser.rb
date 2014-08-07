@@ -1,12 +1,12 @@
-require_relative 'database_interface'
-require_relative 'regex'
-require_relative 'stats_db_interface'
-require_relative 'matchLines'
-require_relative 'manage_quotes'
+require_relative '../database/database_interface'
+require_relative '../regex'
+require_relative '../database/stats_db_interface'
+#require_relative 'match_lines'
+#require_relative 'manage_quotes'
 
 require_relative 'code_parser'
 require_relative 'merger'
-require_relative 'progress'
+require_relative '../progress/progress'
 
 # Possible reasons for negative files
 # - Files that could not be retreived (404/403 etc)

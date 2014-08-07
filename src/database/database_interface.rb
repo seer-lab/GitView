@@ -1,7 +1,7 @@
 require 'mysql'
 
 module Github_database
-    require_relative 'utility'
+    require_relative 'database_utility'
 
     DATABASE = 'github_data'
     HOST = 'localhost'
@@ -89,7 +89,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{REPO}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
 
@@ -105,7 +105,7 @@ module Github_database
         result = pick.fetch
 
         #There should be only 1 id return anyways.
-        return Utility.toInteger(result)
+        return DatabaseUtility.toInteger(result)
     end 
 
     # Get the repository's id stored in the database with the given name
@@ -132,7 +132,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{REPO} (#{REPO_NAME}, #{REPO_OWNER}) VALUES (?, ?)")
         pick.execute(repo, owner)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Update the repository in the database
@@ -151,7 +151,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{USERS}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Get all the users stored in the database
@@ -178,7 +178,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{USERS} (#{NAME}, #{DATE}) VALUES (?, ?)")
         pick.execute(user.name, user.date)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Get all the commits stored in the database
@@ -188,7 +188,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{COMMITS}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Insert the given commits to the database
@@ -208,7 +208,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMITER_REFERENCE}, #{AUTHOR_REFERENCE}, #{BODY}, #{SHA}) VALUES (?, ?, ?, ?, ?)")
         pick.execute(repo_id, commiter_id, author_id, commit.body, commit.sha)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Insert the given commits to the database, with the ids already given.
@@ -224,7 +224,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMITER_REFERENCE}, #{AUTHOR_REFERENCE}, #{BODY}, #{SHA}) VALUES (?, ?, ?, ?, ?)")
         pick.execute(commit.repo, commit.commiter, commit.author, commit.body, commit.sha)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Get the most recent commit's sha hash from the database. 
@@ -236,7 +236,7 @@ module Github_database
 
         pick.execute(repo_id)
 
-        return Utility.toValue(pick.fetch)
+        return DatabaseUtility.toValue(pick.fetch)
     end
 
     # Get the commit id If the commit is not found it will be added to the db
@@ -253,7 +253,7 @@ module Github_database
 
         pick.execute(sha)
 
-        return Utility.toInteger(pick.fetch)
+        return DatabaseUtility.toInteger(pick.fetch)
     end
 
     # Insert the given commits to the database
@@ -269,7 +269,7 @@ module Github_database
 
         pick.execute(child_commit, parent_commit)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Get all the parents of a given child commit
@@ -281,7 +281,7 @@ module Github_database
 
         pick.execute(child_id)
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Insert the file into the database
@@ -294,7 +294,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
         pick.execute(commit_id, file.name, file.addition, file.deletion, file.patch, file.file)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Insert the file into the database with the commit id already provided
@@ -305,7 +305,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
         pick.execute(file.commit, file.name, file.addition, file.deletion, file.patch, file.file)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
 
@@ -318,7 +318,7 @@ module Github_database
         pick = con.prepare("SELECT * FROM #{FILE} WHERE #{COMMIT_REFERENCE} = ?")
         pick.execute(commit_id)
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     def Github_database.getFileForParsing(con, extension, repo_name, repo_owner, sha_hash)
@@ -336,7 +336,7 @@ module Github_database
             pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}")
         end
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Insert the given tag into the database
@@ -347,7 +347,7 @@ module Github_database
         pick = con.prepare("INSERT INTO #{TAGS} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA}) VALUES (?, ?, ?, ?, ?, ?)")
         pick.execute(tag.repo_id, tag.sha, tag.tag_name, tag.tag_description, tag.tag_date, tag.commit_sha)
      
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
 
@@ -357,7 +357,7 @@ module Github_database
 
         pick = con.prepare("SELECT #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA} FROM #{TAGS}")
         
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Get the most recent tag's sha hash from the database. 
@@ -368,7 +368,7 @@ module Github_database
 
         pick.execute(repo_id)
 
-        return Utility.toValue(pick.fetch)
+        return DatabaseUtility.toValue(pick.fetch)
     end
 
     def Github_database.setFileTypes(con, repo_name, repo_owner)
@@ -400,14 +400,14 @@ module Github_database
 
         pick.execute(repo_name, repo_owner)
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     def Github_database.getTags(con, repo_name, repo_owner)
         pick = con.prepare("SELECT t.#{TAG_SHA}, t.#{TAG_NAME}, t.#{TAG_DESC}, t.#{TAG_DATE} FROM #{REPO} AS r INNER JOIN #{TAG} AS t ON r.#{REPO_ID} = t.#{REPO_REFERENCE} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ?")
         pick.execute(repo_name, repo_owner)
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     def Github_database.getNewestTags(con, repo_name, repo_owner, date)
@@ -425,7 +425,25 @@ module Github_database
             pick.execute(repo_owner, repo_name)
         end
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
+    end
+
+    def Github_database.getCommitsByDate(con, repo_name, repo_owner, date=nil)
+
+        stmt = ""
+        if date
+            stmt = "AND t.#{TAG_DATE} > ?"
+        end
+
+        pick = con.prepare("SELECT f.#{NAME}, f.#{FILE}, c.#{SHA}, u.#{DATE} FROM #{REPO} as r INNER JOIN #{COMMITS} as c ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} as u ON u.#{USER_ID} = c.#{COMMITER_REFERENCE} INNER JOIN #{FILE} as f ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} WHERE r.#{REPO_OWNER} LIKE ? AND r.#{REPO_NAME} = ? #{stmt} ORDER BY u.#{DATE} DESC")
+
+        if date
+            pick.execute(repo_owner, repo_name, date)
+        else
+            pick.execute(repo_owner, repo_name)
+        end
+
+        return DatabaseUtility.fetch_associated(pick)
     end
 end
 

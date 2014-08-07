@@ -4,12 +4,17 @@ testlog
 stats_output
 acra_analysis
 
+# Ignore temporary files
+ant_build/register
+ant_build/import_issues
+
+
 # Ignore back up files
 *~
 *.back
 
 # Ignore database backups
-database
+database/*.sql
 
 # Ignore project files
 .project
@@ -21,7 +26,15 @@ database
 
 *.png
 
+
 doc/poster/
+
+
+# Ignore db backups
+db_backup/
+
+# Ignore generated file
+ant_build/errors.xml
 
 # Ignore js libraries
 js/lib

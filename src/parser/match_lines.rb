@@ -3,6 +3,8 @@ require_relative 'levenshtein'
 $removeWhiteSpaces = false
 
 # HIGH_THRESHOLD of 50%
+
+# TODO make set able (from file_parser)
 $HIGH_THRESHOLD = 0.5
 $LOW_THRESHOLD = 0.8
 $SIZE_TRESHOLD = 20

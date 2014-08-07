@@ -1,8 +1,8 @@
-module Utility
+module DatabaseUtility
 
     # Checks if the parameter is an array and returns the first element if so
     # otherwise returns the given element
-    def Utility.toInteger(array)
+    def DatabaseUtility.toInteger(array)
         if array.class.name == Array.to_s
             return array[0]
         else
@@ -11,12 +11,12 @@ module Utility
     end
 
     # Same as calling toInteger (see toInteger)
-    def Utility.toValue(array)
-        return Utility.toInteger(array)
+    def DatabaseUtility.toValue(array)
+        return DatabaseUtility.toInteger(array)
     end
 
     # Assign the results from the database into a simple array
-    def Utility.fetch_results(query_object)
+    def DatabaseUtility.fetch_results(query_object)
         rows = query_object.num_rows
         results = Array.new(rows)
 
@@ -28,7 +28,7 @@ module Utility
     end
 
     # Assign the results from the database into an array of associated hashes
-    def Utility.fetch_associated(query_object)
+    def DatabaseUtility.fetch_associated(query_object)
         associated_fields = query_object.result_metadata.fetch_fields
         results = Array.new
 

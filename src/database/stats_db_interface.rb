@@ -1,8 +1,7 @@
 require 'mysql'
 
 module Stats_db
-    require_relative 'utility'
-    require_relative 'method_statement_counter'
+    require_relative 'database_utility'
 
     $DATABASE = 'project_stats'
     HOST = 'localhost'
@@ -131,7 +130,7 @@ module Stats_db
         result = pick.fetch
 
         #There should be only 1 id return anyways.
-        return Utility.toInteger(result)
+        return DatabaseUtility.toInteger(result)
     end 
 
     # Get the repository's id stored in the database with the given name
@@ -148,7 +147,7 @@ module Stats_db
             result = insertRepo(con, name, owner)
         end
         #There should be only 1 id return anyways.
-        return Utility.toInteger(result)
+        return DatabaseUtility.toInteger(result)
     end
 
 
@@ -156,7 +155,7 @@ module Stats_db
         pick = con.prepare("SELECT #{REPO_ID}, #{REPO_NAME}, #{REPO_OWNER} FROM #{REPO}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Insert the given repository to the database
@@ -166,7 +165,7 @@ module Stats_db
         pick = con.prepare("INSERT INTO #{REPO} (#{REPO_NAME}, #{REPO_OWNER}) VALUES (?, ?)")
         pick.execute(repo, owner)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Get all the commits stored in the database
@@ -176,7 +175,7 @@ module Stats_db
         pick = con.prepare("SELECT * FROM #{COMMITS}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     # Get the most recent commit's sha hash from the database. 
@@ -188,7 +187,7 @@ module Stats_db
 
         pick.execute(repo_id)
 
-        return Utility.toValue(pick.fetch)
+        return DatabaseUtility.toValue(pick.fetch)
     end
 
     # Insert the given commits to the database
@@ -203,7 +202,7 @@ module Stats_db
         pick = con.prepare("INSERT INTO #{COMMITS} (#{REPO_REFERENCE}, #{COMMIT_DATE}, #{SHA}, #{BODY}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{TOTAL_ADDED_COMMENTS}, #{TOTAL_DELETED_COMMENTS}, #{TOTAL_MODIFIED_COMMENT}, #{TOTAL_ADDED_CODE}, #{TOTAL_DELETED_CODE}, #{TOTAL_MODIFIED_CODE}, #{COMMITTER_ID}, #{AUTHOR_ID}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         pick.execute(repo_id, date, sha, body, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, committer_id, author_id)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     # Update the given commits to the database
@@ -219,14 +218,14 @@ module Stats_db
         pick.execute(total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified, commit_id)
 
         nil
-        #return Utility.toInteger(commit_id)
+        #return DatabaseUtility.toInteger(commit_id)
     end
 
     def Stats_db.getFiles(con)
         pick = con.prepare("SELECT * FROM #{FILE}")
         pick.execute
 
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     def Stats_db.insertFile(con, commit_id, path, name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
@@ -234,7 +233,7 @@ module Stats_db
         pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{MODIFIED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}, #{MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         pick.execute(commit_id, path, name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     def Stats_db.insertUser(con, name)
@@ -242,7 +241,7 @@ module Stats_db
 
         pick.execute(name)
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     def Stats_db.getUserId(con, name)
@@ -255,7 +254,7 @@ module Stats_db
             result = insertUser(con, name)
         end
 
-        return Utility.toInteger(result)
+        return DatabaseUtility.toInteger(result)
 
     end
 
@@ -263,7 +262,7 @@ module Stats_db
         pick = con.prepare("INSERT INTO #{TAG} (#{REPO_REFERENCE}, #{TAG_SHA}, #{TAG_NAME}, #{TAG_DESC}, #{TAG_DATE}, #{COMMIT_SHA}) VALUES (?, ?, ?, ?, ?, ?)")
         pick.execute(repo_id, sha, name, description, date, commit_sha)
      
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     def Stats_db.getLastTag(con, repo_id)
@@ -271,7 +270,7 @@ module Stats_db
 
         pick.execute(repo_id)
 
-        return Utility.toValue(pick.fetch)
+        return DatabaseUtility.toValue(pick.fetch)
     end
 
     # Get the commit totals stored in the database
@@ -280,7 +279,7 @@ module Stats_db
         pick = con.prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY c.commit_date")
         pick.execute(repo, user)
     
-        return Utility.fetch_results(pick)
+        return DatabaseUtility.fetch_results(pick)
     end
 
     def Stats_db.insertMethod(con, file_id, method_counter)
@@ -288,7 +287,7 @@ module Stats_db
 
         pick.execute(file_id, method_counter['+'], method_counter['-'], method_counter['~'])
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     def Stats_db.insertMethodStatement(con, file_id, statement_counter)
@@ -296,7 +295,7 @@ module Stats_db
 
         pick.execute(file_id, statement_counter.new_method['code'], statement_counter.new_method['comment'], statement_counter.deleted_method['code'], statement_counter.deleted_method['comment'], statement_counter.modified_method['code_added'], statement_counter.modified_method['comment_added'], statement_counter.modified_method['code_deleted'], statement_counter.modified_method['comment_deleted'])
 
-        return Utility.toInteger(pick.insert_id)
+        return DatabaseUtility.toInteger(pick.insert_id)
     end
 
     def Stats_db.getFileCommitPercent(con, repo_owner, repo_name)
@@ -311,7 +310,7 @@ module Stats_db
 
         pick.execute(repo_name, repo_owner, repo_name, repo_owner)
 
-        return Utility.fetch_associated(pick)
+        return DatabaseUtility.fetch_associated(pick)
     end
 
     def Stats_db.getCommitMessages(con, repo_owner, repo_name)
@@ -320,7 +319,7 @@ module Stats_db
 
         pick.execute(repo_name, repo_owner)
 
-        return Utility.fetch_associated(pick)
+        return DatabaseUtility.fetch_associated(pick)
     end
 
     def Stats_db.getAllRepoMonthAverage(con)
@@ -329,7 +328,7 @@ module Stats_db
 
         pick.execute
 
-        return Utility.fetch_associated(pick)
+        return DatabaseUtility.fetch_associated(pick)
     end    
 
     def Stats_db.getImportantFilesByMethod(con, repo_owner, repo_name, avg_new_methods, avg_deleted_methods, avg_modified_methods)
@@ -340,6 +339,6 @@ module Stats_db
 
         pick.execute(repo_name, repo_owner, avg_new_methods, avg_deleted_methods, avg_modified_methods)
 
-        return Utility.fetch_associated(pick)
+        return DatabaseUtility.fetch_associated(pick)
     end
 end

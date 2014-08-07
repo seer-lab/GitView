@@ -1,5 +1,5 @@
 
-class ManageQuotes
+class ManageSpecialCode
     attr_accessor :commentOpen
 
     def initialize
@@ -104,7 +104,7 @@ end
 
 # TODO move to test case
 =begin
-mq = ManageQuotes.new
+mq = ManageSpecialCode.new
 first_line = "System.out.println(\"reserve characters are: ; { class public \\n // /*\");"
 second_line = "System.out.println(\"Cleaned ; /* comment? */"
 third_line = "finished // everything \" + value);"

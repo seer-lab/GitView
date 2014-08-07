@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# The repo to be scraped and then parsed.
-
-TEST=false
+HIGH_THRESHOLD=0.5
+LOW_THRESHOLD=0.8
+SIZE_THRESHOLD=20
+MUL=true
+TEST=true
 
 if [ $# -lt 2 ]; then
 	echo "Missing 2 Arguements" $# "providied"	 
@@ -19,13 +21,8 @@ elif [ $# -eq 3 ]; then
 	REPO_NAME=$2
 fi
 
-HIGH_THRESHOLD=0.5
-LOW_THRESHOLD=0.8
-SIZE_THRESHOLD=20
-MUL=true
-
 # The directory where the log files will go
-LOGDIR=../parse_log/S${SIZE_THRESHOLD}\_L${LOW_THRESHOLD}\_H${HIGH_THRESHOLD}\_M${MUL}/
+LOGDIR=../../parse_log/S${SIZE_THRESHOLD}\_L${LOW_THRESHOLD}\_H${HIGH_THRESHOLD}\_M${MUL}/
 
 # The file that the log will be saved to. Format: O_R_t.t_mmddyyyy_HHMM
 # O = Repo Owner, R = Repo name, t.t = high_threshold value (in decimal)

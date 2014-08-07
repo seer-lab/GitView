@@ -1,5 +1,5 @@
-require_relative 'manage_quotes'
-require_relative 'regex'
+require_relative 'manage_special_code'
+require_relative '../regex'
 require_relative 'method_types'
 
 class MethodFinder
@@ -18,7 +18,7 @@ class MethodFinder
         @delta = 0
         @just_run = false
         @lines = lines
-        @mq = ManageQuotes.new
+        @mq = ManageSpecialCode.new
         @deleted_statement = DELETED_DEFAULT
         @actual_start = 0
         @comment_start = COMMENT_DEFAULT
