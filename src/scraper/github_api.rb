@@ -4,10 +4,9 @@ require 'github_api'
 require 'nokogiri'
 require 'open-uri'
 require 'socket'    # Required to catch socket error
-require_relative 'database_interface'
-require_relative 'utility'
-require_relative 'regex'
-require_relative 'progress'
+require_relative '../database/database_interface'
+require_relative '../regex'
+require_relative '../progress/progress'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -249,7 +248,7 @@ def getAllCommits(con, github, username, repo_name)
         commits = allCommits.body
 
         # Get the repo's database Id
-        repo_id = Utility.toInteger(Github_database.getRepoId(con, repo_name, username))
+        repo_id = Github_database.getRepoId(con, repo_name, username)
     end
 
     if commits
@@ -277,7 +276,7 @@ def getAllCommits(con, github, username, repo_name)
             end
             author_date = commit["commit"]["author"]["date"]
 
-            author_id = Utility.toInteger(Github_database.getUserId(con, User.new(author_name, author_date)))
+            author_id = Github_database.getUserId(con, User.new(author_name, author_date))
 
             
             #puts "author_id = #{author_id}"
@@ -294,7 +293,7 @@ def getAllCommits(con, github, username, repo_name)
 
             commiter_date = commit["commit"]["committer"]["date"]
 
-            commiter_id = Utility.toInteger(Github_database.getUserId(con, User.new(commiter_name, commiter_date)))
+            commiter_id = Github_database.getUserId(con, User.new(commiter_name, commiter_date))
 
             #puts "commiter_id = #{commiter_id}"
 
@@ -304,7 +303,7 @@ def getAllCommits(con, github, username, repo_name)
             # Insert the commits into the database.
 
             # Get the insert id
-            commit_id = Utility.toInteger(Github_database.insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha)))
+            commit_id = Github_database.insertCommitsIds(con, Commit.new(repo_id, commiter_id, author_id, message, sha))
         
             #parentHash = Array.new
             # Insert the parents

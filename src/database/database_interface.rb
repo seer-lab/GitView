@@ -122,7 +122,7 @@ module Github_database
             result = insertRepo(con, name, owner)
         end
         #There should be only 1 id return anyways.
-        return result
+        return DatabaseUtility.toInteger(result)
     end    
 
     # Insert the given repository to the database
@@ -168,7 +168,7 @@ module Github_database
             result = insertUser(con, user)
         end
 
-        return result
+        return DatabaseUtility.toInteger(result)
     end
 
     # Insert the given user to the database
