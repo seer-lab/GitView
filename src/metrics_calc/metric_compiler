@@ -1,0 +1,174 @@
+#!/bin/bash
+
+HOME_DIR=~
+
+# Eclipse variables
+#VMARGS=-Xmx256m
+ECLIPSE_LOCATION=${HOME_DIR}/eclipse/eclipse
+WORKSPACE=${HOME_DIR}/workspace_luna
+
+MAVEN_ID=pom.xml
+ECPLISE_ID=.project
+
+SCRIPT_WORK_DIR=${HOME_DIR}/source_code/GitHubMining/ant_build
+PROJECT_REG_FILE=register
+IMPORT_ISSUES=import_issues
+
+# Metrics variables
+BUILD_FILE=build.xml
+TEMPLATE_BUILD_FILE_LOCATION=${SCRIPT_WORK_DIR}/${BUILD_FILE}
+XML_NAME=metrics.xml
+
+# XML to CSV converter variables
+XML_CONVERTER_PROGRAM=${HOME_DIR}/source_code/eclipse_metrics_xml_reader/src/eclipse_metrics_xml_reader.py
+OUTPUT_FORMAT=csv
+
+# Initial directory
+START_DIR=$PWD
+
+# Root location of the project. Provided by user
+PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
+OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
+VERSION_NUMBER=1
+
+function maven_setup {
+    local project_dir=$1
+
+    mvn -Declipse.workspace="${WORKSPACE}" eclipse:configure-workspace
+
+    cd ${project_dir}
+
+    mvn eclipse:eclipse
+
+    cd ${START_DIR}
+}
+
+function import_project {
+    
+    # use xvfb-run to run on gui-less server
+    ${ECLIPSE_LOCATION} -console -noSplash -data ${WORKSPACE} -import ${PROJECT_HOME_FOLDER} -exit_on_finish
+}
+
+# Create the build file for the project
+function create_build_file {
+    # $1 => project location
+    # $2 => project name
+    local project_location=$1
+    local project_name=`basename ${project_location}`
+
+    # Replace project_name with the actual project name
+    sed "s/<project_name>/${project_name}/" ${TEMPLATE_BUILD_FILE_LOCATION} > ${project_location}/${BUILD_FILE}
+}
+
+function calc_metrics {
+    # $1 => location of the project
+    local project_location=$1
+
+    # use xvfb-run to run on gui-less server
+    # Launch eclipse without a ui and run the metrics plug in on it.
+    ${ECLIPSE_LOCATION} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${project_location}/${BUILD_FILE}
+}
+
+function convert_xml_to_csv {
+    # $1 => location of the project
+    local project_location=$1
+
+    # Convert the xml to csv
+    python2 ${XML_CONVERTER_PROGRAM} -i ${project_location}/${XML_NAME} -t ${OUTPUT_FORMAT}
+}
+
+function import_and_calc_metrics {
+
+    #$1 => project_version_number
+    local project_version_number=$1
+
+    readarray PROJECTS < <(find ${PROJECT_HOME_FOLDER} -name ${MAVEN_ID} -o -name ${ECPLISE_ID})
+
+    if [[ ${#PROJECTS[@]} -eq 0 ]]; then
+        echo "No project found"
+    else
+        for item in "${PROJECTS[@]}"
+        do
+            # Get the path from the absolute file path
+            dir=${item%/*}
+
+            if [[ ${item} == *${MAVEN_ID}* ]]; then
+                echo "Setting up the project using Maven"
+
+                # Set up the eclipse env. using maven
+                maven_setup ${dir}
+            fi
+        done
+
+        rm ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE} -f
+
+        # Ensure the register file is alreay created
+        touch ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE}
+
+        echo "Importing all projects to Eclipse"
+        import_project > ${SCRIPT_WORK_DIR}/${IMPORT_ISSUES}
+
+        # Format next line to move to next page
+        echo 
+
+        for item in "${PROJECTS[@]}"
+        do
+            
+            # Get the path from the absolute file path
+            dir=${item%/*}
+            project_name=`basename ${dir}`
+            
+            # Ensure the project successfully imported
+            if grep -q "${project_name} SUCCESS" ${SCRIPT_WORK_DIR}/${IMPORT_ISSUES}; then
+
+                # Check if the project has already had it's metrics calculated
+                if grep -q ${dir} ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE}; then
+                    # Project's metrics have been calculated.
+                    echo "Project Found at "${dir}" Twice!"
+                else
+                    
+                    # Project has not already had it's metrics calculated ensure it wont be calculated a second time
+                    echo ${dir} | tee -a ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE}
+
+                    create_build_file ${dir}
+
+                    calc_metrics ${dir}
+                    
+                    convert_xml_to_csv ${dir}
+
+                    # Move the generated files to the target output folder
+                    for x in ${dir}/metrics*.csv
+                    do
+                        name=`basename "${x}"`
+                        mv "${x}" ${OUTPUT_FOLDER}/${project_name}_${project_version_number}_${name}
+                    done
+                fi
+            fi
+        done
+    fi
+
+    # Delete the temporary files
+    rm ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE}
+    rm ${SCRIPT_WORK_DIR}/${IMPORT_ISSUES}
+}
+
+function remove_untracked {
+
+    #| grep \?\? 
+    for item in `git status --porcelain | tr -d '??'`
+    do
+        # Delete uncommitted files or directories
+        rm "${item}" -r
+    done
+}
+
+function reset_repo {
+
+    # Remove all tracked file changes
+    git checkout -f
+    remove_untracked
+}
+
+import_and_calc_metrics ${VERSION_NUMBER}
+
+reset_repo
