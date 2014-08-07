@@ -6,7 +6,7 @@ Mining GitHub projects to learn about open source software development communiti
 ## Prerequisites
 
 1. [Xubuntu](http://xubuntu.org/) or some similar Ubuntu variant
-2. [Ruby](https://www.ruby-lang.org/en/) version 2.0.3
+2. [Ruby](https://www.ruby-lang.org/en/) version 1.9.3
 3. [Apache2](https://httpd.apache.org/)
 4. [MySQL](https://www.mysql.com/) version 14.14, distribution 5.5.38
 5. [PHP](http://php.net/) version 5.5.9
@@ -21,7 +21,7 @@ Mining GitHub projects to learn about open source software development communiti
 5. [Eclipse metrics plugin](http://sourceforge.net/projects/eclipse-metrics/), version 1.3.6
 	- http://sourceforge.net/projects/metrics2/
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
-7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin) The project is very new, runs on startup and starts the GUI for eclipse.
+7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin)
 8. [Maven](https://maven.apache.org/) version 2.2.1
 9. [Python](https://www.python.org/) version 2.7.6, required by Eclipse Metrics XML reader
 
@@ -31,9 +31,9 @@ Please see the [project setup notes](doc/project_setup) for a more detailed expl
 
 ### Setup Ruby
 
-1. Install ruby2.0
+1. Install ruby1.9.3
 
-		sudo apt-get install ruby2.0
+		sudo apt-get install ruby1.9.3
 
 2. Install the required [Gems](doc/gems_required). An example would be:
 
@@ -73,7 +73,7 @@ In order to store the data you must use mysql
 
 4. Clone project into /var/www/html/ or set up virtual site.
 
-5. Go to page http://localhost/GitHubMining/index.php
+5. Go to page `http://localhost/GitHubMining/index.php`
 
 ## Collecting Data
 
@@ -96,7 +96,7 @@ This section outlines how to collect and then parse the data to show on the webs
 
 		bash parser ACRA acra false
 
-3. Proceed to http://localhost/GitHubMining/index.php which should now be displaying the newly parsed project. *Note* this can be done before the parser is finished since the changes will be visible on the site immediately.
+3. Proceed to `http://localhost/GitHubMining/index.php` which should now be displaying the newly parsed project. *Note* this can be done before the parser is finished since the changes will be visible on the site immediately.
 
 ## Current Work
 

@@ -530,23 +530,11 @@ def setFiles(con, github, commitUrl, commit_id)
         Github_database.insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
     }
 end
-=begin
-        if rate.checkRate(github) <= 0
-            puts "press enter to check the rate again"
-        end
-        while rate.checkRate(github) <= 0
-            puts "rate = #{rate.rate}"
-            gets.chomp
-        end
-=end
-
-#TODO add something that keeps track of all the file types in the program ()
 
 con = Github_database.createConnection()
 
 start_time = Time.now
 
-#java large
 getAllCommits(con, github, repo_owner, repo_name)
 
 finish_time = Time.now
