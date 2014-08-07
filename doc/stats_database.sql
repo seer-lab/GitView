@@ -103,6 +103,7 @@ CREATE TABLE tags
     CONSTRAINT fkey_tags_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+/*
 DROP TABLE method_statement;
 DROP TABLE method;
 DROP TABLE file;
@@ -110,14 +111,16 @@ DROP TABLE tags;
 DROP TABLE commits;
 DROP TABLE user;
 DROP TABLE repositories;
+*/
 
-
-
+/*
 INSERT INTO commits (repo_reference, commit_date, body, total_comments, total_code) VALUES (1, '09-06-2013', "fdsjafdsjokfj", 1, 2)
-
+*/
 /* 
  * Alter commands to fix databases that were created with the old schema.
  */
+/*
 ALTER TABLE commits ADD CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE file ADD CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
+*/

@@ -28,6 +28,8 @@ START_DIR=$PWD
 
 # Root location of the project. Provided by user
 PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
+OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
+VERSION_NUMBER=1
 
 function maven_setup {
     local project_dir=$1
@@ -125,6 +127,13 @@ else
                 calc_metrics ${dir}
                 
                 convert_xml_to_csv ${dir}
+
+
+                # Move the generated files to the targetoutput folder
+                for x in ${dir}/metrics*.csv
+                do
+                    mv "${dir}/$x" "${OUTPUT_FOLDER}/${project_name}_${VERSION_NUMBER}_$x"
+                done
             fi
         fi
 

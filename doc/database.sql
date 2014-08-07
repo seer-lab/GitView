@@ -7,9 +7,9 @@ CREATE DATABASE github_data;
 CREATE USER 'git_miner'@'localhost' IDENTIFIED BY 'pickaxe';
 
 #Postgresql
-CREATE USER git_miner WITH NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN ENCRYPTED PASSWORD 'pickaxe';
+#CREATE USER git_miner WITH NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN ENCRYPTED PASSWORD 'pickaxe';
 
-DROP ROLE git_miner
+#DROP ROLE git_miner
 
 GRANT ALL ON github_data.* to 'git_miner'@'localhost';
 
@@ -145,6 +145,7 @@ INSERT INTO file_types (type) VALUES ('java');
 /*
  * The commands for dropping the tables.
  */
+/*
 DROP TABLE file_types;
 DROP TABLE repo_file_types;
 DROP TABLE tags;
@@ -153,10 +154,12 @@ DROP TABLE parent_commits;
 DROP TABLE commits;
 DROP TABLE users;
 DROP TABLE repositories;
+*/
 
 /*
  * Use to update github_data tables that were created using old schema
  */ 
+/*
 ALTER TABLE commits ADD CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_commits_2 FOREIGN KEY (commiter_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_commits_3 FOREIGN KEY (author_reference) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE parent_commits ADD CONSTRAINT fkey_parent_1 FOREIGN KEY (children_id) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -166,3 +169,4 @@ ALTER TABLE file ADD CONSTRAINT fkey_file_1 FOREIGN KEY (commit_reference) REFER
 ALTER TABLE tags ADD CONSTRAINT fkey_tags_1 FOREIGN KEY (commit_reference) REFERENCES commits (commit_id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE repo_file_types ADD CONSTRAINT fkey_repo_file_1 FOREIGN KEY (repo_id) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE, ADD CONSTRAINT fkey_repo_file_2 FOREIGN KEY (file_type_id) REFERENCES file_types (type_id) ON DELETE CASCADE ON UPDATE CASCADE;
+*/

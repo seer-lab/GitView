@@ -1,6 +1,13 @@
 #!/bin/bash
 
-#LOCATION=/home/joseph/source_code/GitHubMining/
+# The repo to be scraped and then parsed.
+if [ $# -eq 2 ]; then
+	REPO_OWNER=$1
+	REPO_NAME=$2
+else
+	echo "Invalid Arguements got" $#", expecting 2"
+	exit 1
+fi
 
 # The directory where the log files will go
 LOGDIR=../testlog/
@@ -9,10 +16,6 @@ LOGFILE=test$(date +"%m%d%Y_%H%M")
 
 # Full path of the file
 FULLPATH=$LOGDIR$LOGFILE
-
-# The repo to be scraped and then parsed.
-REPO_OWNER=$1
-REPO_NAME=$2
 
 # The username used to login with for github api
 read -p "Username: " USERNAME

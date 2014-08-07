@@ -1,12 +1,27 @@
 #!/bin/bash
 
 # The repo to be scraped and then parsed.
-REPO_OWNER=jenkinsci
-REPO_NAME=jenkins
+
+TEST=false
+
+if [ $# -lt 2 ]; then
+	echo "Missing 2 Arguements" $# "providied"	 
+	exit 1
+elif [ $# -gt 3 ]; then
+	echo "To many Arguements got" $#", expecting 2 or 3"
+	exit 1
+elif [ $# -eq 2 ]; then
+	REPO_OWNER=$1
+	REPO_NAME=$2
+elif [ $# -eq 3 ]; then
+	TEST=$3
+	REPO_OWNER=$1
+	REPO_NAME=$2
+fi
+
 HIGH_THRESHOLD=0.5
 LOW_THRESHOLD=0.8
 SIZE_THRESHOLD=20
-TEST=false
 MUL=true
 
 # The directory where the log files will go
@@ -22,7 +37,7 @@ FULLPATH=${LOGDIR}${LOGFILE}
 # Make the directory if it doesnt already exist
 mkdir -p $LOGDIR
 
-(ruby file_parser.rb $REPO_OWNER $REPO_NAME $TEST $FULLPATH $MUL $HIGH_THRESHOLD $LOW_THRESHOLD $SIZE_THRESHOLD)
+ruby file_parser.rb ${REPO_OWNER} ${REPO_NAME} ${TEST} ${FULLPATH} ${MUL} ${HIGH_THRESHOLD} ${LOW_THRESHOLD} ${SIZE_THRESHOLD}
 
 # Print on a new line after the progress bar
 echo 
