@@ -1,4 +1,4 @@
-require_relative 'stats_db_interface'
+require_relative 'database/stats_db_interface'
 
 $threshold = 0.5
 $multi = false

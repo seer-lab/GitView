@@ -1,6 +1,6 @@
-require_relative 'database_interface'
+require_relative 'database/database_interface'
 require_relative 'regex'
-require_relative 'stats_db_interface'
+require_relative 'database/stats_db_interface'
 
 $high_threshold, $ONE_TO_MANY = 0.5, true
 $low_threshold, $size_threshold = 0.8, 20

@@ -1,6 +1,6 @@
-require_relative 'database_interface'
+require_relative 'database/database_interface'
 require_relative 'regex'
-require_relative 'stats_db_interface'
+require_relative 'database/stats_db_interface'
 
 gem 'github_api', '=0.9.7'
 require 'github_api'
