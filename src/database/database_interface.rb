@@ -432,10 +432,10 @@ module Github_database
 
         stmt = ""
         if date
-            stmt = "AND t.#{TAG_DATE} > ?"
+            stmt = "AND u.#{DATE} > ?"
         end
 
-        pick = con.prepare("SELECT f.#{NAME}, f.#{FILE}, c.#{SHA}, u.#{DATE} FROM #{REPO} as r INNER JOIN #{COMMITS} as c ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} as u ON u.#{USER_ID} = c.#{COMMITER_REFERENCE} INNER JOIN #{FILE} as f ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} WHERE r.#{REPO_OWNER} LIKE ? AND r.#{REPO_NAME} = ? #{stmt} ORDER BY u.#{DATE} DESC")
+        pick = con.prepare("SELECT c.#{SHA}, u.#{DATE} FROM #{REPO} as r INNER JOIN #{COMMITS} as c ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} as u ON u.#{USER_ID} = c.#{COMMITER_REFERENCE} WHERE r.#{REPO_OWNER} LIKE ? AND r.#{REPO_NAME} = ? #{stmt} ORDER BY u.#{DATE}")
 
         if date
             pick.execute(repo_owner, repo_name, date)

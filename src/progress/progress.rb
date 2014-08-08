@@ -12,7 +12,7 @@ class Progress
         @app_title = title
     end
 
-    def percentComplete(name, working_title=nil)
+    def percentComplete(list=nil)
         cur_percent = (@count.to_f/@total_length)*100
 
         # Print clear character since system "clear" does not work from bash script
@@ -22,15 +22,12 @@ class Progress
             @orig_std.puts @app_title
         end
 
-        if working_title
-            @orig_std.puts "Working on #{working_title}..."
-        else
-            @orig_std.puts "Working on Files..."
+        if list
+            list.each do |item|
+                @orig_std.puts item
+            end
         end
 
-        if name
-            @orig_std.puts "Current File: #{name}"
-        end
         @orig_std.puts "Percent Complete #{format("%.1f",cur_percent)}%"
 
         @orig_std.print "|"

@@ -27,9 +27,20 @@ OUTPUT_FORMAT=csv
 START_DIR=$PWD
 
 # Root location of the project. Provided by user
-PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
-OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
-VERSION_NUMBER=1
+#PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
+#OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
+#VERSION_NUMBER=1
+
+
+if [ $# -eq 3 ]; then
+    PROJECT_HOME_FOLDER=$1
+    OUTPUT_FOLDER=$2
+    VERSION_NUMBER=$3
+else
+    # Invalid args
+    echo "Invalid Arguements got" $#", expecting 2"
+    exit 1
+fi
 
 function maven_setup {
     local project_dir=$1
@@ -169,6 +180,8 @@ function reset_repo {
     remove_untracked
 }
 
+# Import all the project and calculate the metircs for the project
 import_and_calc_metrics ${VERSION_NUMBER}
 
+# Set the git repository to clean state.
 reset_repo

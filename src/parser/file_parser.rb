@@ -138,7 +138,7 @@ if files && files.length > 0
     # Map file name to the array of stats about that file.
     files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
 
-        progress_indicator.percentComplete(file_name, "Analizing Files")
+        progress_indicator.percentComplete(["Working on Analizing Files...", "Current File: #{file_name}"])
 
         if prev_commit != sha
 
@@ -218,6 +218,6 @@ if files && files.length > 0
         fileCount+=1
     end
 
-    progress_indicator.percentComplete(nil)
+    progress_indicator.percentComplete
     puts "filesize = #{files.length}"
 end

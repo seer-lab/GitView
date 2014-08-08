@@ -28,6 +28,7 @@ module DatabaseUtility
     end
 
     # Assign the results from the database into an array of associated hashes
+    # Note: Does not handle when two columns are name the same name (if they are the second will overwrite the first)
     def DatabaseUtility.fetch_associated(query_object)
         associated_fields = query_object.result_metadata.fetch_fields
         results = Array.new

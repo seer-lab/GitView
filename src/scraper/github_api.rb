@@ -259,7 +259,7 @@ def getAllCommits(con, github, username, repo_name)
 
         commits.each { |commit|
 
-            progress_indicator.percentComplete(nil,"Storing Commits")
+            progress_indicator.percentComplete(["Working on Storing Commits..."])
 
             # Get the commit's sha
             sha = commit["sha"]
@@ -341,7 +341,7 @@ def getAllCommits(con, github, username, repo_name)
 
         tags.each { |tag|
 
-            progress_indicator.percentComplete(nil, "Storing Tags")
+            progress_indicator.percentComplete(["Working on Storing Tags..."])
 
             # Get the tag's sha
             sha = tag["object"]["sha"]
