@@ -63,12 +63,13 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
             redirect = "2>&1 | tee #{log_file}#{repo_owner}_#{repo_name}_#{commit[Github_database::SHA][0..6]}_#{Time.now.to_s[0..-7].gsub(/\s/, '_').gsub(/:/, '-')}"
         end
 
-        puts redirect
-
         # Collect the information about the previous commit
-        %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} #{redirect})
-        #Kernel.exit(true)
+        result = %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} #{redirect})
+
+        # TODO search through results for errors or success
     end
+
+    # Exit after the first project for testing purposes
     Kernel.exit(true)
 end
  

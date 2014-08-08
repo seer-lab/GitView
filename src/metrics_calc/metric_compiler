@@ -96,7 +96,7 @@ function import_and_calc_metrics {
     readarray PROJECTS < <(find ${PROJECT_HOME_FOLDER} -name ${MAVEN_ID} -o -name ${ECPLISE_ID})
 
     if [[ ${#PROJECTS[@]} -eq 0 ]]; then
-        echo "No project found"
+        echo "FAILED: No project found"
     else
         for item in "${PROJECTS[@]}"
         do
@@ -104,7 +104,7 @@ function import_and_calc_metrics {
             dir=${item%/*}
 
             if [[ ${item} == *${MAVEN_ID}* ]]; then
-                echo "Setting up the project using Maven"
+                #echo "Setting up the project using Maven"
 
                 # Set up the eclipse env. using maven
                 maven_setup ${dir}
@@ -116,7 +116,7 @@ function import_and_calc_metrics {
         # Ensure the register file is alreay created
         touch ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE}
 
-        echo "Importing all projects to Eclipse"
+        #echo "Importing all projects to Eclipse"
         import_project > ${SCRIPT_WORK_DIR}/${IMPORT_ISSUES}
 
         # Format next line to move to next page
@@ -144,16 +144,28 @@ function import_and_calc_metrics {
                     create_build_file ${dir}
 
                     calc_metrics ${dir}
+
+                    if [ $? -ne 0 ]; then
+                        echo "FAILED: Metrics calculating ${project_name} ${project_version_number}"
+                    fi
                     
                     convert_xml_to_csv ${dir}
+
+                    if [ $? -ne 0 ]; then
+                        echo "FAILED: XML parsing ${project_name} ${project_version_number}"
+                    fi
 
                     # Move the generated files to the target output folder
                     for x in ${dir}/metrics*.csv
                     do
                         name=`basename "${x}"`
                         mv "${x}" ${OUTPUT_FOLDER}/${project_name}_${project_version_number}_${name}
+
+                        echo "SUCCESS: ${project_name} ${project_version_number}"
                     done
                 fi
+            else
+                echo "FAILED: Importing ${project_name} ${project_version_number}"
             fi
         done
     fi
