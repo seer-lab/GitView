@@ -71,9 +71,18 @@ Setting up to run the project
     * **TEMPLATE_BUILD_FILE_LOCATION**: Location of the template [build file](ant_build/build.xml).
     * **SCRIPT_WORK_DIR**: The directory the script is working in (temporary files will be created and later removed from this folder).
     * **XML_CONVERTER_PROGRAM**: The path to the eclipse metrics xml reader.
-    * **PROJECT_HOME_FOLDER**: The path to the target project's root folder.
-    * **OUTPUT_FOLDER**: The output folder where the output csv files will be moved to once the script is finished.
 
-2. Run [metric_compiler](src/metrics_calc/metric_compiler)
+2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust (*note* these paths can be relative):
 
-        bash metrics_compiler
+    * **project_dir**: the directory to clone the projects too.
+    * **output_dir**: the directory to output all the calculated metric csv files to.
+    * **log_file**: the location of the log file directory.
+    * **log**: identifies whether to log the script to the provided **log_file** directory.
+
+3. Execute the script
+
+        ruby metrics_calc.rb
+
+4. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
+
+* *Note* this can also produce a large number of log and output files so it is wise to direct them to empty folders.

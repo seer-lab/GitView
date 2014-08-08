@@ -18,8 +18,7 @@ Mining GitHub projects to learn about open source software development communiti
 2. [Ant](https://ant.apache.org/) version 1.9.3 
 3. [Eclipse Luna](http://eclipse.org/)
 4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Eclipse ADT with SDK since it uses it has issues installing the import plug-in.
-5. [Eclipse metrics plugin](http://sourceforge.net/projects/eclipse-metrics/), version 1.3.6
-	- http://sourceforge.net/projects/metrics2/
+5. [Eclipse metrics plugin](http://sourceforge.net/projects/metrics2/), version 1.3.8
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
 7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin)
 8. [Maven](https://maven.apache.org/) version 2.2.1
@@ -83,7 +82,7 @@ This section outlines how to collect and then parse the data to show on the webs
 
 **Please note** this script executed in this section may take a very long time (depending on the size of the project).
 
-1. Run the script on the desired project passing the repository owner and the repository's name as arguments. For example:
+1. Run the [scraper](src/scraper/scraper) script on the desired project passing the repository owner and the repository's name as arguments. For example:
 
 		bash scraper ACRA acra
 
@@ -92,7 +91,7 @@ This section outlines how to collect and then parse the data to show on the webs
 **Please note** this section relies on the completion of the previous section for the same repository. In order to parse [ACRA/acra](https://github.com/ACRA/acra) it must first be called with the [scraper script](#collecting-data-from-github).
 **Please note** this script executed in this section may take a very long time (depending on the size of the project).
 
-1. Execute the script to actually store the values in the database.
+1. Execute the [parser](src/parser/parser) script to actually store the values in the database.
 
 		bash parser ACRA acra false
 
@@ -140,10 +139,14 @@ This section outlines how to setup the metrics collecting script.
 
 ### Collecting Metrics
 
-1. Open the [script](ant_build/metric_compiler) and adjust the necessary variables
+1. Open the [metric_compiler](src/metrics_calc/metric_compiler) script and adjust the necessary variables
 
-2. Execute the script
+2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust `project_dir`, `output_dir`, `log_file` and `log` as desired
 
-		bash metric_compiler
+3. Execute the script
 
-3. If successful each project folder should contain a `.csv` file for the package, class and method level. 
+		ruby metrics_calc.rb
+
+4. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
+
+* *Note* this can also produce a large number of log and output files so it is wise to direct them to empty folders.
