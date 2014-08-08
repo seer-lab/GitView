@@ -16,7 +16,7 @@ IMPORT_ISSUES=import_issues
 
 # Metrics variables
 BUILD_FILE=build.xml
-TEMPLATE_BUILD_FILE_LOCATION=${SCRIPT_WORK_DIR}/${BUILD_FILE}
+TEMPLATE_BUILD_FILE_LOCATION=${HOME_DIR}/source_code/GitHubMining/src/metrics_calc/${BUILD_FILE}
 XML_NAME=metrics.xml
 
 # XML to CSV converter variables
