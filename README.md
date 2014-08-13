@@ -17,11 +17,11 @@ Mining GitHub projects to learn about open source software development communiti
 1. [Java](https://www.java.com/en/) version 1.7.0_51
 2. [Ant](https://ant.apache.org/) version 1.9.3 
 3. [Eclipse Luna](http://eclipse.org/)
-4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Eclipse ADT with SDK since it uses it has issues installing the import plug-in.
+4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Do not use Eclipse ADT with SDK since it has issues installing the import plug-in.
 5. [Eclipse metrics plugin](http://sourceforge.net/projects/metrics2/), version 1.3.8
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
 7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin)
-8. [Maven](https://maven.apache.org/) version 2.2.1
+8. [Maven](https://maven.apache.org/) version 2.2.1, used to create eclipse project files
 9. [Python](https://www.python.org/) version 2.7.6, required by Eclipse Metrics XML reader
 
 ## Setup notes

@@ -49,7 +49,17 @@ class Progress
     end
 
     def puts(value)
-        @orig_std.puts value
+
+        if value.class.name == Array.to_s
+            
+            values.each do |val|
+                @orig_std.puts value
+            end
+
+        else
+            @orig_std.puts value
+        end
+       
     end
 
 ensure

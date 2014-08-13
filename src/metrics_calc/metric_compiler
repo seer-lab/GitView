@@ -96,7 +96,7 @@ function import_and_calc_metrics {
     readarray PROJECTS < <(find ${PROJECT_HOME_FOLDER} -name ${MAVEN_ID} -o -name ${ECPLISE_ID})
 
     if [[ ${#PROJECTS[@]} -eq 0 ]]; then
-        echo "FAILED: No project found"
+        echo "FAILED: No project found in" ${PROJECT_HOME_FOLDER}
     else
         for item in "${PROJECTS[@]}"
         do
@@ -146,26 +146,31 @@ function import_and_calc_metrics {
                     calc_metrics ${dir}
 
                     if [ $? -ne 0 ]; then
-                        echo "FAILED: Metrics calculating ${project_name} ${project_version_number}"
+                        echo "FAILED: /${project_name}/ ${project_version_number} Metrics calculating "
                     fi
                     
                     convert_xml_to_csv ${dir}
 
                     if [ $? -ne 0 ]; then
-                        echo "FAILED: XML parsing ${project_name} ${project_version_number}"
+                        echo "FAILED: /${project_name}/ ${project_version_number} XML parsing"
                     fi
 
                     # Move the generated files to the target output folder
+                    success=0
                     for x in ${dir}/metrics*.csv
                     do
                         name=`basename "${x}"`
                         mv "${x}" ${OUTPUT_FOLDER}/${project_name}_${project_version_number}_${name}
 
-                        echo "SUCCESS: ${project_name} ${project_version_number}"
+                        success=`expr ${success} + 1`
                     done
+
+                    if [[ $success -gt 0 ]]; then
+                        echo "SUCCESS: /${project_name}/ ${project_version_number}"
+                    fi
                 fi
             else
-                echo "FAILED: Importing ${project_name} ${project_version_number}"
+                echo "FAILED: /${project_name}/ ${project_version_number} Could not import"
             fi
         done
     fi
