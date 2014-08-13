@@ -90,6 +90,7 @@ This section outlines how to collect and then parse the data to show on the webs
 ### Parsing the Collected Data
 
 **Please note** this section relies on the completion of the previous section for the same repository. In order to parse [ACRA/acra](https://github.com/ACRA/acra) it must first be called with the [scraper script](#collecting-data-from-github).
+
 **Please note** this script executed in this section may take a very long time (depending on the size of the project).
 
 1. Execute the script to actually store the values in the database.
