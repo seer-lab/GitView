@@ -17,7 +17,7 @@ Mining GitHub projects to learn about open source software development communiti
 1. [Java](https://www.java.com/en/) version 1.7.0_51
 2. [Ant](https://ant.apache.org/) version 1.9.3 
 3. [Eclipse Luna](http://eclipse.org/)
-4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Do not use Eclipse ADT with SDK since it has issues installing the import plug-in.
+4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Eclipse ADT with SDK since it uses it has issues installing the import plug-in.
 5. [Eclipse metrics plugin](http://sourceforge.net/projects/metrics2/), version 1.3.8
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
 7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin)
@@ -89,6 +89,7 @@ This section outlines how to collect and then parse the data to show on the webs
 ### Parsing the Collected Data
 
 **Please note** this section relies on the completion of the previous section for the same repository. In order to parse [ACRA/acra](https://github.com/ACRA/acra) it must first be called with the [scraper script](#collecting-data-from-github).
+
 **Please note** this script executed in this section may take a very long time (depending on the size of the project).
 
 1. Execute the [parser](src/parser/parser) script to actually store the values in the database.
