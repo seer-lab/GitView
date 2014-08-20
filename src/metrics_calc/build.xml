@@ -7,12 +7,12 @@
 	<target name="build" depends="init">
 	  <eclipse.refreshLocal resource="<project_name>" depth="infinite"/>
 	  <metrics.enable projectName="<project_name>"/>
-	  <!--<eclipse.build 
+	<eclipse.build 
 	  	ProjectName="<project_name>" 
-	  	BuildType="full" 
+	  	BuildType="full"	
 	  	errorOut="errors.xml" 
 	  	errorFormat="xml" 
-	  	failOnError="true"/> -->
+	  	failOnError="false"/>
 	  <metrics.export 
 	  	projectName="<project_name>"
 	  	file="metrics.xml"/>

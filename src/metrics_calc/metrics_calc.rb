@@ -1,6 +1,7 @@
 #require 'fileutils'
 require_relative '../database/database_interface'
 require_relative '../progress/progress'
+require_relative 'csv_parser'
 
 APP_TITLE = 'Metric Calculator'
 
@@ -26,11 +27,13 @@ RESULTS_REGEX = /(FAILED|SUCCESS): \/([A-Za-z0-9 ]*)\/ ([A-Za-z0-9]*)([A-Za-z0-9
 project_dir = fixDir("~/source_code/acra/")
 output_dir = fixDir("~/source_code/GitHubMining/acra_metrics")
 log_file = "~/source_code/GitHubMining/ant_build/"
-log = true
+log = false
 
 metric_compiler = "~/source_code/GitHubMining/src/metrics_calc/metric_compiler"
 
 progress_indicator = Progress.new(APP_TITLE)
+
+csv_parser = CSVParser.new
 
 # Ensure the directory is not already in use.
 if Dir.exists?(project_dir) && Dir[project_dir].empty?
@@ -50,6 +53,8 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
     #git@github.com:ACRA/acra.git
 
     previous_result = ''
+
+    csv_parser.setup_repo(repo_owner, repo_name)
 
     commits = Github_database.getCommitsByDate(con, repo_owner, repo_name)
     progress_indicator.total_length = commits.length
@@ -83,6 +88,11 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
                 val = "Project #{element[1]} in version #{element[2]}"
 
+                project_name = element[1]
+
+                # Store the results in the database
+                csv_parser.handle_all(project_name, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
+
                 if element[0] == 'SUCCESS'
                     # Completed successfully
                     val += " succeed"
@@ -96,9 +106,16 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
         else
             previous_result << "Failed to find any projects!"
         end
+
     end
 
     # Exit after the first project for testing purposes
     Kernel.exit(true)
 end
- 
+
+
+# "#{output_dir}/${project_name}_${project_version}_metrics_package.csv"
+# "#{output_dir}/${project_name}_${project_version}_metrics_class.csv"
+
+
+

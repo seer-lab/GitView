@@ -2,6 +2,8 @@ CREATE DATABASE project_stats;
 
 GRANT ALL ON project_stats.* to 'git_miner'@'localhost';
 
+USE project_stats;
+
 /**
  * The create table command for the repositories retrieved
  */

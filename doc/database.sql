@@ -13,6 +13,8 @@ CREATE USER 'git_miner'@'localhost' IDENTIFIED BY 'pickaxe';
 
 GRANT ALL ON github_data.* to 'git_miner'@'localhost';
 
+USE github_data;
+
 /*
  * The commands for creating all the tables.
  */

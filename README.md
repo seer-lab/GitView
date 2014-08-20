@@ -1,7 +1,7 @@
 GitHubMining
 ============
 
-Mining GitHub projects to learn about open source software development communities and practices.
+Mining GitHub projects to learn about open source software development communities and practices. To view a demo of this project please see http://sqrlab.science.uoit.ca/GitHubMining/
 
 ## Prerequisites
 
