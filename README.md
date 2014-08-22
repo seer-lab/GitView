@@ -143,6 +143,10 @@ This section outlines how to setup the metrics collecting script.
 1. Open the [metric_compiler](src/metrics_calc/metric_compiler) script and adjust the necessary variables
 
 2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust `project_dir`, `output_dir`, `log_file` and `log` as desired
+	* `project_dir` is the location the project will be cloned to and each commit is checked out.
+	* `output_dir` is the directory to output the metrics csv files to.
+	* `log_file` is the directory where the log files would be placed.
+	* `log` whether to ouput the log file or not.
 
 3. Execute the script
 
@@ -150,4 +154,4 @@ This section outlines how to setup the metrics collecting script.
 
 4. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
 
-* *Note* this can also produce a large number of log and output files so it is wise to direct them to empty folders.
+* *Note* this can also produce a large number of log and output files so it is wise to direct each of them to seperate empty directories.
