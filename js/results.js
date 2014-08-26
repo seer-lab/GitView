@@ -415,28 +415,12 @@ function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
         },
 
         rangeSelector:{
-            enabled: true,
-            selected: 2,
-            buttons: [{
-                type: 'month',
-                count: 1,
-                text: '1m'
-            }, {
-                type: 'month',
-                count: 3,
-                text: '3m'
-            }, {
-                type: 'month',
-                count: 6,
-                text: '6m'
-            }, {
-                type: 'year',
-                count: 1,
-                text: '1y'
-            }, {
-                type: 'all',
-                text: 'All'
-            }]
+           enabled:true,
+            buttons: [{ type: 'month', count: 1, text: 'S'
+            }, { type: 'month', count: 3, text: 'M'
+            }, { type: 'month', count: 6, text: 'L'
+            }, { type: 'year', count: 1, text: '1Y'
+            }, { type: 'all', text: 'All' }]
         },
 
         //TODO get the height of the container and store is as a varaible to use here
