@@ -70,9 +70,69 @@ In order to store the data you must use mysql
 
 		sudo apt-get install php5 libapache2-mod-php5 php5-mysql
 
-4. Clone project into /var/www/html/ or set up virtual site.
+4. Clone project into `/var/www/html/` or set up [virtual site](#setting-up-virtual-site)
 
 5. Go to page `http://localhost/GitHubMining/index.php`
+
+#### Setting up Virtual Site
+
+*Note* not required if the project is cloned to `/var/www/html/`
+
+1. Open `/etc/apache2/sites-enabled/000-default.conf` and add the following to the end of the file. 
+
+		<VirtualHost *:80>
+		    ServerAdmin test@git_data.dom
+		    DocumentRoot "<project_location>"
+		    ServerName git_data.dom
+		    ServerAlias git_data.dom
+		    ErrorLog "/var/log/apache2/git_data.dom-error_log"
+		    CustomLog "/var/log/apache2/git_data.dom-access_log" common
+		    <Directory "<project_location>">
+		            DirectoryIndex index.php
+		            AddHandler php5-script php
+		            Options -Indexes +FollowSymLinks +MultiViews
+		            AllowOverride All
+		            Order allow,deny
+		            allow from all
+		            Require all granted
+		    </Directory>
+		</VirtualHost>
+
+2. Modify the `<project_location>` field in `DocumentRoot` and `Directory` to the location of the project.
+
+#### Cleaning web server repo
+
+1. Apache by default will show the directory listings of the folder for the website. To remove this open `/etc/apache2/sites-enabled/000-default.conf`
+
+2. Add in the following (if you followed the steps for creating the virtual site only modifiy the *Options* line):
+
+		<Directory /var/www/html/GitHubMining/>
+                Options -Indexes +FollowSymLinks +MultiViews
+                AllowOverride all
+                Order allow,deny
+                allow from all
+        </Directory>
+
+3. Now that the directories are not displayed by default we now want to block the directories that are not required. The following is a list of the folders that require r-x permission for the web server to work:
+    * api
+    * css
+    * img
+    * inc
+    * js
+    * src
+    * templates
+
+4. All other folder's can be removed or have their permissions revoked for both group and other users.
+
+        sudo chmod go-rx <folder name>
+
+5. Finally, the two files required in the root directory are: 
+    * add_new.php
+    * index.php
+
+6. All other files can be deleted or the permissions can be remoked for both group and other users.
+
+        sudo chmod go-rx <file name>
 
 ## Collecting Data
 
