@@ -1,4 +1,25 @@
 <?php
+/*
+ * Copyright (c) 2014 Jeremy S. Bradbury, Joseph Heron
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 $LIMIT = 5;
 $DESC = "DESC";
@@ -35,6 +56,51 @@ function getAllRepos($mysqli)
     return $results;
 }
 
+function getMethodMetric($mysqli, $user, $repo, $path, $committer)
+{
+    $results = array('project_name'                => array(),
+                     'method_name'                 => array(),
+                     'date'                        => array(),
+                     'number_method_line'          => array(),
+                     'nested_block_depth'           => array(),
+                     'cyclomatic_complexity'       => array(),
+                     'number_parameters'           => array()
+                     );
+    
+    // TODO change to use only 1 repo
+    if ($stmt = $mysqli->prepare("SELECT project_name, method_name, c.commit_date, m.number_method_line, m.nested_block_depth, m.cyclomatic_complexity, m.number_parameters FROM repositories as r INNER JOIN commits as c ON r.repo_id = c.repo_reference INNER JOIN method as m ON c.commit_id = m.commit_reference WHERE repo_name = ? AND repo_owner = ? ORDER BY method_name, c.commit_date"))
+    
+    {       
+        #$path = $path . '%';
+        /* bind parameters for markers */
+        $stmt->bind_param('ss', $repo, $user);
+
+        /* execute query */
+        $stmt->execute();
+
+        /* bind result variables */
+        $stmt->bind_result($project_name, $method_name, $date, $number_method_line, $nested_block_depth, $cyclomatic_complexity, $number_parameters);
+
+        $i = 0;
+        while ($stmt->fetch())
+        {
+            $results['project_name'][$i] = $project_name;
+            $results['method_name'][$i] = $method_name;
+            $results['date'][$i] = $date;
+            $results['number_method_line'][$i] = $number_method_line;
+            $results['nested_block_depth'][$i] = $nested_block_depth;   
+            $results['cyclomatic_complexity'][$i] = $cyclomatic_complexity;
+            $results['number_parameters'][$i] = $number_parameters;
+            $i++;
+        }
+
+        /* close statement */
+        $stmt->close();
+    }
+    
+    return $results;
+}
+
 /**
  * Get the stats for the method level churn
  * @param $mysqli the mysql connection.
@@ -45,13 +111,14 @@ function getAllRepos($mysqli)
  */
 function getMethodChurn($mysqli, $user, $repo, $path, $committer)
 {
-        $results = array('date'                => array(),
-                        'newMethods'           => array(),
-                        'deletedMethods'       => array(),
-                        'modifiedMethods'      => array(),
-                        'committer_name'       => array(),
-                        'author_name'          => array(),
-                    );
+    $results = array('date'                => array(),
+                     'newMethods'           => array(),
+                     'deletedMethods'       => array(),
+                     'modifiedMethods'      => array(),
+                     'committer_name'       => array(),
+                     'author_name'          => array(),
+                     );
+
     // TODO change to use only 1 repo
     if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_methods), SUM(m.deleted_methods), SUM(m.modified_methods), com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     
