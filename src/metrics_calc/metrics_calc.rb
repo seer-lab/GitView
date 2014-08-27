@@ -77,30 +77,33 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
         end
 
         # Collect the information about the previous commit
-        result = %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} #{redirect})
+        #result = %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} #{redirect})
 
         # search through results for errors or success
-        results = result.scan(RESULTS_REGEX)
+        #results = result.scan(RESULTS_REGEX)
 
-        if results && results.length > 0
+        relavent_projects = %x(ls *#{commit[Github_database::SHA]}_metrics_method.csv)
 
-            results.each do |element|
+        if relavent_projects && relavent_projects.length > 0
 
-                val = "Project #{element[1]} in version #{element[2]}"
-
-                project_name = element[1]
+            line.scan(Regexp.new("^([A-Za-z0-9 ]+)_#{commit[Github_database::SHA]}")).each do |project| 
+                
+                # For some reason acra project is parsing its own as well as CrashReports values
+                # Might be for some reason when it fails 
+                val = "Project #{project} in version #{commit[Github_database::SHA]}"
 
                 # Store the results in the database
-                csv_parser.handle_all(project_name, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
+                csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
 
-                if element[0] == 'SUCCESS'
+                #if element[0] == 'SUCCESS'
                     # Completed successfully
-                    val += " succeed"
+                # assume success if file is present
+                val += " succeed"
 
-                elsif element[0] == 'FAILED'
+                #elsif element[0] == 'FAILED'
                     # Failed
-                    val += " failed #{element[3]}"
-                end
+                #    val += " failed #{element[3]}"
+                #end
                 previous_result << "#{val}"
             end
         else
