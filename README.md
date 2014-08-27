@@ -178,7 +178,7 @@ This section outlines how to setup the metrics collecting script.
 
 4. Install Python
 
-		sudo apt-get install python2
+		sudo apt-get install python2.7
 
 5. Download the [Eclipse metrics XML reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
 
@@ -188,9 +188,11 @@ This section outlines how to setup the metrics collecting script.
 
 		https://dl-ssl.google.com/android/eclipse/
 
-2. Open the *Android SDK Manager*
+2. Re-open eclipse which will prompt you to install the Android SDK.
 
-3. Select all the required SDK Platform version. If an older version of the target application used an earlier version of the Android SDK then that version will be required as well. The most flexible method is to install every Android version. **Note** Downloading and install may take sometime.
+3. Open the *Android SDK Manager*
+
+4. Select all the required SDK Platform version. If an older version of the target application used an earlier version of the Android SDK then that version will be required as well. The most flexible method is to install every Android version. **Note** Downloading and install may take sometime.
 
 #### Installing Import plug-in for Eclipse
 
