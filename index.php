@@ -24,7 +24,7 @@
 require 'inc/auth.php';
 require_once 'inc/db_interface.php';
 
-//session_start();
+session_start();
 
 include 'templates/header.php';
 include 'templates/body.php';
