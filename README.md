@@ -237,11 +237,11 @@ This section outlines how to setup the metrics collecting script.
     * `TEMPLATE_BUILD_FILE_LOCATION` the location of the template [build.xml](src/metrics_calc/build.xml) file.
     * `XML_CONVERTER_LOCATION` the location of the clone of [xml to csv program](https://github.com/sqrlab/eclipse_metrics_xml_reader).
 
-2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust `project_dir`, `output_dir`, `log_file` and `log` as desired
-	* `project_dir` is the location the project will be cloned to and each commit is checked out.
-	* `output_dir` is the directory to output the metrics csv files to.
-	* `log_file` is the directory where the log files would be placed.
-	* `log` whether to ouput the log file or not.
+2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust the following:
+    * `project_dir` is the location the project will be cloned to and each commit is checked out.
+    * `output_dir` is the directory to output the metrics csv files to.
+    * `log_file` is the directory where the log files would be placed.
+    * `log` whether to ouput the log file or not.
     * `headless` whether to run with xvfb (a virtualized graphical environment) or not.
     * `metrics_compiler` the location of the [metrics compiler](src/metrics_calc/metric_compiler) shell script.
 
