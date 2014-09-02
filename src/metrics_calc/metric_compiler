@@ -31,13 +31,13 @@ WORKSPACE=${HOME_DIR}/workspace_luna
 MAVEN_ID=pom.xml
 ECPLISE_ID=.project
 
-SCRIPT_WORK_DIR=${HOME_DIR}/source_code/GitHubMining/ant_build
+SCRIPT_WORK_DIR=${HOME_DIR}/source_code/GitView/ant_build
 PROJECT_REG_FILE=register
 IMPORT_ISSUES=import_issues
 
 # Metrics variables
 BUILD_FILE=build.xml
-TEMPLATE_BUILD_FILE_LOCATION=${HOME_DIR}/source_code/GitHubMining/src/metrics_calc/${BUILD_FILE}
+TEMPLATE_BUILD_FILE_LOCATION=${HOME_DIR}/source_code/GitView/src/metrics_calc/${BUILD_FILE}
 XML_NAME=metrics.xml
 
 # XML to CSV converter variables
@@ -50,17 +50,17 @@ START_DIR=$PWD
 
 # Root location of the project. Provided by user
 #PROJECT_HOME_FOLDER=${HOME_DIR}/source_code/acra
-#OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
+#OUTPUT_FOLDER=${HOME_DIR}/source_code/GitView/acra_metrics
 #VERSION_NUMBER=1
 
 HEADLESS=false
 
 
-if [ $# -eq 3 ]; &&  then
+if [ $# -eq 3 ];  then
     PROJECT_HOME_FOLDER=$1
     OUTPUT_FOLDER=$2
     VERSION_NUMBER=$3
-elif [ $# -eq 4]
+elif [ $# -eq 4 ]; then
     PROJECT_HOME_FOLDER=$1
     OUTPUT_FOLDER=$2
     VERSION_NUMBER=$3
@@ -72,9 +72,9 @@ else
 fi
 
 if [[ HEADLESS -eq true ]]; then
-    HEADLESS=1
-else
     HEADLESS=0
+else
+    HEADLESS=1
 fi
 
 function maven_setup {

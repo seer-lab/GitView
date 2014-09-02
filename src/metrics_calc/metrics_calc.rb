@@ -47,12 +47,12 @@ end
 RESULTS_REGEX = /(FAILED|SUCCESS): \/([A-Za-z0-9 ]*)\/ ([A-Za-z0-9]*)([A-Za-z0-9 ]*)/
 
 project_dir = fixDir("~/source_code/acra/")
-output_dir = fixDir("~/source_code/GitHubMining/acra_metrics")
-log_file = "~/source_code/GitHubMining/ant_build/"
+output_dir = fixDir("~/source_code/GitView/acra_metrics")
+log_file_dir = "~/source_code/GitView/ant_build/"
 log = false
 headless = true
 
-metric_compiler = "~/source_code/GitHubMining/src/metrics_calc/metric_compiler"
+metric_compiler = "~/source_code/GitView/src/metrics_calc/metric_compiler"
 
 progress_indicator = Progress.new(APP_TITLE)
 
@@ -96,7 +96,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
         redirect = ""
         if log
-            redirect = "2>&1 | tee #{log_file}#{repo_owner}_#{repo_name}_#{commit[Github_database::SHA][0..6]}_#{Time.now.to_s[0..-7].gsub(/\s/, '_').gsub(/:/, '-')}"
+            redirect = "2>&1 | tee #{log_file_dir_dir}#{repo_owner}_#{repo_name}_#{commit[Github_database::SHA][0..6]}_#{Time.now.to_s[0..-7].gsub(/\s/, '_').gsub(/:/, '-')}"
         end
 
         # Collect the information about the previous commit
@@ -105,7 +105,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
         # search through results for errors or success
         #results = result.scan(RESULTS_REGEX)
 
-        relavent_projects = %x(ls *#{commit[Github_database::SHA]}_metrics_method.csv)
+        relavent_projects = %x(ls #{output_dir}*#{commit[Github_database::SHA]}_metrics_method.csv)
 
         if relavent_projects && relavent_projects.length > 0
 
