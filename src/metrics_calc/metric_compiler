@@ -41,7 +41,8 @@ TEMPLATE_BUILD_FILE_LOCATION=${HOME_DIR}/source_code/GitHubMining/src/metrics_ca
 XML_NAME=metrics.xml
 
 # XML to CSV converter variables
-XML_CONVERTER_PROGRAM=${HOME_DIR}/source_code/eclipse_metrics_xml_reader/src/eclipse_metrics_xml_reader.py
+XML_CONVERTER_LOCATION=${HOME_DIR}/source_code/eclipse_metrics_xml_reader
+XML_CONVERTER_PROGRAM=${XML_CONVERTER_LOCATION}/src/eclipse_metrics_xml_reader.py
 OUTPUT_FORMAT=csv
 
 # Initial directory
