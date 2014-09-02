@@ -38,3 +38,6 @@ ant_build/errors.xml
 
 # Ignore js libraries
 js/lib
+
+# Ignore test patches debug output
+testpatches/
