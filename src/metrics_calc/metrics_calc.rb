@@ -96,7 +96,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
         redirect = ""
         if log
-            redirect = "2>&1 | tee #{log_file_dir_dir}#{repo_owner}_#{repo_name}_#{commit[Github_database::SHA][0..6]}_#{Time.now.to_s[0..-7].gsub(/\s/, '_').gsub(/:/, '-')}"
+            redirect = "2>&1 | tee #{log_file_dir}#{repo_owner}_#{repo_name}_#{commit[Github_database::SHA][0..6]}_#{Time.now.to_s[0..-7].gsub(/\s/, '_').gsub(/:/, '-')}"
         end
 
         # Collect the information about the previous commit
@@ -109,25 +109,28 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
         if relavent_projects && relavent_projects.length > 0
 
-            line.scan(Regexp.new("^([A-Za-z0-9 ]+)_#{commit[Github_database::SHA]}")).each do |project| 
-                
-                # For some reason acra project is parsing its own as well as CrashReports values
-                # Might be for some reason when it fails 
-                val = "Project #{project} in version #{commit[Github_database::SHA]}"
+            relavent_projects.each_line do |line|
 
-                # Store the results in the database
-                csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
+                line.scan(Regexp.new("^([A-Za-z0-9 ]+)_#{commit[Github_database::SHA]}")).each do |project| 
+                    
+                    # For some reason acra project is parsing its own as well as CrashReports values
+                    # Might be for some reason when it fails 
+                    val = "Project #{project} in version #{commit[Github_database::SHA]}"
 
-                #if element[0] == 'SUCCESS'
-                    # Completed successfully
-                # assume success if file is present
-                val += " succeed"
+                    # Store the results in the database
+                    csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
 
-                #elsif element[0] == 'FAILED'
-                    # Failed
-                #    val += " failed #{element[3]}"
-                #end
-                previous_result << "#{val}"
+                    #if element[0] == 'SUCCESS'
+                        # Completed successfully
+                    # assume success if file is present
+                    val += " succeed"
+
+                    #elsif element[0] == 'FAILED'
+                        # Failed
+                    #    val += " failed #{element[3]}"
+                    #end
+                    previous_result << "#{val}"
+                end
             end
         else
             previous_result << "Failed to find any projects!"

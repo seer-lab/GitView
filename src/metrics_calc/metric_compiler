@@ -56,7 +56,7 @@ START_DIR=$PWD
 HEADLESS=false
 
 
-if [ $# -eq 3 ];  then
+if [ $# -eq 3 ]; then
     PROJECT_HOME_FOLDER=$1
     OUTPUT_FOLDER=$2
     VERSION_NUMBER=$3
