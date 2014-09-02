@@ -52,15 +52,28 @@ START_DIR=$PWD
 #OUTPUT_FOLDER=${HOME_DIR}/source_code/GitHubMining/acra_metrics
 #VERSION_NUMBER=1
 
+HEADLESS=false
 
-if [ $# -eq 3 ]; then
+
+if [ $# -eq 3 ]; &&  then
     PROJECT_HOME_FOLDER=$1
     OUTPUT_FOLDER=$2
     VERSION_NUMBER=$3
+elif [ $# -eq 4]
+    PROJECT_HOME_FOLDER=$1
+    OUTPUT_FOLDER=$2
+    VERSION_NUMBER=$3
+    HEADLESS=$4
 else
     # Invalid args
-    echo "Invalid Arguements got" $#", expecting 2"
+    echo "Invalid Arguements got" $#", expecting 3 or 4"
     exit 1
+fi
+
+if [[ HEADLESS -eq true ]]; then
+    HEADLESS=1
+else
+    HEADLESS=0
 fi
 
 function maven_setup {
@@ -78,7 +91,11 @@ function maven_setup {
 function import_project {
     
     # use xvfb-run to run on gui-less server
-    ${ECLIPSE_LOCATION} -console -noSplash -data ${WORKSPACE} -import ${PROJECT_HOME_FOLDER} -exit_on_finish
+    if [[ HEADLESS -eq 0 ]]; then
+        xvfb-run ${ECLIPSE_LOCATION} -console -noSplash -data ${WORKSPACE} -import ${PROJECT_HOME_FOLDER} -exit_on_finish
+    else
+        ${ECLIPSE_LOCATION} -console -noSplash -data ${WORKSPACE} -import ${PROJECT_HOME_FOLDER} -exit_on_finish
+    fi
 }
 
 # Create the build file for the project
@@ -98,7 +115,11 @@ function calc_metrics {
 
     # use xvfb-run to run on gui-less server
     # Launch eclipse without a ui and run the metrics plug in on it.
-    ${ECLIPSE_LOCATION} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${project_location}/${BUILD_FILE}
+    if [[ HEADLESS -eq 0 ]]; then
+        xvfb-run ${ECLIPSE_LOCATION} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${project_location}/${BUILD_FILE}
+    else
+        ${ECLIPSE_LOCATION} -console -noSplash -noupdate -application org.eclipse.ant.core.antRunner -data ${WORKSPACE} -file ${project_location}/${BUILD_FILE}
+    fi
 }
 
 function convert_xml_to_csv {

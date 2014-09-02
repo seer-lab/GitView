@@ -99,7 +99,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
         end
 
         # Collect the information about the previous commit
-        #result = %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} #{redirect})
+        result = %x(bash #{metric_compiler} #{project_dir}#{repo_name}/ #{output_dir} #{commit[Github_database::SHA]} true #{redirect})
 
         # search through results for errors or success
         #results = result.scan(RESULTS_REGEX)
