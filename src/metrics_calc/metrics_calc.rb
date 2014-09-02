@@ -75,7 +75,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
     Dir.chdir(repo_name)
     #git@github.com:ACRA/acra.git
 
-    previous_result = ''
+    previous_result = Array.new
 
     csv_parser.setup_repo(repo_owner, repo_name)
 
@@ -111,14 +111,17 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
             relavent_projects.each_line do |line|
 
-                line.scan(Regexp.new("^([A-Za-z0-9 ]+)_#{commit[Github_database::SHA]}")).each do |project| 
+                line.scan(Regexp.new("([A-Za-z0-9 ]+)_#{commit[Github_database::SHA]}")).each do |project|
+
+                    # Set the value to the only value within the selection
+                    project = project[0]
                     
                     # For some reason acra project is parsing its own as well as CrashReports values
                     # Might be for some reason when it fails 
                     val = "Project #{project} in version #{commit[Github_database::SHA]}"
 
                     # Store the results in the database
-                    csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)            
+                    csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)          
 
                     #if element[0] == 'SUCCESS'
                         # Completed successfully

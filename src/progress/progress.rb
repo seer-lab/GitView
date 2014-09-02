@@ -73,8 +73,9 @@ class Progress
 
         if value.class.name == Array.to_s
             
-            values.each do |val|
-                @orig_std.puts value
+            puts value
+            value.each do |val|
+                @orig_std.puts val
             end
 
         else
