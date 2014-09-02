@@ -17,12 +17,13 @@ Mining GitHub projects to learn about open source software development communiti
 1. [Java](https://www.java.com/en/) version 1.7.0_51
 2. [Ant](https://ant.apache.org/) version 1.9.3 
 3. [Eclipse Luna](http://eclipse.org/)
-4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Eclipse ADT with SDK since it uses it has issues installing the import plug-in.
+4. [Eclipse ADT plugin](https://developer.android.com/sdk/installing/installing-adt.html) **Note** Eclipse ADT with SDK has issues installing the import plug-in.
 5. [Eclipse metrics plugin](http://sourceforge.net/projects/metrics2/), version 1.3.8
 6. [Eclipse Metrics xml Reader](https://github.com/sqrlab/eclipse_metrics_xml_reader)
 7. [Eclipse Import tool](https://github.com/dataBaseError/eclipse-import-projects-plugin)
 8. [Maven](https://maven.apache.org/) version 2.2.1, used to create eclipse project files
 9. [Python](https://www.python.org/) version 2.7.6, required by Eclipse Metrics XML reader
+10. [xvfb-run](http://manpages.ubuntu.com/manpages/lucid/man1/xvfb-run.1.html) used for headless execution of metrics collection.
 
 ## Setup notes
 
@@ -62,7 +63,7 @@ In order to store the data you must use mysql
 
         source ./doc/metrics_db.sql
 
-5. Exit the mysql server
+5. Exit the MySQL server
 
         exit
 
@@ -127,11 +128,11 @@ To:
 
 2. Modify the `<project_location>` field in `DocumentRoot` and `Directory` to the location of the project.
 
-#### Cleaning web server repo
+#### Cleaning web server repository
 
 1. Apache by default will show the directory listings of the folder for the website. To remove this open `/etc/apache2/sites-enabled/000-default.conf`
 
-2. Add in the following (if you followed the steps for creating the virtual site only modifiy the *Options* line):
+2. Add in the following (if you followed the steps for creating the virtual site only modify the *Options* line):
 
 		<Directory /var/www/html/GitView/>
                 Options -Indexes +FollowSymLinks +MultiViews
@@ -157,7 +158,7 @@ To:
     * add_new.php
     * index.php
 
-6. All other files can be deleted or the permissions can be remoked for both group and other users.
+6. All other files can be deleted or the permissions can be revoked for both group and other users.
 
         sudo chmod go-rx <file name>
 
@@ -241,7 +242,7 @@ This section outlines how to setup the metrics collecting script.
 	* `output_dir` is the directory to output the metrics csv files to.
 	* `log_file` is the directory where the log files would be placed.
 	* `log` whether to ouput the log file or not.
-    * `headless` whether to run with xvfb or not.
+    * `headless` whether to run with xvfb (a virtualized graphical environment) or not.
     * `metrics_compiler` the location of the [metrics compiler](src/metrics_calc/metric_compiler) shell script.
 
 3. Execute the script
@@ -250,4 +251,4 @@ This section outlines how to setup the metrics collecting script.
 
 4. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
 
-* *Note* this can also produce a large number of log and output files so it is wise to direct each of them to seperate empty directories.
+* *Note* this can also produce a large number of log and output files so it is wise to direct each of them to separate empty directories.
