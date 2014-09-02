@@ -39,10 +39,8 @@
       }
     </style>
     <link href="../css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
-    <style type="text/css">
-    </style>
-    <link href="../css/bootstrap.min.css" rel="stylesheet">
-    <link href="../css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet">
 
     <!-- HTML5 shiv, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
