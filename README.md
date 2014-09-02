@@ -1,5 +1,5 @@
-GitHubMining
-============
+GitView
+=======
 
 Mining GitHub projects to learn about open source software development communities and practices. To view a demo of this project please see http://sqrlab.science.uoit.ca/GitHubMining/
 
@@ -82,7 +82,24 @@ In order to store the data you must use mysql
 
 4. Clone project into `/var/www/html/` or set up [virtual site](#setting-up-virtual-site)
 
-5. Go to page `http://localhost/GitHubMining/index.php`
+5. Changing the api root url. Open the javascript [graphing file](js/results.js) and change the following line to point the api folder within the project.
+
+        var rootURL = "http://git_data.dom/api";
+
+6. Go to page `http://localhost/GitView/index.php`
+
+7. *Please note*, depending on whether the project is placed in the `/var/www/html/` or is a virtual site the relative paths to the resources may need to change. The paths are currently set up for a virtual server. A set up that places the project directly into `/var/www/html/` will require to adjust:
+    * [header.php](templates/header.php), change the href for css resources.
+    * [footer.php](templates/footer.php), change the href for the js resources.
+
+Usually this just requires changing a path like:
+
+        <link href="../css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
+
+To:
+
+        <link href="./css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
+
 
 #### Setting up Virtual Site
 
@@ -116,7 +133,7 @@ In order to store the data you must use mysql
 
 2. Add in the following (if you followed the steps for creating the virtual site only modifiy the *Options* line):
 
-		<Directory /var/www/html/GitHubMining/>
+		<Directory /var/www/html/GitView/>
                 Options -Indexes +FollowSymLinks +MultiViews
                 AllowOverride all
                 Order allow,deny
@@ -166,7 +183,7 @@ This section outlines how to collect and then parse the data to show on the webs
 
 		bash parser ACRA acra false
 
-3. Proceed to `http://localhost/GitHubMining/index.php` which should now be displaying the newly parsed project. *Note* this can be done before the parser is finished since the changes will be visible on the site immediately.
+3. Proceed to `http://localhost/GitView/index.php` which should now be displaying the newly parsed project. *Note* this can be done before the parser is finished since the changes will be visible on the site immediately.
 
 ## Current Work
 
