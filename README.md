@@ -46,15 +46,25 @@ In order to store the data you must use mysql
 
 		sudo apt-get install mysql-server-5.5 mysql-common mysql-client-5.5
 
-2. Create github_data database using the [create file](doc/database.sql)
+2. Log into the mysql server.
 
-		mysql -u <username> -p
+        mysql -u <username> -p
+
+2. Create github_data database using the [create file](doc/database.sql). 
+
 		source ./doc/database.sql
 
 3. Create project_stats database using the [create file](doc/stats_database.sql)
 
-		mysql -u <username> -p
-		source ./doc/stats_database.sql
+        source ./doc/stats_database.sql
+
+4. ** Note, the following is current development**. Create metrics database using the [create file](doc/metrics_db.sql)
+
+        source ./doc/metrics_db.sql
+
+5. Exit the mysql server
+
+        exit
 
 ### Setup the Web Server
 
@@ -202,13 +212,20 @@ This section outlines how to setup the metrics collecting script.
 
 ### Collecting Metrics
 
-1. Open the [metric_compiler](src/metrics_calc/metric_compiler) script and adjust the necessary variables
+1. Open the [metric_compiler](src/metrics_calc/metric_compiler) script and adjust the following variables:
+    * `ECLIPSE_LOCATION` the location where the eclipse binary is located.
+    * `WORKSPACE` the location of the workspace to use.
+    * `SCRIPT_WORK_DIR` the location to create temporary files.
+    * `TEMPLATE_BUILD_FILE_LOCATION` the location of the template [build.xml](src/metrics_calc/build.xml) file.
+    * `XML_CONVERTER_LOCATION` the location of the clone of [xml to csv program](https://github.com/sqrlab/eclipse_metrics_xml_reader).
 
 2. Open the [metrics_calc.rb](src/metrics_calc/metrics_calc.rb) script and adjust `project_dir`, `output_dir`, `log_file` and `log` as desired
 	* `project_dir` is the location the project will be cloned to and each commit is checked out.
 	* `output_dir` is the directory to output the metrics csv files to.
 	* `log_file` is the directory where the log files would be placed.
 	* `log` whether to ouput the log file or not.
+    * `headless` whether to run with xvfb or not.
+    * `metrics_compiler` the location of the [metrics compiler](src/metrics_calc/metric_compiler) shell script.
 
 3. Execute the script
 
