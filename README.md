@@ -94,11 +94,11 @@ In order to store the data you must use mysql
 
 Usually this just requires changing a path like:
 
-        <link href="../css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
+        <link href="../css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet"/>
 
 To:
 
-        <link href="./css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
+        <link href="./css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet"/>
 
 
 #### Setting up Virtual Site
