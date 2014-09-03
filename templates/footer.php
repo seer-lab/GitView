@@ -26,6 +26,7 @@
         <div class="pull-left">
           <p>Designed and built by <a target="_blank" href="https://github.com/dataBaseError">Joseph Heron</a>, 
             <a target="_blank" href="http://faculty.uoit.ca/bradbury/sqrlab/">SQR Lab</a></p>
+          <p>View the source code on <a target="_blank" href="https://github.com/sqrlab/GitView">GitHub</a></p>
         </div>
       </footer>
     </div>
