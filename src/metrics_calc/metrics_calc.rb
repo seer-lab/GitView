@@ -24,6 +24,7 @@
 require_relative '../database/database_interface'
 require_relative '../progress/progress'
 require_relative 'csv_parser'
+require_relative '../database/metrics_interface'
 
 APP_TITLE = 'Metric Calculator'
 
@@ -31,7 +32,8 @@ def checkForwardSlash(folder)
     if folder[-1] != "/"
         folder = "#{folder}/"
     end
-    folder
+    
+    return folder
 end
 
 def fixDir(folder)
@@ -39,9 +41,56 @@ def fixDir(folder)
     folder = checkForwardSlash(folder)
     # Ensure ruby handles the ~ symbol properly
     if folder[0] == '~' 
-        folder = "#{%x(echo ~).chomp!}#{folder[1..-1]}"
+        folder = "#{checkForwardSlash(Dir.home)}#{folder[1..-1]}"
     end
-    folder
+    return folder
+end
+
+def getCloneString(repo_owner, repo_name)
+    return "git@github.com:#{repo_owner}/#{repo_name}.git"
+end
+
+def cloneProject(folder, repo_owner, repo_name)
+    Dir.chdir(folder)
+
+    %x(git clone #{getCloneString(repo_owner, repo_name)})
+    Dir.chdir(repo_name)
+end
+
+def verifyGitHubProject(folder, repo_owner, repo_name)
+
+    if !Dir.exists?("#{folder}#{repo_name}")
+        # Clone the project
+        cloneProject(folder, repo_owner, repo_name)
+    else
+        Dir.chdir("#{folder}#{repo_name}")
+        # Verify the project is actually the project we are looking for
+        if %x(git remote show origin | grep #{getCloneString(repo_owner, repo_name)}).empty?
+            # Folder exists but is not the repository delete?
+
+            puts "Folder for the project already exists within #{folder} would you like to delete it? (y/N)"
+            answer = gets.chomp!
+
+            if answer.downcase == "y"
+                Dir.chdir(folder)
+                Dir.delete(repo_name)
+                verifyGitHubProject(folder, repo_owner, repo_name)
+            else
+                # Do not delete
+                return false
+            end
+        else
+            # Folder is a clone
+            if %x(git status --porcelain | tr -d '??').empty?
+                # Nothing is pending proceed
+                return true
+            else
+                puts "The project has pending changes resolve them."
+                return false
+            end
+        end
+    end
+    return true
 end
 
 RESULTS_REGEX = /(FAILED|SUCCESS): \/([A-Za-z0-9 ]*)\/ ([A-Za-z0-9]*)([A-Za-z0-9 ]*)/
@@ -65,21 +114,27 @@ end
 
 con = Github_database.createConnection
 
-Dir.chdir(project_dir)
-
 Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
-    # Clone the repository.
-    puts "#{repo_owner}/#{repo_name}"
-    %x(git clone git@github.com:#{repo_owner}/#{repo_name}.git)
-    Dir.chdir(repo_name)
-    #git@github.com:ACRA/acra.git
-
+    progress_indicator.puts "#{repo_owner}/#{repo_name}"
+    if !verifyGitHubProject(project_dir, repo_owner, repo_name)
+        break
+    end
+    
     previous_result = Array.new
 
     csv_parser.setup_repo(repo_owner, repo_name)
 
-    commits = Github_database.getCommitsByDate(con, repo_owner, repo_name)
+    # Get the last commit metrics were calculate 
+    last_commit = csv_parser.getLastCommit
+    date = nil
+
+    if last_commit && !last_commit.empty?
+        date = last_commit[0][Metrics_database::DATE]
+    end
+
+    commits = Github_database.getCommitsByDate(con, repo_owner, repo_name, date)
+
     progress_indicator.total_length = commits.length
 
     commits.each do |commit|
@@ -142,7 +197,7 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
     end
 
     # Exit after the first project for testing purposes
-    Kernel.exit(true)
+    #Kernel.exit(true)
 end
 
 

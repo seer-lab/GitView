@@ -132,6 +132,17 @@ module Metrics_database
         return DatabaseUtility.fetch_results(pick)
     end
 
+    # Get all the latest commit sha and date
+    # Params:
+    # +con+:: the database connection used. 
+    # +repo_id+:: the id of the repository
+    def Metrics_database.getLastCommit(con, repo_id)
+        pick = con.prepare("SELECT c.#{SHA}, c.#{DATE} FROM #{COMMITS} as c WHERE c.#{REPO_REFERENCE} = ? ORDER BY c.#{DATE} DESC LIMIT 1")
+        pick.execute(repo_id)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
     def Metrics_database.getCommitExist(con, sha_hash)
 
         pick = con.prepare("SELECT #{COMMIT_ID} FROM #{COMMITS} WHERE #{SHA} = ?")

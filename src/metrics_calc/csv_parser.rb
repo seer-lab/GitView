@@ -32,6 +32,16 @@ class CSVParser
         @con = Metrics_database.createConnection
     end
 
+    def getLastCommit
+
+        # Ensure repo and owner name are set
+        if @repo_id
+            return Metrics_database.getLastCommit(@con, @repo_id)
+        end
+
+        return nil
+    end
+
     def setup_repo(repo_owner, repo_name)
         @repo_owner = repo_owner
         @repo_name = repo_name
