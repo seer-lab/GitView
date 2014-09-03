@@ -82,9 +82,13 @@ function maven_setup {
 
     mvn -Declipse.workspace="${WORKSPACE}" eclipse:configure-workspace
 
+    #local conf_result=$?
+
     cd ${project_dir}
 
     mvn eclipse:eclipse
+
+    maven_setup_result=$?
 
     cd ${START_DIR}
 }
@@ -138,6 +142,7 @@ function import_and_calc_metrics {
 
     readarray PROJECTS < <(find ${PROJECT_HOME_FOLDER} -name ${MAVEN_ID} -o -name ${ECPLISE_ID})
 
+    failed=0
     if [[ ${#PROJECTS[@]} -eq 0 ]]; then
         echo "FAILED: No project found in" ${PROJECT_HOME_FOLDER}
     else
@@ -151,8 +156,19 @@ function import_and_calc_metrics {
 
                 # Set up the eclipse env. using maven
                 maven_setup ${dir}
+
+                if [[ maven_setup_result -ne 0 ]]; then
+                    # maven setup failed
+                    echo "FAILED: creating maven project"
+                    failed=`expr ${failed} + 1`
+                fi
             fi
         done
+
+        if [[ failed -eq ${#PROJECTS[@]} ]]; then
+            # No project was successfully created from maven source
+            exit 1
+        fi
 
         rm ${SCRIPT_WORK_DIR}/${PROJECT_REG_FILE} -f
 

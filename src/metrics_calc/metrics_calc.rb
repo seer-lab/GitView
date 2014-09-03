@@ -169,7 +169,7 @@ list.each do |repo_id, repo_name, repo_owner|
         date = last_commit[0][Metrics_database::DATE]
     end
 
-    commits = Github_database.getCommitsByDate(con, repo_owner, repo_name, date)
+    commits = Github_database.getCommitsByDate(con, repo_name, repo_owner, date)
 
     if commits.length == 0
         progress_indicator.puts "#{repo_owner}/#{repo_name} is already complete."
