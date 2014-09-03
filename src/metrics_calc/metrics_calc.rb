@@ -20,14 +20,21 @@
 # SOFTWARE.
 ###############################################################################
 
-#require 'fileutils'
 require_relative '../database/database_interface'
 require_relative '../progress/progress'
 require_relative 'csv_parser'
 require_relative '../database/metrics_interface'
+require 'fileutils'
+
+# Examples:
+# 1. This will only collect the metrics for given project ACRA/acra
+# ruby metrics_calc.rb ACRA acra
+# 2. This will go through all stored projects and collect the metrics for each project
+# ruby metrics_calc.rb
 
 APP_TITLE = 'Metric Calculator'
 
+# Ensure a folder path has a forward slash as the very last character.
 def checkForwardSlash(folder)
     if folder[-1] != "/"
         folder = "#{folder}/"
@@ -36,6 +43,7 @@ def checkForwardSlash(folder)
     return folder
 end
 
+# Fix the given directory to be correctly formated for ruby
 def fixDir(folder)
 
     folder = checkForwardSlash(folder)
@@ -46,22 +54,19 @@ def fixDir(folder)
     return folder
 end
 
+# Get the formated string of a github clone url
 def getCloneString(repo_owner, repo_name)
     return "git@github.com:#{repo_owner}/#{repo_name}.git"
 end
 
-def cloneProject(folder, repo_owner, repo_name)
-    Dir.chdir(folder)
-
-    %x(git clone #{getCloneString(repo_owner, repo_name)})
-    Dir.chdir(repo_name)
-end
-
+# Ensure the project can be cloned properly.
 def verifyGitHubProject(folder, repo_owner, repo_name)
 
     if !Dir.exists?("#{folder}#{repo_name}")
         # Clone the project
-        cloneProject(folder, repo_owner, repo_name)
+        Dir.chdir(folder)
+        %x(git clone #{getCloneString(repo_owner, repo_name)})
+        Dir.chdir(repo_name)
     else
         Dir.chdir("#{folder}#{repo_name}")
         # Verify the project is actually the project we are looking for
@@ -72,8 +77,10 @@ def verifyGitHubProject(folder, repo_owner, repo_name)
             answer = gets.chomp!
 
             if answer.downcase == "y"
-                Dir.chdir(folder)
-                Dir.delete(repo_name)
+                #Delete the folder               
+                FileUtils.rm_rf("#{folder}#{repo_name}")
+
+                # Clone it again
                 verifyGitHubProject(folder, repo_owner, repo_name)
             else
                 # Do not delete
@@ -93,7 +100,21 @@ def verifyGitHubProject(folder, repo_owner, repo_name)
     return true
 end
 
-RESULTS_REGEX = /(FAILED|SUCCESS): \/([A-Za-z0-9 ]*)\/ ([A-Za-z0-9]*)([A-Za-z0-9 ]*)/
+repo_owner = nil
+repo_name = nil
+
+# Handle the command line arguemnts
+if ARGV.size == 2
+    # Repository owner and name have been provided
+
+    repo_owner = ARGV[0]
+    repo_name = ARGV[1]
+elsif ARGV.size != 0
+    # Invalid number of arguments
+    puts "Invalid number of arguments provided expecting 0 or 2, received #{ARGV.size}"
+end
+
+#RESULTS_REGEX = /(FAILED|SUCCESS): \/([A-Za-z0-9 ]*)\/ ([A-Za-z0-9]*)([A-Za-z0-9 ]*)/
 
 project_dir = fixDir("~/source_code/acra/")
 output_dir = fixDir("~/source_code/GitView/acra_metrics")
@@ -114,11 +135,26 @@ end
 
 con = Github_database.createConnection
 
-Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
+list = Array.new
+
+# Set up either parsing a single repo or all stored repos.
+if repo_owner && repo_name
+    repo_id = Github_database.getRepoExist(con, repo_name, repo_owner)
+    if repo_id
+        list << [repo_id, repo_name, repo_owner]
+    else
+        puts "Repository #{repo_owner}/#{repo_name} has not been parsed!"
+        Kernel.exit(false)
+    end
+else
+    list = Github_database.getRepos(con)
+end
+
+list.each do |repo_id, repo_name, repo_owner|
 
     progress_indicator.puts "#{repo_owner}/#{repo_name}"
     if !verifyGitHubProject(project_dir, repo_owner, repo_name)
-        break
+        Kernel.exit(false)
     end
     
     previous_result = Array.new
@@ -135,10 +171,13 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
 
     commits = Github_database.getCommitsByDate(con, repo_owner, repo_name, date)
 
+    if commits.length == 0
+        progress_indicator.puts "#{repo_owner}/#{repo_name} is already complete."
+    end
+
     progress_indicator.total_length = commits.length
 
     commits.each do |commit|
-        #c.#{SHA}, u.#{DATE}
 
         # Display the relevant information
         progress_indicator.percentComplete(["Repository = #{repo_owner}/#{repo_name}", "Current commit = #{commit[Github_database::SHA]}"])
@@ -178,31 +217,13 @@ Github_database.getRepos(con).each do |repo_id, repo_name, repo_owner|
                     # Store the results in the database
                     csv_parser.handle_all(project, commit[Github_database::SHA], commit[Github_database::DATE], output_dir)          
 
-                    #if element[0] == 'SUCCESS'
-                        # Completed successfully
-                    # assume success if file is present
                     val += " succeed"
 
-                    #elsif element[0] == 'FAILED'
-                        # Failed
-                    #    val += " failed #{element[3]}"
-                    #end
                     previous_result << "#{val}"
                 end
             end
         else
             previous_result << "Failed to find any projects!"
         end
-
     end
-
-    # Exit after the first project for testing purposes
-    #Kernel.exit(true)
 end
-
-
-# "#{output_dir}/${project_name}_${project_version}_metrics_package.csv"
-# "#{output_dir}/${project_name}_${project_version}_metrics_class.csv"
-
-
-
