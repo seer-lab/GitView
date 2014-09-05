@@ -245,10 +245,14 @@ This section outlines how to setup the metrics collecting script.
     * `headless` whether to run with xvfb (a virtualized graphical environment) or not.
     * `metrics_compiler` the location of the [metrics compiler](src/metrics_calc/metric_compiler) shell script.
 
-3. Execute the script
+3. Execute the script to collect metrics for all stored repositories with:
 
 		ruby metrics_calc.rb
 
-4. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
+4. Alternatively, you can use specifically identify which repository to collect metrics for using:
+
+        ruby metrics_calc.rb ACRA acra
+
+5. This can take a very long time and make it harder to use the computer is running on (eclipse will open and take focus and then close).
 
 * *Note* this can also produce a large number of log and output files so it is wise to direct each of them to separate empty directories.
