@@ -1,8 +1,8 @@
-CREATE DATABASE project_stats;
+CREATE DATABASE project_stats20_08_05_M;
 
-GRANT ALL ON project_stats.* to 'git_miner'@'localhost';
+GRANT ALL ON project_stats20_08_05_M.* to 'git_miner'@'localhost';
 
-USE project_stats;
+USE project_stats20_08_05_M;
 
 /**
  * The create table command for the repositories retrieved
