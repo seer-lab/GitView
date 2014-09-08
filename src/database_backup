@@ -1,0 +1,19 @@
+#!/bin/bash
+
+DATABASES=("github_data" "project_stats20_08_05_M" "metrics")
+
+# The password for that user
+read -s -p "MySQL Password: " password
+# Extra echo so everything following will begin on a new line
+echo
+
+date_stamp=$(date +"%m%d%Y_%H%M")
+
+for line in ${DATABASES[@]}
+do
+
+    mysqldump -ujoseph -p${password} ${line} > ${line}${date_stamp}
+done
+
+# Clear the value stored in password
+password=
