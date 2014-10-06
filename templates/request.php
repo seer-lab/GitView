@@ -24,7 +24,7 @@
 require_once 'inc/auth.php';
 require_once 'inc/db_interface.php';
 //TODO make db same as the threshold db.
-$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 global $selectedOwner, $selectedRepo;
 ?>

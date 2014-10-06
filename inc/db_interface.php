@@ -56,7 +56,7 @@ function getAllRepos($mysqli)
     return $results;
 }
 
-function getMethodMetric($mysqli, $user, $repo, $path, $committer)
+function getMethodMetric($mysqli, $user, $repo, $method)
 {
     $results = array('project_name'                => array(),
                      'method_name'                 => array(),
@@ -68,7 +68,7 @@ function getMethodMetric($mysqli, $user, $repo, $path, $committer)
                      );
     
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT project_name, method_name, c.commit_date, m.number_method_line, m.nested_block_depth, m.cyclomatic_complexity, m.number_parameters FROM repositories as r INNER JOIN commits as c ON r.repo_id = c.repo_reference INNER JOIN method as m ON c.commit_id = m.commit_reference WHERE repo_name = ? AND repo_owner = ? ORDER BY method_name, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT project_name, method_name, c.commit_date, m.number_method_line, m.nested_block_depth, m.cyclomatic_complexity, m.number_parameters FROM repositories as r INNER JOIN commits as c ON r.repo_id = c.repo_reference INNER JOIN method as m ON c.commit_id = m.commit_reference WHERE repo_name = ? AND repo_owner = ? AND method_name = 'org.acra.ErrorReporter.ErrorReporter' AND project_name = 'acra' ORDER BY method_name, c.commit_date"))
     
     {       
         #$path = $path . '%';

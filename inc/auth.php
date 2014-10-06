@@ -28,10 +28,11 @@ $COMMIT = 'Commit';
 $NO_AGGR = 'None';
 $METHOD_AGGR = 'Method';
 $STATEMENT_AGGR = 'Statement';
+$METHOD_METRICS = 'Method Metrics';
 
 $db_user = 'git_miner';
 $db_pass = 'pickaxe';
-$db_stats = 'project_stats';
+$db_stats = 'project_stats20_08_05_M';
 $db_data = 'github_data';
 
 $db_metrics = "metrics";

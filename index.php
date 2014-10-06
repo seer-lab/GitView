@@ -33,17 +33,17 @@ $_SESSION['first_load'] = 0;
 
 /* Connect to the databases */
 /*
-$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats ."20_08_05_M");
+$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 $_SESSION['first_load'] = true;
 
-$packages = getUniquePackage($mysqli_stats, "ACRA", "acra");
-echo '<option selected="selected">All Packages</option>';
+//$packages = getUniquePackage($mysqli_stats, "ACRA", "acra");
+//echo '<option selected="selected">All Packages</option>';
 
-foreach ($packages as $package)
+/*foreach ($packages as $package)
 {
   echo '<p>' . $package . '</p>';
-}
+}*/
 
 // check connection
 if (mysqli_connect_errno()) {

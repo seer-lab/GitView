@@ -46,12 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 $app = new \Slim\Slim();
 
 // GET route
-$app->get('/commits', 'getCommitsAPI');
 $app->get('/commitsChurn/:user/:repo/:group/:committer/:path', 'getCommitsChurnAPI');
-//$app->get('/commitsChurn/:thre/:user/:repo/', 'getTags');
 $app->get('/packages/:user/:repo/:commiter', 'getRepoPackages');
 $app->get('/committers/:user/:repo/:path', 'getRepoCommitter');
-//$app->get('/pie_stats/:type/:user/:repo/:reverse/:path', 'getPieStats');
 $app->get('/commits/method/:user/:repo/:committer/:path', 'getMethod');
 $app->get('/commits/statement/:user/:repo/:committer/:path', 'getMethodStatement');
 
@@ -59,13 +56,15 @@ $app->get('/commits/statement/:user/:repo/:committer/:path', 'getMethodStatement
 $app->get('/stats/:user/:repo/:path', 'getStats');
 $app->get('/newrepo/:user/:repo/', 'getNewRepo');
 
+//$app->get('/metrics/:user/:repo/:level','getMetrics');
+
 $app->run();
 
 function getMethod($user, $repo, $committer, $path)
 {
 	global $db_user, $db_pass, $db_stats;
 
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
@@ -76,13 +75,15 @@ function getMethod($user, $repo, $committer, $path)
 	$committer = cleanUser($committer);
 
 	echo json_encode(array(getMethodChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
+
+	$mysqli_stats->close();
 }
 
 function getMethodStatement($user, $repo, $committer, $path)
 {
 	global $db_user, $db_pass, $db_stats;
 
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
@@ -93,29 +94,15 @@ function getMethodStatement($user, $repo, $committer, $path)
 	$committer = cleanUser($committer);
 
 	echo json_encode(array(getMethodStatementChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
-}
 
-function getCommitsAPI()
-{
-	global $db_user, $db_pass, $db_stats;
-	
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
-	
-	/* check connection */
-	if (mysqli_connect_errno()) {
-		printf("Connect failed: %s\n", mysqli_connect_error());
-		exit();
-	}
-	
-	/* Encode the results as JSON */
-	echo json_encode(getCommitsMonths($mysqli_stats));
+	$mysqli_stats->close();
 }
 
 function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
 
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 	
 	/* check connection */
 	if (mysqli_connect_errno()) {
@@ -124,10 +111,6 @@ function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 	}
 	$path = cleanPackage($path);
 	$committer = cleanUser($committer);
-
-	#$user = urldecode($user);
-	#$repo = urldecode($repo);
-	#$group = urldecode($group);
 
 	/* Encode the results as JSON */
 	if(isset($group))
@@ -144,17 +127,18 @@ function getCommitsChurnAPI($user, $repo, $group, $committer, $path)
 		}
 		else
 		{
-
 			/* On a per commit basis */
 			echo json_encode(array(getChurn($mysqli_stats, $user, $repo, $path, $committer), getTags($mysqli_stats, $user, $repo)));
 		}
 	}
+
+	$mysqli_stats->close();
 }
 
 function getRepoPackages($user, $repo, $committer)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 	$committer = cleanUser($committer);
 
@@ -164,12 +148,14 @@ function getRepoPackages($user, $repo, $committer)
 		exit();
 	}
 	echo json_encode(getUniquePackage($mysqli_stats, $user, $repo, $committer));
+
+	$mysqli_stats->close();
 }
 
 function getRepoCommitter($user, $repo, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 	$path = cleanPackage($path);
 
@@ -179,6 +165,8 @@ function getRepoCommitter($user, $repo, $path)
 		exit();
 	}
 	echo json_encode(getCommitters($mysqli_stats, $user, $repo, $path));
+
+	$mysqli_stats->close();
 }
 
 function cleanPackage($path)
@@ -205,62 +193,10 @@ function cleanUser($committer)
 	return $committer;
 }
 
-/*function getPieStats($type, $user, $repo, $reverse, $path)
-{
-	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
-
-	// check connection
-	if (mysqli_connect_errno()) {
-		printf("Connect failed: %s\n", mysqli_connect_error());
-		exit();
-	}
-
-	$path = urldecode($path);
-
-	$path = preg_replace('/!/', '/', $path);
-
-	if ($path == "All Packages")
-	{
-		$path = "";
-	}
-
-    if ($reverse == "false")
-    {
-        //echo "<p>true</p>";
-        $reverse = false;
-    }
-    else
-    {
-		$reverse = true;
-    }
-
-    if ($type == "topCoder" || $type == "bottomCoders")
-    {
-		echo json_encode(getTopCoder($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topCommenter" || $type == "bottomCommenters")
-	{
-		echo json_encode(getTopCommenter($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topCommitter")
-	{
-		echo json_encode(getTopCommitter($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "topAuthor")
-	{
-		echo json_encode(getTopAuthor($mysqli_stats, $user, $repo, $path, $reverse), JSON_NUMERIC_CHECK);
-	}
-	elseif($type == "CommentCode")
-	{
-		echo json_encode(codeRatio($mysqli_stats, $user, $repo, $path), JSON_NUMERIC_CHECK);
-	}
-}*/
-
 function getStats($user, $repo, $path)
 {
 	global $db_user, $db_pass, $db_stats, $MONTH, $DAY;
-	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+	$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 	/* check connection */
 	if (mysqli_connect_errno()) {
@@ -293,12 +229,20 @@ function getStats($user, $repo, $path)
 								//'bottomCommitter'	=> getTopCommitter($mysqli_stats, $user, $repo, $path, true),
 								'topContributors' => getTopContributors($mysqli_stats, $user, $repo, $path, false),
 								/*'bottomAuthor'		=> getTopAuthor($mysqli_stats, $user, $repo, $path, true)*/)), JSON_NUMERIC_CHECK);
+
+	$mysqli_stats->close();
 }
 
 function getNewRepo($user, $repo)
 {
 	global $db_user, $db_pass, $db_data, $MONTH, $DAY;
 	$mysqli_data = new mysqli("localhost", $db_user, $db_pass, $db_data);
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
 
 	$user = urldecode($user);
 	$repo = urldecode($repo);
@@ -327,6 +271,8 @@ function getNewRepo($user, $repo)
 	{
 		// User/Repo are not valid error
 	}
+
+	$mysqli_data->close();
 }
 
 function validateUserRepo($user, $repo)
@@ -341,6 +287,22 @@ function validateUserRepo($user, $repo)
 		}
 	}
 	return FALSE;
+}
+
+function getMetrics($user, $repo, $level) {
+	global $db_user, $db_pass, $db_metrics;
+	$mysqli_metrics = new mysqli("localhost", $db_user, $db_pass, $db_metrics);
+
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
+
+	echo json_encode(getMethodMetric($mysqli_metrics, $user, $repo, ''));
+
+
+	$mysqli_metrics->close();
 }
 
 ?>

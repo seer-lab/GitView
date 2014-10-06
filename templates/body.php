@@ -24,7 +24,7 @@
 require_once 'inc/auth.php';
 require_once 'inc/db_interface.php';
 //TODO make db same as the threshold db.
-$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats . "20_08_05_M");
+$mysqli_stats = new mysqli("localhost", $db_user, $db_pass, $db_stats);
 
 global $selectedOwner, $selectedRepo;
 ?>
@@ -51,10 +51,12 @@ global $selectedOwner, $selectedRepo;
                         echo '<option selected="selected">' . $NO_AGGR . '</option>';
                         echo '<option>' . $METHOD_AGGR . '</option>';
                         echo '<option>' . $STATEMENT_AGGR . '</option>';
+                        
                     ?>
                 </select>
             </div>
-        </div>   
+        </div>
+        <div id="method_name_select"></div>
         <div id="repo_select" class="control-group">
           <label for="repo" class="control-label">Repository</label>
               <div class="controls">
