@@ -25,11 +25,11 @@ var rootURL = "http://git_data.dom/api";
 
 $(document).ready(function () {
     /* Display the election results when page is loaded */
-    
+    //plotData();
     if (checkIfGraphPage())
     {
         $('#commit_info_panel').hide();
-        allCommits();
+
         plotSelectedValues();
     }
 });
@@ -182,19 +182,25 @@ function handleLevel(repo, pack, user) {
 
     if(level == 'Method')
     {
-        type = 'method/';
-        title = 'Method churn';
+        plotMethodView('method/', 'Method churn', repo, user, pack, level);
     }
     else if (level == 'Statement')
     {
-        type = "statement/";
-        title = 'Method statement churn';
+        plotMethodView("statement/", 'Method statement churn', repo, user, pack, level);
+    }
+    else if(level == "Method Metrics")  {
+        // Disabled metrics display
+        getMetrics(repo);
     }
     else {
         // Handle default
         return false;
     }
 
+    return true; 
+}
+
+function plotMethodView(type, title, repo, user, pack, level) {
     //console.log(rootURL + '/commits/' + type + repo + "/" + encodeURIComponent(user) + "/" + encodeURIComponent(pack));
     $.ajax({
         type: 'GET',
@@ -203,22 +209,22 @@ function handleLevel(repo, pack, user) {
         success: function(data) {
             //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
             var values = plotChurn(data, true);
-            var statsArray = values[0];
-            var tagArray = values[1];
+            //var statsArray = values[0];
+            //var tagArray = values[1];
             
             var series;
+            console.log(level)
+            var label = "Number of Statements";
             if(level == 'Method') {
-                series = getMethodSeries(statsArray, tagArray);
+                series = getMethodSeries(values[0], values[1]);
+                label = "Number of Methods";
             }
             else {
-                series = getStatementSeries(statsArray, tagArray);
+                series = getStatementSeries(values[0], values[1]);
             }
-            areaPlotChurn("container", title, repo, series, getYAxis(false), 'normal');
+            areaPlotChurn("container", title, repo, series, getYAxis(false, label), 'normal');
         }
     });
-
-    // True
-    return true; 
 }
 
 function plotSelectedValues()
@@ -277,7 +283,7 @@ function getChurn(repo, group, pack, user) {
             var title = "Comments and Code Churn Per " + group;
 
             var series = getCommitSeries(statsArray, tagArray)
-            areaPlotChurn("container", title, repo, series, getYAxis(true), null);
+            areaPlotChurn("container", title, repo, series, getYAxis(true, "Number of Lines"), null);
         }
     });
 }
@@ -532,13 +538,13 @@ $(function() {
     });
 });
 
-function getYAxis(showSecond) {
+function getYAxis(showSecond, label) {
 
     if (showSecond) {
         return [{
             opposite: false,
             title: {
-                text: 'Number of Lines'
+                text: label
             },
             labels: {
 
@@ -567,7 +573,7 @@ function getYAxis(showSecond) {
     return {
             opposite: false,
             title: {
-                text: 'Number of Lines'
+                text: label
             },
             labels: {
 
@@ -814,7 +820,7 @@ function getStatementSeries(stats, tagInfo) {
 
     return [{
             type: 'column',
-            name: 'New Code',
+            name: 'Added Code',
             data: stats["new_code"],
             color: 'rgba(0,102,0, 0.9)',
             yAxis: 0,
@@ -826,7 +832,7 @@ function getStatementSeries(stats, tagInfo) {
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
             type: 'column',
-            name: 'New Comments',
+            name: 'Added Comments',
             data: stats["new_comment"],
             color: 'rgba(102,255,102, 0.9)',
             yAxis: 0,
@@ -837,7 +843,7 @@ function getStatementSeries(stats, tagInfo) {
             }
         }, {
             type: 'column',
-            name: 'Removed Code',
+            name: 'Deleted Code',
             data: stats["deleted_code"],
             color: 'rgba(153,0,0, 0.9)',
             yAxis: 0,
@@ -848,7 +854,7 @@ function getStatementSeries(stats, tagInfo) {
             }
         }, {
             type: 'column',
-            name: 'Removed Comments',
+            name: 'Deleted Comments',
             data: stats["deleted_comment"],
             color: 'rgba(205,92,92, 0.9)',
             yAxis: 0,
@@ -860,7 +866,7 @@ function getStatementSeries(stats, tagInfo) {
             //color: 'rgba(255, 255, 255, 0.7)'
         }, {
             type: 'column',
-            name: 'Added Code',
+            name: 'Modified Code Added',
             data: stats["modified_code_added"],
             color: 'rgba(0,204,204, 0.9)',
             yAxis: 0,
@@ -871,7 +877,7 @@ function getStatementSeries(stats, tagInfo) {
             }
         }, {
             type: 'column',
-            name: 'Added Comments',
+            name: 'Modified Comments Added',
             data: stats["modified_comment_added"],
             color: 'rgba(102,255,255, 0.9)',
             yAxis: 0,
@@ -882,7 +888,7 @@ function getStatementSeries(stats, tagInfo) {
             }
         }, {
             type: 'column',
-            name: 'Deleted Code',
+            name: 'Modified Code Deleted',
             data: stats["modified_code_deleted"],
             color: 'rgba(153,0,76, 0.9)',
             yAxis: 0,
@@ -893,7 +899,7 @@ function getStatementSeries(stats, tagInfo) {
             }
         }, {
             type: 'column',
-            name: 'Deleted Comments',
+            name: 'Modified Comments Deleted',
             data: stats["modified_comment_deleted"],
             color: 'rgba(255,102,178, 0.9)',
             yAxis: 0,
