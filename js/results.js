@@ -36,7 +36,7 @@ $(document).ready(function () {
 
 function checkIfGraphPage()
 {
-    if (window.location.pathname.match(/^\/index\.php$/) || window.location.pathname.match(/^\/$/))
+	if (window.location.pathname.match(/^\/index\.php$/) || window.location.pathname.match(/^\/$/))
     {
         return true;
     }
