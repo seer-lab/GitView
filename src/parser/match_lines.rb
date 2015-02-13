@@ -68,10 +68,7 @@ def findSimilarLines(posLines, negLines)
 
             # Pick the the length of the longest line.
             # So additions that are smaller than the negative counter part are not favoured. 
-            largeLength = posLine.length
-            if negLine.length > largeLength
-                largeLength = negLine.length
-            end
+            largeLength = [posLine.length, negLine.length].max
 
             #Check if it is above HIGH_THRESHOLD
             if similarityIndex[i][j] < getTreshold(largeLength)
