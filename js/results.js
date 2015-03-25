@@ -481,7 +481,7 @@ function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
                         s += '<br>Committed By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["com"] + '</b></br>';
                         s += '<br>Authored By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["aut"] + '</b></br>';
 
-                        document.getElementById('commit_message').innerHTML = this.points[index].series.userOptions.data[y_point].myData["body"]
+                        $('#commit_message').text(this.points[index].series.userOptions.data[y_point].myData["body"]).linkify();
                         $('#commit_info_panel').show();
                     }
 
