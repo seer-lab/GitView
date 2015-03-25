@@ -208,7 +208,7 @@ function plotMethodView(type, title, repo, user, pack, level) {
         dataType: "json", // data type of response
         success: function(data) {
             //console.log(rootURL + '/commitsChurn/' + repo + "/" + group + "/" + encodeURIComponent(pack));
-            var values = plotChurn(data, true);
+            var values = plotChurn(data, false);//true);
             //var statsArray = values[0];
             //var tagArray = values[1];
             
