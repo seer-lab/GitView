@@ -247,7 +247,14 @@ function plotSelectedValues()
         getChurn(repo, group, pack, user);
     }
     
-    getStats(repo, pack);
+    var level = $('#level').val();
+    if(level == "None") {
+        $('#pie_view').show();
+        getStats(repo, pack);
+    }
+    else {
+        $('#pie_view').hide();
+    }
 }
 
 $('#update').click(function(event) {

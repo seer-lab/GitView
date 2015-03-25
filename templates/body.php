@@ -175,14 +175,14 @@ global $selectedOwner, $selectedRepo;
         <div class="panel-heading">
           <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
         </div>
-        <p id="commit_message"> MODIFIED: a lot of codes and comments</p>
+        <p id="commit_message"> </p>
       </div>
    </div>
  </div>
   
 </div>
 
-<div class="container-fluid" id="seperator">
+<div class="container-fluid" id="pie_view">
    <div class="row-fluid">
     <div class="span5">
       <div class="container-fluid" id="code_pie" style="min-width: 310px; height: 400px" ></div>
