@@ -175,7 +175,10 @@ global $selectedOwner, $selectedRepo;
         <div class="panel-heading">
           <h3 class="panel-title" id="commit_panel_title">Commit Information</h3>
         </div>
-        <p id="commit_message"> </p>
+        <div >
+        <p id="commit_link"> </p>
+        <p id="commit_message">  </p>
+        </div>
       </div>
    </div>
  </div>

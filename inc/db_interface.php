@@ -117,11 +117,12 @@ function getMethodChurn($mysqli, $user, $repo, $path, $committer)
                      'modifiedMethods'      => array(),
                      'committer_name'       => array(),
                      'author_name'          => array(),
-                     'body'                 => array()
+                     'body'                 => array(),
+                     'sha'                  => array()
                      );
 
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_methods), SUM(m.deleted_methods), SUM(m.modified_methods), com.name, aut.name, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_methods), SUM(m.deleted_methods), SUM(m.modified_methods), com.name, aut.name, c.body, c.sha_hash FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -132,7 +133,7 @@ function getMethodChurn($mysqli, $user, $repo, $path, $committer)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $newMethods, $deletedMethods, $modifiedMethods, $commiter_name, $author_name, $body);
+        $stmt->bind_result($date, $newMethods, $deletedMethods, $modifiedMethods, $commiter_name, $author_name, $body, $sha_hash);
 
         $i = 0;
         while ($stmt->fetch())
@@ -144,6 +145,7 @@ function getMethodChurn($mysqli, $user, $repo, $path, $committer)
             $results['committer_name'][$i] = $commiter_name;   
             $results['author_name'][$i] = $author_name;
             $results['body'][$i] = $body;
+            $results['sha'][$i] = $sha_hash;
 
             $i++;
         }
@@ -174,9 +176,10 @@ function getMethodStatementChurn($mysqli, $user, $repo, $path, $committer)
                         'modified_comment_deleted'  => array(),
                         'committer_name'            => array(),
                         'author_name'               => array(),
+                        'sha'                       => array()
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_code), SUM(m.new_comment), SUM(m.deleted_code), SUM(m.deleted_comment), SUM(m.modified_code_added), SUM(m.modified_comment_added), SUM(m.modified_code_deleted), SUM(m.modified_comment_deleted), com.name, aut.name, c.body FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method_statement as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_code), SUM(m.new_comment), SUM(m.deleted_code), SUM(m.deleted_comment), SUM(m.modified_code_added), SUM(m.modified_comment_added), SUM(m.modified_code_deleted), SUM(m.modified_comment_deleted), com.name, aut.name, c.body, c.sha_hash FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method_statement as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -187,7 +190,7 @@ function getMethodStatementChurn($mysqli, $user, $repo, $path, $committer)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $new_code, $new_comment, $deleted_code, $deleted_comment, $modified_code_added, $modified_comment_added, $modified_code_deleted, $modified_comment_deleted, $commiter_name, $author_name, $body);
+        $stmt->bind_result($date, $new_code, $new_comment, $deleted_code, $deleted_comment, $modified_code_added, $modified_comment_added, $modified_code_deleted, $modified_comment_deleted, $commiter_name, $author_name, $body, $sha_hash);
 
         $i = 0;
         while ($stmt->fetch())
@@ -204,6 +207,7 @@ function getMethodStatementChurn($mysqli, $user, $repo, $path, $committer)
             $results['committer_name'][$i] = $commiter_name;
             $results['author_name'][$i] = $author_name;
             $results['body'][$i] = $body;
+            $results['sha'][$i] = $sha_hash;
 
             $i++;
         }
@@ -237,9 +241,10 @@ function getChurn($mysqli, $user, $repo, $path, $committer)
                         'committer_name'        => array(),
                         'author_name'           => array(),
                         'body'                  => array(),
+                        'sha'                   => array()
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name, c.sha_hash FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? ORDER BY c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -250,7 +255,7 @@ function getChurn($mysqli, $user, $repo, $path, $committer)
         $stmt->execute();
 
         /* bind result variables */
-        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified, $body, $commiter_name, $author_name);
+        $stmt->bind_result($date, $commentsAdded, $commentsDeleted, $commentsModified, $codeAdded, $codeDeleted, $codeModified, $body, $commiter_name, $author_name, $sha_hash);
 
         $i = 0;
         $results['totalComments'][$i] = 0;
@@ -269,6 +274,7 @@ function getChurn($mysqli, $user, $repo, $path, $committer)
             $results['committer_name'][$i] = $commiter_name;
             $results['author_name'][$i] = $author_name;
             $results['body'][$i] = $body;
+            $results['sha'][$i] = $sha_hash;
 
             if ($i > 0)
             {

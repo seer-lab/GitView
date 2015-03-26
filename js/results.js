@@ -360,7 +360,7 @@ function plotChurn(data, level) {
         {
             //break;
             //user[moment(churnData[keys[0]][j], "YYYY-MM-DD HH:mm:ss").valueOf()] = churnData[keys[k]][j];
-            statsArray["ExtraData"][j] = {x: moment(churnData["date"][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: j, myData: {com: churnData["committer_name"][j], aut: churnData["author_name"][j], body: churnData["body"][j]}};
+            statsArray["ExtraData"][j] = {x: moment(churnData["date"][j], "YYYY-MM-DD HH:mm:ss").valueOf(), y: j, myData: {com: churnData["committer_name"][j], aut: churnData["author_name"][j], body: churnData["body"][j], sha: churnData["sha"][j]}};
         }
     }
 
@@ -406,6 +406,10 @@ $(document).ready(function(){
         //console.log(PageHeight);
     }
 });
+
+function createCodeLink(repo, sha) {
+    return "https://github.com/" + repo + "/tree/" + sha;
+}
 
 function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
 
@@ -481,6 +485,7 @@ function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
                         s += '<br>Committed By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["com"] + '</b></br>';
                         s += '<br>Authored By: <b> ' + this.points[index].series.userOptions.data[y_point].myData["aut"] + '</b></br>';
 
+                        $('#commit_link').text(createCodeLink(repo, this.points[index].series.userOptions.data[y_point].myData["sha"])).linkify();
                         $('#commit_message').text(this.points[index].series.userOptions.data[y_point].myData["body"]).linkify();
                         $('#commit_info_panel').show();
                     }
