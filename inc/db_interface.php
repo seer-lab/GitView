@@ -122,7 +122,31 @@ function getMethodChurn($mysqli, $user, $repo, $path, $committer)
                      );
 
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, SUM(m.new_methods), SUM(m.deleted_methods), SUM(m.modified_methods), com.name, aut.name, c.body, c.sha_hash FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT 
+            c.commit_date, 
+            SUM(m.new_methods),
+            SUM(m.deleted_methods),
+            SUM(m.modified_methods),
+            com.name,
+            aut.name,
+            c.body,
+            c.sha_hash
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id INNER JOIN
+            user AS aut ON c.author_id = aut.user_id INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            method as m ON f.file_id = m.file_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ? AND
+            com.name LIKE ?
+        GROUP BY
+            c.commit_date
+        ORDER BY
+            c.commit_date"))
     
     {       
         $path = $path . '%';
