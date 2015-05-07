@@ -468,7 +468,7 @@ function areaPlotChurn(id, title, repo, series, yaxis, stacked) {
         tooltip: {
             formatter: function() {
 
-                var s = '<b>'+ Highcharts.dateFormat('%A, %b %e, %Y', this.x) +'</b>';
+                var s = '<b>'+ Highcharts.dateFormat('%H:%M %A, %b %e, %Y', this.x) +'</b>';
                 
                 if (this.point == undefined)
                 {
