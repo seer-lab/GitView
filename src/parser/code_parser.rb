@@ -225,6 +225,7 @@ class CodeParser
 
             if @test
                 puts "line = #{line[0]}"
+                puts "lineCount = #{lineCount}"
                 #puts "s+ = #{@statementCounter.new_method}, s- = #{@statementCounter.deleted_method}, s~ = #{@statementCounter.modified_method}"
                 #puts "type = #{method_finder.methodHistory}"
                 #puts "multi = #{multiLine}"

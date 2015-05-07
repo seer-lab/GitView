@@ -70,6 +70,19 @@ class MethodFinder
 
             quoteLess = @mq.removeQuotes(@lines[index][0])
 
+            #puts "Find_method_line = #{@lines[index]}"
+            #puts "Size = #{@lines[index][0].size}"
+            #puts "@lines[index][0][0] != ' ' = #{@lines[index][0][0] != ' '} && (@lines[index].size == 1 #{@lines[index].size == 1} || @lines[index][0][1..-1].match(/^\s+$/) = #{@lines[index][0][1..-1].match(/^\s+$/)})"
+            if @lines[index][0] == "" || (@lines[index][0][0][0] != ' ' && (@lines[index][0].size == 1 || @lines[index][0][1..-1].match(/^\s+$/)))
+                #puts "quoteLess empty = #{quoteLess}"
+                #puts "Skipping"
+                index += 1
+                #@actual_start = index
+                # Skip an empty line
+                next
+            end
+
+
             # TODO handle deleted statement
             #if quoteLess[0] == '-' && false
             #    # Skip
@@ -79,9 +92,10 @@ class MethodFinder
             if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '+'
                 # Modified statement
                 # Look for another method signature with + preceeding it
-            elsif @deleted_statement != DELETED_DEFAULT && quoteLess[0] != ' '
+            elsif @deleted_statement != DELETED_DEFAULT && quoteLess[0] == ' '
                 # Statement is only deleted continue where it was previously left at
                 index = @deleted_statement
+                @methodHistory = MethodTypes::ONLY_DELETED
                 found = true
                 break
             end
@@ -117,7 +131,7 @@ class MethodFinder
                 #TODO remove +/- inside the statement, currently just removing
                 #TODO handle +/- properly
                 temp = "#{fullStatement} #{quoteLess[1..-1]}"
-                #puts "full = #{fullStatement}"
+                #puts "full = #{temp}"
 
                 if quoteLess.match(/\{/)
                     
@@ -125,7 +139,8 @@ class MethodFinder
                         temp.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
                         # Not a statement since it has has built-in command as part of it
                         stop_looking = true
-                    elsif temp.match(/\(([\w\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
+                    # Added support for array attribute types in methods
+                    elsif temp.match(/\(([\w\[\]\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
                         # Note this will not catch interface's declaration of a method (since it has no body)
                         
                         if quoteLess[0] == '-'
@@ -178,7 +193,7 @@ class MethodFinder
     def updateHistory(line)
         if line[0] == '-'
             if @methodHistory == MethodTypes::INITIAL
-                @methodHistory = MethodTypes::ONLY_DELETED 
+                @methodHistory = MethodTypes::ONLY_DELETED
             elsif @methodHistory == MethodTypes::ONLY_ADDED || @methodHistory == MethodTypes::UNCHANGED
                 @methodHistory = MethodTypes::MODIFIED
             end
@@ -188,9 +203,15 @@ class MethodFinder
             elsif @methodHistory == MethodTypes::ONLY_DELETED || @methodHistory == MethodTypes::UNCHANGED
                 @methodHistory = MethodTypes::MODIFIED
             end
-        elsif line[1..-1] && line[1..-1].match(WHITE_SPACE) != nil &&
+        elsif line.size > 1 && line[1..-1].match(WHITE_SPACE) &&
             @methodHistory != MethodTypes::UNCHANGED #&& line[0] == ' '
             # Ensure the line isnt empty
+            if @methodHistory == MethodTypes::INITIAL 
+                @methodHistory = MethodTypes::UNCHANGED
+            else
+                @methodHistory = MethodTypes::MODIFIED
+            end
+        elsif line.size > 1 && line[1..-1].match(WHITE_SPACE) == nil && @methodHistory != MethodTypes::UNCHANGED
             if @methodHistory == MethodTypes::INITIAL
                 @methodHistory = MethodTypes::UNCHANGED
             else
@@ -258,15 +279,23 @@ class MethodFinder
 
                 quoteLess = @mq.removeQuotes(@lines[index][0])
 
-                updateHistory(quoteLess) 
+                # In the case where the last curly brace is 'borrowed' from another mehtod (as is often done in diffs)
+                #if depthCounter == 1 && quoteLess[0] == ' ' && quoteLess.match(/\s*\}/)
+                #    break
+                #else
+                    updateHistory(quoteLess)
+                #end 
 
                 # TODO handle deleted statement
                 # TODO handle added statment
                 if quoteLess[0] == '-' && @methodHistory == MethodTypes::MODIFIED
                     # Skip
                     index += 1
+                    #puts "Skipping line #{quoteLess}"
                     next
                 end
+
+                # TODO handle case where method signature is deleted and added with the ending curly brace being left unmodified
 
                 quoteLess = @mq.removeComments(quoteLess)
 
@@ -278,7 +307,7 @@ class MethodFinder
                     puts "quoteLess = #{quoteLess}"
                     puts "Brackets = #{result}"
                 end
-                
+
                 result.each do |cur|
 
                     if cur == '}'
