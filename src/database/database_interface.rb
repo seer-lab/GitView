@@ -347,10 +347,41 @@ module Github_database
 
         stmt = ""
         if sha_hash
-            stmt = "AND com.#{DATE} > (SELECT com.#{DATE} FROM #{COMMITS} AS c INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND c.#{SHA} = ?)"
+            stmt = "AND com.#{DATE} >
+                (SELECT 
+                    com.#{DATE}
+                FROM #{COMMITS} AS c INNER JOIN
+                #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID}
+                INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID}
+            WHERE
+                r.#{REPO_NAME} LIKE ? AND
+                r.#{REPO_OWNER} LIKE ? AND
+                c.#{SHA} = ?)"
         end
 
-        pick = con.prepare("SELECT f.#{FILE}, c.#{SHA}, f.#{NAME}, c.#{COMMIT_ID}, com.#{DATE}, c.#{BODY}, f.#{PATCH}, com.#{NAME}, aut.#{NAME} FROM #{FILE} AS f INNER JOIN #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID} INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID} WHERE r.#{REPO_NAME} LIKE ? AND r.#{REPO_OWNER} LIKE ? AND f.#{NAME} LIKE ? #{stmt} ORDER BY com.#{DATE}")
+        pick = con.prepare(
+            "SELECT 
+                f.#{FILE},
+                c.#{SHA},
+                f.#{NAME},
+                c.#{COMMIT_ID},
+                com.#{DATE},
+                c.#{BODY},
+                f.#{PATCH},
+                com.#{NAME},
+                aut.#{NAME} 
+            FROM 
+                #{FILE} AS f INNER JOIN 
+                #{COMMITS} AS c ON f.#{COMMIT_REFERENCE} = c.#{COMMIT_ID} INNER JOIN
+                #{REPO} AS r ON c.#{REPO_REFERENCE} = r.#{REPO_ID} INNER JOIN
+                #{USERS} AS com ON c.#{COMMITER_REFERENCE} = com.#{USER_ID}
+                INNER JOIN #{USERS} AS aut ON c.#{AUTHOR_REFERENCE} = aut.#{USER_ID}
+            WHERE
+                r.#{REPO_NAME} LIKE ? AND
+                r.#{REPO_OWNER} LIKE ? AND
+                f.#{NAME} LIKE ? #{stmt}
+            ORDER BY
+                com.#{DATE}")
 
         if sha_hash
             pick.execute(repo_name, repo_owner, "#{EXTENSION_EXPRESSION}#{extension}", repo_name, repo_owner, sha_hash)
