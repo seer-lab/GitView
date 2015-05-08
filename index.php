@@ -46,15 +46,15 @@ $_SESSION['first_load'] = true;
 }*/
 
 // check connection
-if (mysqli_connect_errno()) {
+/*if (mysqli_connect_errno()) {
     printf("Connect failed: %s\n", mysqli_connect_error());
     exit();
-}*/
+}
 
 //getCommits($mysqli_stats);
 
-/* close connection */
-$mysqli_stats->close();
+/* close connection 
+$mysqli_stats->close();*/
 
 include 'templates/footer.php';
 exit();

@@ -297,7 +297,31 @@ function getChurn($mysqli, $user, $repo, $path, $committer)
                         'sha'                   => array()
                     );
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT c.commit_date, c.total_comment_addition, c.total_comment_deletion, c.total_comment_modified, c.total_code_addition, c.total_code_deletion, c.total_code_modified, c.body, com.name, aut.name, c.sha_hash FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN user AS aut ON c.author_id = aut.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? AND com.name LIKE ? ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT
+            c.commit_date,
+            c.total_comment_addition,
+            c.total_comment_deletion,
+            c.total_comment_modified,
+            c.total_code_addition,
+            c.total_code_deletion,
+            c.total_code_modified,
+            c.body,
+            com.name,
+            aut.name,
+            c.sha_hash
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id INNER JOIN
+            user AS aut ON c.author_id = aut.user_id INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ? AND
+            com.name LIKE ?
+        ORDER BY
+            c.commit_date"))
     
     {       
         $path = $path . '%';
@@ -446,7 +470,34 @@ function getChurnMonths($mysqli, $user, $repo, $path, $committer)
                         'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE_FORMAT(c.commit_date, '%Y-%m'), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN user AS com ON c2.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ? AND com.name LIKE ?) GROUP BY DATE_FORMAT(commit_date, '%Y-%m') ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT
+            DATE_FORMAT(c.commit_date, '%Y-%m'),
+            SUM(c.total_comment_addition),
+            SUM(c.total_comment_deletion),
+            SUM(c.total_comment_modified),
+            SUM(c.total_code_addition),
+            SUM(c.total_code_deletion),
+            SUM(c.total_code_modified)
+        FROM
+            commits AS c
+        WHERE
+            c.commit_id IN (
+                SELECT DISTINCT
+                    c2.commit_id
+                FROM
+                    commits AS c2 INNER JOIN
+                    repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN
+                    file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN
+                    user AS com ON c2.committer_id = com.user_id
+                WHERE
+                    r.repo_name LIKE ? AND
+                    r.repo_owner LIKE ? AND
+                    f2.path LIKE ? AND
+                    com.name LIKE ?)
+        GROUP BY
+            DATE_FORMAT(commit_date, '%Y-%m')
+        ORDER BY
+            c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
@@ -998,7 +1049,25 @@ function codeRatio($mysqli, $user, $repo, $package)
 {
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT SUM(f.total_code) AS most_code, SUM(f.total_comments) AS most_comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ?"))
+    if ($stmt = $mysqli->prepare("SELECT
+            SUM(c.total_code_addition) - SUM(c.total_code_deletion) AS code,
+            SUM(c.total_comment_addition) - SUM(c.total_comment_deletion) AS comment
+        FROM
+            commits AS c 
+        WHERE
+            c.commit_id IN (
+                SELECT DISTINCT
+                    c2.commit_id
+                FROM
+                    commits AS c2 INNER JOIN
+        
+                    repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN
+                    file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN
+                    user AS com ON c2.committer_id = com.user_id
+                WHERE
+                    r.repo_name LIKE ? AND
+                    r.repo_owner LIKE ? AND
+                    f2.path LIKE ?)"))
     {
         $package = $package . '%';
         /* bind parameters for markers */
