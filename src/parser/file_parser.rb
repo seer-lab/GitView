@@ -160,7 +160,7 @@ if files && files.length > 0
     # Map file name to the array of stats about that file.
     files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
 
-        if !test
+        if !$test
             progress_indicator.percentComplete(["Working on Analizing Files...", "Current File: #{file_name}"])
         end
 

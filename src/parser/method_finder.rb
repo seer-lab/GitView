@@ -135,11 +135,12 @@ class MethodFinder
 
                 if quoteLess.match(/\{/)
                     
-                    if temp.match(/\s(new)\s+/) ||
+                    if temp.match(/\W(new)\s+/) ||
                         temp.match(/\s(if|else|elsif|while|for|switch)\s*\(/)
                         # Not a statement since it has has built-in command as part of it
                         stop_looking = true
                     # Added support for array attribute types in methods
+                    # Add default check (java 8+) /\(([\w\[\]\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?((default [\{\}\[\]\<\>\w,\.\s]*;)|\{)/
                     elsif temp.match(/\(([\w\[\]\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
                         # Note this will not catch interface's declaration of a method (since it has no body)
                         
