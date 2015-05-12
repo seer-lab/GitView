@@ -64,7 +64,8 @@ class MethodFinder
         #    - must not be if, else, elsif, while, for, switch
         #     - may be spawning over multiple lines
         #    - may have declaration of arguments (or no arguments)
-        fullStatement = ""   
+        fullStatement = ""
+        depthCounter = 1
 
         while !found && index < @lines.length
 
@@ -92,12 +93,26 @@ class MethodFinder
             if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '+'
                 # Modified statement
                 # Look for another method signature with + preceeding it
+
+                # TODO create a way for it to check if the method has an end (within it's delete block or if there is additions following before a end curly brace
             elsif @deleted_statement != DELETED_DEFAULT && quoteLess[0] == ' '
                 # Statement is only deleted continue where it was previously left at
                 index = @deleted_statement
                 @methodHistory = MethodTypes::ONLY_DELETED
                 found = true
                 break
+            end
+
+            # This should check if there is a curly brace for an only deleted file 
+            if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '-'
+                result = check_line(index, depthCounter, 0, false, false)
+                depthCounter = result['depthCounter']
+                if result['stop']
+                    index = @deleted_statement
+                    @methodHistory = MethodTypes::ONLY_DELETED
+                    found = true
+                    break
+                end
             end
 
             updateHistory(quoteLess)
@@ -267,73 +282,18 @@ class MethodFinder
         # Assume that a method has been found. Therefore assume count('}') == count('{') + 1
         depthCounter = 1
         start = index
-        test = 0
+        test = 1
 
         begin
             index = start
             while index < @lines.length
 
-                if test == 1
-                    puts "Line = #{@lines[index][0]}"
-                    puts "index = #{index}"
-                end
-
-                quoteLess = @mq.removeQuotes(@lines[index][0])
-
-                # In the case where the last curly brace is 'borrowed' from another mehtod (as is often done in diffs)
-                #if depthCounter == 1 && quoteLess[0] == ' ' && quoteLess.match(/\s*\}/)
-                #    break
-                #else
-                    updateHistory(quoteLess)
-                #end 
-
-                # TODO handle deleted statement
-                # TODO handle added statment
-                if quoteLess[0] == '-' && @methodHistory == MethodTypes::MODIFIED
-                    # Skip
-                    index += 1
-                    #puts "Skipping line #{quoteLess}"
-                    next
-                end
-
-                # TODO handle case where method signature is deleted and added with the ending curly brace being left unmodified
-
-                quoteLess = @mq.removeComments(quoteLess)
-
-                result = quoteLess.scan(/\{|\}/)
-
-                if test == 1
-                    puts "inComment? = #{@mq.commentOpen}"
-                    puts "depth = #{depthCounter}"
-                    puts "quoteLess = #{quoteLess}"
-                    puts "Brackets = #{result}"
-                end
-
-                result.each do |cur|
-
-                    if cur == '}'
-                        # Decrement the count by 1
-                        depthCounter -= 1
-
-                        # Check for depth condition
-                        if depthCounter == 0
-                            break
-                        end
-                    end
-                   
-                    if cur == '{'
-                        # Increment the count by 1
-                        depthCounter += 1
-                        #puts "depth Increased at #{@lines[index][0]}"
-                        #puts "WITH #{result} and #{cur}"
-                    end
-                end
-
-                if depthCounter == 0
+                result = check_line(index, depthCounter, test)
+                index = result['index']
+                depthCounter = result['depthCounter']
+                if result['stop']
                     return index
                 end
-
-                index += 1
             end
 
             test += 1
@@ -342,6 +302,79 @@ class MethodFinder
 
         # No end found
         return nil
+    end
+
+    def check_line(index, depthCounter, test=0, remove_quote=true, check_history=true)
+        if test == 1
+            puts "Line = #{@lines[index][0]}"
+            puts "index = #{index}"
+        end
+
+        if remove_quote
+            quoteLess = @mq.removeQuotes(@lines[index][0])
+        else
+            quoteLess = @lines[index][0]
+        end
+
+        # In the case where the last curly brace is 'borrowed' from another mehtod (as is often done in diffs)
+        #if depthCounter == 1 && quoteLess[0] == ' ' && quoteLess.match(/\s*\}/)
+        #    break
+        #else
+        if check_history
+            updateHistory(quoteLess)
+        end
+        #end 
+
+        # TODO handle deleted statement
+        # TODO handle added statment
+        if quoteLess[0] == '-' && @methodHistory == MethodTypes::MODIFIED
+            # Skip
+            #index += 1
+            return {'index' => index + 1, 'stop' => false, 'depthCounter' => depthCounter}
+            #puts "Skipping line #{quoteLess}"
+            #next
+        end
+
+        # TODO handle case where method signature is deleted and added with the ending curly brace being left unmodified
+
+        quoteLess = @mq.removeComments(quoteLess)
+
+        result = quoteLess.scan(/\{|\}/)
+
+        if test == 1
+            puts "inComment? = #{@mq.commentOpen}"
+            puts "depth = #{depthCounter}"
+            puts "quoteLess = #{quoteLess}"
+            puts "Brackets = #{result}"
+        end
+
+        result.each do |cur|
+
+            if cur == '}'
+                # Decrement the count by 1
+                depthCounter -= 1
+
+                # Check for depth condition
+                if depthCounter == 0
+                    break
+                end
+            end
+           
+            if cur == '{'
+                # Increment the count by 1
+                depthCounter += 1
+                #puts "depth Increased at #{@lines[index][0]}"
+                #puts "WITH #{result} and #{cur}"
+            end
+        end
+        puts "depthCount = #{depthCounter}"
+
+        if depthCounter == 0
+            return {'index' => index, 'stop' => true, 'depthCounter' => depthCounter}
+        end
+
+        return {'index' => index+1, 'stop' => false, 'depthCounter' => depthCounter} 
+
     end
 
     def comment_length
