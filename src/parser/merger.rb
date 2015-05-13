@@ -99,9 +99,10 @@ class Merger
                             end
                         end
                         #puts "patchoffset #{patchOffset}"
+                        #puts "deletions #{deletions}"
                         #puts "lines #{lines}"
                         lines, currentLine = fillBefore(lines, patchOffset[0][3].to_i-1 + deletions, currentLine)
-                        deletions = 0
+                        #deletions = 0
                     else
                         if patchLine[0] == nil && patchLine[2] == "\\ No newline at end of file" 
                         
