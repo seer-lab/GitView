@@ -55,6 +55,7 @@ class MethodFinder
         stop_looking = false
         @deleted_statement = DELETED_DEFAULT
         @methodHistory = MethodTypes::INITIAL
+        only_deleted = nil
         #end_of_block = false
 
         # Identify the method
@@ -71,7 +72,7 @@ class MethodFinder
 
             quoteLess = @mq.removeQuotes(@lines[index][0])
 
-            #puts "Find_method_line = #{@lines[index]}"
+            puts "Find_method_line = #{@lines[index]}"
             #puts "Size = #{@lines[index][0].size}"
             #puts "@lines[index][0][0] != ' ' = #{@lines[index][0][0] != ' '} && (@lines[index].size == 1 #{@lines[index].size == 1} || @lines[index][0][1..-1].match(/^\s+$/) = #{@lines[index][0][1..-1].match(/^\s+$/)})"
             if @lines[index][0] == "" || (@lines[index][0][0][0] != ' ' && (@lines[index][0].size == 1 || @lines[index][0][1..-1].match(/^\s+$/)))
@@ -100,6 +101,7 @@ class MethodFinder
                 index = @deleted_statement
                 @methodHistory = MethodTypes::ONLY_DELETED
                 found = true
+                puts "Found unchanged using deleted method"
                 break
             end
 
@@ -111,6 +113,7 @@ class MethodFinder
                     index = @deleted_statement
                     @methodHistory = MethodTypes::ONLY_DELETED
                     found = true
+                    puts "Found Deleted method end!"
                     break
                 end
             end
@@ -146,7 +149,7 @@ class MethodFinder
                 #TODO remove +/- inside the statement, currently just removing
                 #TODO handle +/- properly
                 temp = "#{fullStatement} #{quoteLess[1..-1]}"
-                #puts "full = #{temp}"
+                puts "full = #{temp}"
 
                 if quoteLess.match(/\{/)
                     
@@ -159,6 +162,7 @@ class MethodFinder
                     elsif temp.match(/\(([\w\[\]\<\>\?,\s]*)\)\s*(throws[\w,\s]*)?\{/)
                         # Note this will not catch interface's declaration of a method (since it has no body)
                         
+                        puts "found method start"
                         if quoteLess[0] == '-'
                             # A deleted method signature has been found 
                             @deleted_statement = index
@@ -172,8 +176,17 @@ class MethodFinder
                     end
                 end
 
-                # Undo changes made by a negative line
-                if quoteLess[0] != '-'
+                if quoteLess[0] == '-' && only_deleted == nil
+                    only_deleted = true
+                elsif quoteLess[0] == '+' && only_deleted == true
+                    # Undo changes made by a negative line
+                    temp = quoteLess[1..-1]
+                    only_deleted = false
+                elsif quoteLess[0] == ' '
+                    only_deleted = nil
+                end
+
+                if @deleted_statement == DELETED_DEFAULT
                     fullStatement = temp
                 end
             end
@@ -181,6 +194,7 @@ class MethodFinder
             #puts "Stop #{stop_looking}"
             if stop_looking && @deleted_statement == DELETED_DEFAULT #&& quoteLess[0] != '-'
                 #fullStatement = temp
+                puts "found nothing!"
                 index = start
                 break
             else
