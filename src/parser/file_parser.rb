@@ -176,6 +176,7 @@ if files && files.length > 0
         end
 
         if $test
+            puts "sha = #{sha}"
             puts "file: #{file_name}"
         end
 
@@ -209,7 +210,7 @@ if files && files.length > 0
             progress_indicator.puts lines
             progress_indicator.puts churn
             progress_indicator.puts method_churn
-            a = $stdin.gets
+            #a = $stdin.gets
 
             puts "Total number of lines of comments = #{comments[0][0]}"
             puts "Total number of lines of code = #{comments[0][1]}"

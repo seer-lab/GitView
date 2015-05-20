@@ -98,6 +98,11 @@ class Merger
                                 #a = gets
                             end
                         end
+                        if patchOffset[0][3].to_i == 0 && patchOffset[0][5].to_i == 0
+                            # File is completely deleted.
+                            # Delete the file so that all lines will be added as deleted lines
+                            lines.clear
+                        end
                         #puts "patchoffset #{patchOffset}"
                         #puts "deletions #{deletions}"
                         #puts "lines #{lines}"
