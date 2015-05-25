@@ -233,7 +233,7 @@ class CodeParser
             end
 
             # Identify if the current line is a method
-            if method_finder.methodFinderManager(lineCount)
+            if method_finder.methodFinderManager(lineCount) && !multiLine
 
                 #if @test
                 #    puts lines[lineCount..lineCount+method_finder.delta]
