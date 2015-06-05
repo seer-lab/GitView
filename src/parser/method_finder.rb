@@ -31,7 +31,7 @@ class MethodFinder
     # Comment start indicates the starting position of the comments preceeding the method.
     # *note that white space may preceed the comment.
     # *note that the lack of a comment preceeding a method is denoted by a -1
-    attr_accessor :actual_start, :comment_start, :deleted_statement, :methodHistory
+    attr_accessor :actual_start, :comment_start, :deleted_statement, :methodHistory, :method_sig_end
 
     DELETED_DEFAULT = -1
     COMMENT_DEFAULT = -1
@@ -107,7 +107,7 @@ class MethodFinder
 
             # This should check if there is a curly brace for an only deleted file 
             if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '-'
-                result = check_line(index, depthCounter, 0, false, false)
+                result = check_line(index, depthCounter, 1, false, false)
                 depthCounter = result['depthCounter']
                 if result['stop']
                     index = @deleted_statement
@@ -163,9 +163,11 @@ class MethodFinder
                         # Note this will not catch interface's declaration of a method (since it has no body)
                         
                         puts "found method start"
-                        if quoteLess[0] == '-'
-                            # A deleted method signature has been found 
-                            @deleted_statement = index
+                        if quoteLess[0] == '-' 
+                            if @deleted_statement == DELETED_DEFAULT
+                                # A deleted method signature has been found 
+                                @deleted_statement = index
+                            end
                         else
                             found = true
                             break
@@ -209,6 +211,7 @@ class MethodFinder
             end
         end
 
+        @method_sig_end = index
         # Extract useful info from it
         @delta = index - start
 

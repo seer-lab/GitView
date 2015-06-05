@@ -205,6 +205,7 @@ class CodeParser
 
         @methodCounter = {'+' => 0, '-' => 0, '~' => 0, '*' => 0}
         @statementCounter = MethodStatementCounter.new
+        method_info_list = Array.new
 
         #methodCounter = CodeChurn.new
 
@@ -276,6 +277,14 @@ class CodeParser
 
                     @statementCounter.push_state(method_finder.methodHistory, length)
 
+                    method_sig = lines[lineCount..method_finder.method_sig_end]
+                    method_sig = removeSigComments(method_sig)
+
+                    # Join all the lines and remove extra spaces as well as left and right side spaces.
+                    method_info = {'change_type' => method_finder.methodHistory,
+                        'signature' => method_sig.join(' ').gsub(/\s+/, ' ').strip}
+                    method_info_list << method_info
+
                     if @test
                         # Identifies the actual start of the method (prior is either white space or comments)
                         #puts "actual_start = #{method_finder.actual_start}"
@@ -283,6 +292,11 @@ class CodeParser
                         #puts "deleted_start = #{method_finder.deleted_statement}"
 
                         puts "+ = #{@methodCounter['+']}, - = #{@methodCounter['-']}, ~ = #{@methodCounter['~']}, * = #{@methodCounter['*']}"
+                        puts "Start = #{method_finder.method_sig_end}"
+                        puts "Start_line:"  
+                        puts lines[lineCount..method_finder.method_sig_end]
+                        puts "Lines without comment:"
+                        puts method_sig
 
                         puts "###### method_start #{lineCount}, type = #{method_finder.methodHistory}, length = #{length} ######"
                         puts lines[lineCount..m_end]
@@ -550,8 +564,36 @@ class CodeParser
             lineCount += 1
             method_finder.iterate
         }
-        return [[totalComment, totalCode], @codeChurn]
+        return [[totalComment, totalCode], @codeChurn, method_info_list]
     end
+end
+
+def removeSigComments(code)
+    remover = ManageSpecialCode.new
+
+    sig_lines = Array.new
+
+    code.each do |line|
+
+        if line && line[0].size > 0
+            temp = line[0].clone
+
+            # Remove preceeding addition/deletion marks
+            if line[0][0] == '+' || line[0][0] == '-'
+                temp = line[0][1..-1]
+            end
+
+            # Remove comments
+            temp = remover.removeComments(temp)
+
+            
+            if temp.gsub(/\s/, '').size > 0
+                # line contains part of the method sig.
+                sig_lines << temp
+            end
+        end
+    end
+    return sig_lines
 end
 
 def handleModified(linesStreak, linesCommentStreak)

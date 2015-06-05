@@ -74,6 +74,16 @@ CREATE TABLE method
     CONSTRAINT fkey_method_1 FOREIGN KEY (file_reference) REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE method_info
+(
+    method_info_id BIGINT UNSIGNED AUTO_INCREMENT,
+    method_id BIGINT UNSIGNED,
+    change_type INTEGER,
+    signature TEXT,
+    PRIMARY KEY(method_info_id),
+    CONSTRAINT fkey_minfo_1 FOREIGN KEY (method_id) REFERENCES method (method_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE method_statement
 (
     statement_id BIGINT UNSIGNED AUTO_INCREMENT,

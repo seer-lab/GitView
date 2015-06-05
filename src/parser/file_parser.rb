@@ -42,6 +42,7 @@ $low_threshold, $size_threshold = 0.8, 20
 $log = true
 $test_merge = false
 $test_tag = false
+$test_paser = true
 
 if ARGV.size == 8
 	repo_owner, repo_name = ARGV[0], ARGV[1]
@@ -155,7 +156,7 @@ if files && files.length > 0
 
     merger = Merger.new($test_merge)
 
-    codeParser = CodeParser.new($test, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
+    codeParser = CodeParser.new($test_paser, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
     # Map file name to the array of stats about that file.
     files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
@@ -206,6 +207,8 @@ if files && files.length > 0
         churn["TotalComment"] += comments[0][0]
         churn["TotalCode"] += comments[0][1]
 
+        method_info = comments[2]
+
         if $test
             progress_indicator.puts lines
             progress_indicator.puts churn
@@ -239,7 +242,11 @@ if files && files.length > 0
             file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
 
             # Insert the method churn count
-            Stats_db.insertMethod(stats_con, file_id, method_churn)
+            method_id = Stats_db.insertMethod(stats_con, file_id, method_churn)
+
+            method_info.each do |method|
+                Stats_db.insertMethodInfo(stats_con, method_id, method)
+            end
 
             # Insert the method statement churn count
             Stats_db.insertMethodStatement(stats_con, file_id, method_statement_churn)

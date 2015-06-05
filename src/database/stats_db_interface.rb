@@ -35,6 +35,7 @@ module Stats_db
     COMMITS = 'commits'
     FILE = 'file'
     METHOD = 'method'
+    METHOD_INFO = 'method_info'
     METHOD_STATEMENT = 'method_statement'
 
     # Repo
@@ -85,6 +86,11 @@ module Stats_db
     NEW_METHODS = 'new_methods'
     DELETED_METHODS = 'deleted_methods'
     MODIFIED_METHODS = 'modified_methods'
+
+    # Method Info
+    METHOD_INFO_ID = 'method_info_id'
+    CHANGE_TYPE = 'change_type'
+    SIGNATURE = 'signature'
 
     # Method Statements
     STATEMENT_ID = 'statement_id'
@@ -312,6 +318,24 @@ module Stats_db
         return DatabaseUtility.toInteger(pick.insert_id)
     end
 
+    def Stats_db.insertMethodInfo(con, method_id, method_info)
+        pick = con.prepare("INSERT INTO #{METHOD_INFO}
+                            (
+                                #{METHOD_ID}, 
+                                #{CHANGE_TYPE},
+                                #{SIGNATURE}
+                            )
+                            VALUES
+                            (
+                                ?, ?, ?
+                            )")
+
+        puts "method_id = #{method_id}, rest = #{method_info}"
+        pick.execute(method_id, method_info['change_type'], method_info['signature'])
+
+        return DatabaseUtility.toInteger(pick.insert_id)
+    end
+
     def Stats_db.insertMethodStatement(con, file_id, statement_counter)
         pick = con.prepare("INSERT INTO #{METHOD_STATEMENT} (#{FILE_REFERENCE}, #{NEW_CODE}, #{NEW_COMMENT}, #{REMOVED_CODE}, #{REMOVED_COMMENT}, #{MODIFIED_CODE_ADDED}, #{MODIFIED_COMMENT_ADDED}, #{MODIFIED_CODE_DELETED}, #{MODIFIED_COMMENT_DELETED}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
@@ -357,9 +381,119 @@ module Stats_db
 
         #DATE_FORMAT(c.commit_date, '%Y-%m')
 
-        pick = con.prepare("SELECT f.path, f.name, c.commit_id, AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED}, AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS}, AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED} FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN method as m ON f.file_id = m.file_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? GROUP BY f.path, f.name, c.commit_id HAVING #{AVERAGE_METHODS_ADDED} > ? OR #{AVERAGE_DELETED_METHODS} > ? OR #{AVERAGE_METHODS_MODIFIED} > ?")
+        pick = con.prepare("
+                        SELECT
+                            f.path,
+                            f.name,
+                            c.commit_id,
+                            AVG(m.new_methods) as #{AVERAGE_METHODS_ADDED},
+                            AVG(m.deleted_methods) as #{AVERAGE_DELETED_METHODS},
+                            AVG(m.modified_methods) as #{AVERAGE_METHODS_MODIFIED}
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ?
+                        GROUP BY
+                            f.path,
+                            f.name,
+                            c.commit_id
+                        HAVING
+                            #{AVERAGE_METHODS_ADDED} > ? OR
+                            #{AVERAGE_DELETED_METHODS} > ? OR
+                            #{AVERAGE_METHODS_MODIFIED} > ?"
+                        )
 
         pick.execute(repo_name, repo_owner, avg_new_methods, avg_deleted_methods, avg_modified_methods)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getMethodInfo(con, repo_owner, repo_name)
+
+        pick = con.prepare("
+                        SELECT
+                            c.commit_id,
+                            c.sha_hash,
+                            c.commit_date,
+                            mi.method_info_id,
+                            f.path,
+                            f.name,
+                            mi.change_type,
+                            mi.signature
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference INNER JOIN
+                            method_info as mi ON m.method_id = mi.method_id
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ?
+                        ORDER BY
+                            c.commit_date"
+                        )
+
+        pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.findSimilar(con, repo_owner, repo_name, path, file_name, signature)
+
+        pick = con.prepare("
+                        SELECT
+                            c.commit_id
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference INNER JOIN
+                            method_info as mi ON m.method_id = mi.method_id
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ? AND
+                            f.path LIKE ? AND
+                            f.name LIKE ? AND
+                            mi.signature LIKE ? AND
+                            mi.change_type > 0 
+                        ORDER BY
+                            c.commit_date"
+                        )
+
+        pick.execute(repo_name, repo_owner, path, file_name, signature)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getRelated(con, commit_id, method_info_id)
+        pick = con.prepare("
+                        SELECT
+                            c.commit_id,
+                            c.sha_hash,
+                            c.commit_date,
+                            mi.method_info_id,
+                            f.path,
+                            f.name,
+                            mi.change_type,
+                            mi.signature
+                        FROM
+                            commits AS c INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference INNER JOIN
+                            method_info as mi ON m.method_id = mi.method_id
+                        WHERE
+                            c.commit_id = ? AND
+                            mi.method_info_id != ? AND
+                            mi.change_type > 0 
+                        ORDER BY
+                            c.commit_date"
+                        )
+
+        pick.execute(commit_id, method_info_id)
 
         return DatabaseUtility.fetch_associated(pick)
     end
