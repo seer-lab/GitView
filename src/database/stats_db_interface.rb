@@ -497,4 +497,62 @@ module Stats_db
 
         return DatabaseUtility.fetch_associated(pick)
     end
+
+    def Stats_db.getMethodChangeInfo(con, repo_owner, repo_name, limit=nil)
+
+        limit_text = ""
+        if limit
+            limit_text = "LIMIT #{limit}"
+        end
+
+        pick = con.prepare("
+                        SELECT
+                            c.commit_id,
+                            c.sha_hash,
+                            c.commit_date,
+                            mi.method_info_id,
+                            f.path,
+                            f.name,
+                            mi.change_type,
+                            mi.signature
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference INNER JOIN
+                            method_info as mi ON m.method_id = mi.method_id
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ?
+                        ORDER BY
+                            f.path,
+                            f.name,
+                            mi.signature,
+                            c.commit_date #{limit_text}"
+                        )
+
+        pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getCommitDates(con, repo_owner, repo_name)
+
+        pick = con.prepare("
+                        SELECT
+                            c.commit_date
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ?
+                        ORDER BY
+                            c.commit_date"
+                        )
+
+        pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
 end
