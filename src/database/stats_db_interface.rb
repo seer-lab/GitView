@@ -523,7 +523,8 @@ module Stats_db
                             method_info as mi ON m.method_id = mi.method_id
                         WHERE
                             r.repo_name LIKE ? AND
-                            r.repo_owner LIKE ?
+                            r.repo_owner LIKE ? AND
+                            mi.change_type > 0 
                         ORDER BY
                             f.path,
                             f.name,
@@ -547,6 +548,78 @@ module Stats_db
                         WHERE
                             r.repo_name LIKE ? AND
                             r.repo_owner LIKE ?
+                        ORDER BY
+                            c.commit_date"
+                        )
+
+        pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getMethodMonthInfo(con, repo_owner, repo_name, limit=nil)
+
+        limit_text = ""
+        if limit
+            limit_text = "LIMIT #{limit}"
+        end
+
+        pick = con.prepare("
+                        SELECT
+                            c.commit_id,
+                            c.sha_hash,
+                            DATE_FORMAT(c.commit_date, '%Y-%m') as 'commit_date',
+                            mi.method_info_id,
+                            f.path,
+                            f.name,
+                            mi.change_type,
+                            mi.signature
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                            method as m ON f.file_id = m.file_reference INNER JOIN
+                            method_info as mi ON m.method_id = mi.method_id
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ? AND
+                            mi.change_type > 0
+                        GROUP BY
+                            DATE_FORMAT(c.commit_date, '%Y-%m'),
+                            f.path,
+                            f.name,
+                            mi.change_type
+                        ORDER BY
+                            f.path,
+                            f.name,
+                            mi.signature,
+                            DATE_FORMAT(c.commit_date, '%Y-%m') #{limit_text}"
+                        )
+
+        pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getCommitDatesRange(con, repo_owner, repo_name, range)
+
+        if range == :month
+            range = '%Y-%m'
+        else
+            return nil
+        end
+
+        pick = con.prepare("
+                        SELECT
+                            DATE_FORMAT(c.commit_date, '#{range}') as 'commit_date'
+                        FROM
+                            repositories AS r INNER JOIN
+                            commits AS c ON r.repo_id = c.repo_reference
+                        WHERE
+                            r.repo_name LIKE ? AND
+                            r.repo_owner LIKE ?
+                        GROUP BY
+                            DATE_FORMAT(c.commit_date, '#{range}')
                         ORDER BY
                             c.commit_date"
                         )

@@ -227,10 +227,10 @@ def pretty_print(graph, spacing_list)
                 # Since the dates are ordered we just have to go through and use the offset - prev_offset
                 offset = spacing_list[date.to_s]
                 cur_offset = offset - prev_offset - 1
-                #if row.size > spacing_list.size 
-                #    yield "date = #{date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
-                #    yield edges.to_s
-                #end
+                if row.size > spacing_list.size 
+                    yield "date = #{date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
+                    yield edges.to_s
+                end
 
 
                 cur_offset.times do |x|
@@ -266,8 +266,10 @@ owner = 'ACRA'
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
+#method_info = Stats_db.getMethodMonthInfo(stats_con, owner, repo)
 method_info = Stats_db.getMethodChangeInfo(stats_con, owner, repo)
 
+#date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, :month)
 date_info = Stats_db.getCommitDates(stats_con, owner, repo)
 spacing_list = Hash.new
 offset = 1
