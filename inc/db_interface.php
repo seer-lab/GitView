@@ -398,7 +398,35 @@ function getChurnDays($mysqli, $user, $repo, $path, $committer)
                         'totalCodeModified'     => array(),
                     );
 
-    if ($stmt = $mysqli->prepare("SELECT DATE(c.commit_date), SUM(c.total_comment_addition), SUM(c.total_comment_deletion), SUM(c.total_comment_modified), SUM(c.total_code_addition), SUM(c.total_code_deletion), SUM(c.total_code_modified) FROM commits AS c WHERE c.commit_id IN (SELECT DISTINCT c2.commit_id FROM commits AS c2 INNER JOIN repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN user AS com ON c2.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f2.path LIKE ? AND com.name LIKE ?) GROUP BY DATE(commit_date) ORDER BY c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT
+            DATE(c.commit_date),
+            SUM(c.total_comment_addition),
+            SUM(c.total_comment_deletion),
+            SUM(c.total_comment_modified),
+            SUM(c.total_code_addition),
+            SUM(c.total_code_deletion),
+            SUM(c.total_code_modified)
+        FROM
+            commits AS c
+        WHERE
+            c.commit_id IN (
+                SELECT DISTINCT
+                    c2.commit_id
+                FROM
+                    commits AS c2 INNER JOIN
+                    repositories AS r ON r.repo_id = c2.repo_reference INNER JOIN
+                    file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN
+                    user AS com ON c2.committer_id = com.user_id
+                WHERE
+                    r.repo_name LIKE ? AND
+                    r.repo_owner LIKE ? AND
+                    f2.path LIKE ? AND
+                    com.name LIKE ?
+                )
+        GROUP BY
+            DATE(commit_date)
+        ORDER BY
+            c.commit_date"))
     {
         $path = $path . '%';
         /* bind parameters for markers */
