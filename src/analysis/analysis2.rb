@@ -203,8 +203,8 @@ end
 
 def pretty_print(graph, spacing_list)
 
-    node_string = "_______|commits\n"
-    node_string += "methods|\n"
+    node_string = "          commits\n"
+    node_string += "methods\n"
     yield node_string
     node_string = ""
     prev_node = nil
@@ -214,11 +214,11 @@ def pretty_print(graph, spacing_list)
         if prev_node && node.change_version(prev_node)
             # Do nothing
         else
-            if node.method_uuid.length > 10
-                node_string += node.method_uuid[0..10]
+            if node.method_id.to_s.length > 10
+                node_string += node.method_id.to_s[0..10]
             else
-                node_string += node.method_uuid
-                node_string += " " * (10 - node.method_uuid.size)
+                node_string += node.method_id.to_s
+                node_string += " " * (10 - node.method_id.to_s.size)
             end
             prev_offset = 0
             cur_offset = 0
