@@ -35,7 +35,13 @@ function getAllRepos($mysqli)
                      ));
 
     # Changed to order in reverse to put the better repo first.
-    if ($stmt = $mysqli->prepare("SELECT repo_name, repo_owner FROM repositories ORDER BY repo_id DESC"))
+    if ($stmt = $mysqli->prepare("SELECT
+            repo_name,
+            repo_owner
+        FROM
+            repositories
+        ORDER BY
+            repo_id DESC"))
     {
         /* execute query */
         $stmt->execute();
@@ -68,7 +74,26 @@ function getMethodMetric($mysqli, $user, $repo, $method)
                      );
     
     // TODO change to use only 1 repo
-    if ($stmt = $mysqli->prepare("SELECT project_name, method_name, c.commit_date, m.number_method_line, m.nested_block_depth, m.cyclomatic_complexity, m.number_parameters FROM repositories as r INNER JOIN commits as c ON r.repo_id = c.repo_reference INNER JOIN method as m ON c.commit_id = m.commit_reference WHERE repo_name = ? AND repo_owner = ? AND method_name = 'org.acra.ErrorReporter.ErrorReporter' AND project_name = 'acra' ORDER BY method_name, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT
+            project_name,
+            method_name,
+            c.commit_date,
+            m.number_method_line,
+            m.nested_block_depth,
+            m.cyclomatic_complexity,
+            m.number_parameters
+        FROM
+            repositories as r INNER JOIN
+            commits as c ON r.repo_id = c.repo_reference INNER JOIN
+            method as m ON c.commit_id = m.commit_reference
+        WHERE
+            repo_name = ? AND
+            repo_owner = ? AND
+            method_name = 'org.acra.ErrorReporter.ErrorReporter' AND
+            project_name = 'acra'
+        ORDER BY
+            method_name,
+            c.commit_date"))
     
     {       
         #$path = $path . '%';
@@ -586,7 +611,20 @@ function getPackages($mysqli, $user, $repo, $committer)
 {
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.path FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND com.name LIKE ? ORDER BY f.path, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT
+            f.path
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            com.name LIKE ?
+        ORDER BY
+            f.path,
+            c.commit_date"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('sss', $repo, $user, $committer);
@@ -730,7 +768,19 @@ function getTags($mysqli, $user, $repo)
                         'name'          => array(),
                         'desc'          => array(),
                         'sha'           => array());
-    if ($stmt = $mysqli->prepare("SELECT t.tag_name, t.tag_description, t.tag_date, t.tag_sha FROM repositories AS r INNER JOIN tags AS t ON r.repo_id = t.repo_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? ORDER BY t.tag_date"))
+    if ($stmt = $mysqli->prepare("SELECT
+            t.tag_name,
+            t.tag_description,
+            t.tag_date,
+            t.tag_sha
+        FROM
+            repositories AS r INNER JOIN
+            tags AS t ON r.repo_id = t.repo_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ?
+        ORDER BY
+            t.tag_date"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('ss', $repo, $user);
@@ -767,7 +817,19 @@ function getCommitters($mysqli, $user, $repo, $path)
 
     $path = $path . '%';
     
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT com.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN user AS com ON c.committer_id = com.user_id INNER JOIN file AS f ON c.commit_id = f.commit_reference  WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY com.name"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT
+            com.name
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        ORDER BY
+            com.name"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('sss', $repo, $user, $path);
@@ -799,7 +861,19 @@ function getClasses($mysqli, $user, $repo, $package)
 {
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT DISTINCT f.name FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? ORDER BY f.name, c.commit_date"))
+    if ($stmt = $mysqli->prepare("SELECT DISTINCT
+            f.name
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        ORDER BY
+            f.name,
+            c.commit_date"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('sss', $repo, $user, $package);
@@ -855,7 +929,26 @@ function getTopCoder($mysqli, $user, $repo, $package, $reverse, $opposite)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f." . $cond . ") AS most_code FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING most_code > 0 ORDER BY most_code " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT
+            com.name,
+            SUM(f." . $cond . ") AS most_code
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        GROUP BY
+            com.name
+        HAVING
+            most_code > 0
+        ORDER BY
+            most_code " . $desc . " 
+        LIMIT " .
+            $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -910,7 +1003,26 @@ function getTopCommenter($mysqli, $user, $repo, $package, $reverse, $opposite)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, SUM(f." . $cond . ") AS comments FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name HAVING comments > 0 ORDER BY comments " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT
+            com.name,
+            SUM(f." . $cond . ") AS comments
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        GROUP BY
+            com.name
+        HAVING
+            comments > 0
+        ORDER BY
+            comments " . $desc . " 
+        LIMIT " .
+            $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -954,7 +1066,24 @@ function getTopCommitter($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT com.name, COUNT(c.commit_id) AS most_commits FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS com ON c.committer_id = com.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY com.name ORDER BY most_commits " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT
+            com.name,
+            COUNT(c.commit_id) AS most_commits
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            user AS com ON c.committer_id = com.user_id
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        GROUP BY
+            com.name
+        ORDER BY
+            most_commits " . $desc . " 
+        LIMIT " .
+            $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -998,7 +1127,24 @@ function getTopAuthor($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, COUNT(c.commit_id) AS contrib FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY contrib " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT
+            aut.name,
+            COUNT(c.commit_id) AS contrib
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            user AS aut ON c.author_id = aut.user_id
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        GROUP BY
+            aut.name
+        ORDER BY
+            contrib " . $desc . " 
+        LIMIT " .
+            $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -1042,7 +1188,25 @@ function getTopContributors($mysqli, $user, $repo, $package, $reverse)
 
     $results = array();
 
-    if ($stmt = $mysqli->prepare("SELECT aut.name, SUM(f.total_comments) + SUM(f.total_code) AS contrib, ABS(SUM(f.total_comments) + SUM(f.total_code)) AS ordering FROM repositories AS r INNER JOIN commits AS c ON r.repo_id = c.repo_reference INNER JOIN file AS f ON c.commit_id = f.commit_reference INNER JOIN user AS aut ON c.author_id = aut.user_id WHERE r.repo_name LIKE ? AND r.repo_owner LIKE ? AND f.path LIKE ? GROUP BY aut.name ORDER BY ordering " . $desc . " LIMIT " . $LIMIT))
+    if ($stmt = $mysqli->prepare("SELECT
+            aut.name,
+            SUM(f.total_comments) + SUM(f.total_code) AS contrib,
+            ABS(SUM(f.total_comments) + SUM(f.total_code)) AS ordering
+        FROM
+            repositories AS r INNER JOIN
+            commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+            file AS f ON c.commit_id = f.commit_reference INNER JOIN
+            user AS aut ON c.author_id = aut.user_id
+        WHERE
+            r.repo_name LIKE ? AND
+            r.repo_owner LIKE ? AND
+            f.path LIKE ?
+        GROUP BY
+            aut.name
+        ORDER BY
+            ordering " . $desc . " 
+        LIMIT " .
+            $LIMIT))
     {
         $package = $package . '%';
         /* bind parameters for markers */
@@ -1134,7 +1298,13 @@ function isUniqueRepo($mysqli, $user, $repo)
 
     $result = 0;
 
-    if ($stmt = $mysqli->prepare("SELECT 1 FROM repositories WHERE repo_name LIKE ? AND repo_owner LIKE ?"))
+    if ($stmt = $mysqli->prepare("SELECT
+            1
+        FROM
+            repositories
+        WHERE
+            repo_name LIKE ? AND
+            repo_owner LIKE ?"))
     {
         /* bind parameters for markers */
         $stmt->bind_param('ss', $repo, $user);
