@@ -263,13 +263,14 @@ $low_threshold, $size_threshold = 0.8, 20
 
 repo = 'acra'
 owner = 'ACRA'
+type = :commit
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
-#method_info = Stats_db.getMethodMonthInfo(stats_con, owner, repo)
+#method_info = Stats_db.getMethodRangeInfo(stats_con, owner, repo, type)
 method_info = Stats_db.getMethodChangeInfo(stats_con, owner, repo)
 
-#date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, :month)
+#date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, type)
 date_info = Stats_db.getCommitDates(stats_con, owner, repo)
 spacing_list = Hash.new
 offset = 1
@@ -331,7 +332,7 @@ end
 
 #puts pretty_print(relations, spacing_list)
 
-File.open("grid_output.txt", 'w') do |f|
+File.open("grid_output_#{type.to_s}.txt", 'w') do |f|
 #    f << relations.to_dot()
     pretty_print(relations, spacing_list) do |result|
         f << result

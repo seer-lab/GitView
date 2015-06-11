@@ -557,7 +557,15 @@ module Stats_db
         return DatabaseUtility.fetch_associated(pick)
     end
 
-    def Stats_db.getMethodMonthInfo(con, repo_owner, repo_name, limit=nil)
+    def Stats_db.getMethodRangeInfo(con, repo_owner, repo_name, range, limit=nil)
+
+        if range == :month
+            range = "DATE_FORMAT(c.commit_date, '%Y-%m')"
+        elsif range == :day
+            range = "DATE(c.commit_date)"
+        else
+            return nil
+        end
 
         limit_text = ""
         if limit
@@ -568,7 +576,7 @@ module Stats_db
                         SELECT
                             c.commit_id,
                             c.sha_hash,
-                            DATE_FORMAT(c.commit_date, '%Y-%m') as 'commit_date',
+                            #{range} as 'commit_date',
                             mi.method_info_id,
                             f.path,
                             f.name,
@@ -585,7 +593,7 @@ module Stats_db
                             r.repo_owner LIKE ? AND
                             mi.change_type > 0
                         GROUP BY
-                            DATE_FORMAT(c.commit_date, '%Y-%m'),
+                            #{range},
                             f.path,
                             f.name,
                             mi.change_type
@@ -593,7 +601,7 @@ module Stats_db
                             f.path,
                             f.name,
                             mi.signature,
-                            DATE_FORMAT(c.commit_date, '%Y-%m') #{limit_text}"
+                            #{range} #{limit_text}"
                         )
 
         pick.execute(repo_name, repo_owner)
@@ -604,14 +612,16 @@ module Stats_db
     def Stats_db.getCommitDatesRange(con, repo_owner, repo_name, range)
 
         if range == :month
-            range = '%Y-%m'
+            range = "DATE_FORMAT(c.commit_date, '%Y-%m')"
+        elsif range == :day
+            range = "DATE(c.commit_date)"
         else
             return nil
         end
 
         pick = con.prepare("
                         SELECT
-                            DATE_FORMAT(c.commit_date, '#{range}') as 'commit_date'
+                            #{range} as 'commit_date'
                         FROM
                             repositories AS r INNER JOIN
                             commits AS c ON r.repo_id = c.repo_reference
@@ -619,7 +629,7 @@ module Stats_db
                             r.repo_name LIKE ? AND
                             r.repo_owner LIKE ?
                         GROUP BY
-                            DATE_FORMAT(c.commit_date, '#{range}')
+                            #{range}
                         ORDER BY
                             c.commit_date"
                         )
