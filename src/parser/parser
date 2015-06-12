@@ -55,7 +55,7 @@ FULLPATH=${LOGDIR}${LOGFILE}
 # Make the directory if it doesnt already exist
 mkdir -p $LOGDIR
 
-ruby1.9.3 file_parser.rb ${REPO_OWNER} ${REPO_NAME} ${TEST} ${FULLPATH} ${MUL} ${HIGH_THRESHOLD} ${LOW_THRESHOLD} ${SIZE_THRESHOLD}
+ruby2.0 file_parser.rb ${REPO_OWNER} ${REPO_NAME} ${TEST} ${FULLPATH} ${MUL} ${HIGH_THRESHOLD} ${LOW_THRESHOLD} ${SIZE_THRESHOLD}
 
 # Print on a new line after the progress bar
 echo 

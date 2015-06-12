@@ -106,7 +106,9 @@ CREATE TABLE file
 (
     file_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     commit_reference BIGINT UNSIGNED,
+    status TEXT,
     name TEXT,
+    previous_name TEXT DEFAULT NULL,
     addition INTEGER DEFAULT 0,
     deletion INTEGER DEFAULT 0,
     patch LONGBLOB,

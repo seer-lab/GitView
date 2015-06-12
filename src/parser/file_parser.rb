@@ -40,7 +40,7 @@ project_title = "Project Analizer"
 repo_owner, repo_name, $test, outputFile, $high_threshold, $ONE_TO_MANY = "", "", true, "", 0.5, true
 $low_threshold, $size_threshold = 0.8, 20
 $log = true
-$test_merge = false
+$test_merge = true
 $test_tag = false
 $test_paser = true
 
@@ -159,7 +159,7 @@ if files && files.length > 0
     codeParser = CodeParser.new($test_paser, $log, $high_threshold, $low_threshold, $size_threshold, $ONE_TO_MANY)
 
     # Map file name to the array of stats about that file.
-    files.each do |file, sha, file_name, current_commit_id, date, body, patch, com_name, aut_name|
+    files.each do |file, sha, file_name, current_commit_id, date, body, patch, prev_name, status, com_name, aut_name|
 
         if !$test
             progress_indicator.percentComplete(["Working on Analizing Files...", "Current File: #{file_name}"])
@@ -188,7 +188,12 @@ if files && files.length > 0
 
         lines = file.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').scan(LINE_EXPR)
 
-        lines = merger.mergePatch(lines, patch)
+        if patch == nil 
+            puts "prev_name = #{prev_name}"
+            # File renamed
+        else
+            lines = merger.mergePatch(lines, patch)
+        end
         #pass the lines of code and the related patch
 
         comments = codeParser.findMultiLineComments(lines)
@@ -239,7 +244,7 @@ if files && files.length > 0
             else
                 Stats_db.updateCommit(stats_con, commit_id, churn["TotalComment"], churn["TotalCode"], churn["CommentAdded"], churn["CommentDeleted"], churn["CommentModified"], churn["CodeAdded"], churn["CodeDeleted"], churn["CodeModified"])
             end
-            file_id = Stats_db.insertFile(stats_con, commit_id, package, name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
+            file_id = Stats_db.insertFile(stats_con, commit_id, package, name, prev_name, comments[0][0], comments[0][1], comments[1].commentAdded(0), comments[1].commentDeleted(0), comments[1].commentModified(0), comments[1].codeAdded(0), comments[1].codeDeleted(0), comments[1].codeModified(0))
 
             # Insert the method churn count
             method_id = Stats_db.insertMethod(stats_con, file_id, method_churn)

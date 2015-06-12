@@ -79,6 +79,7 @@ module Stats_db
     ADDED_CODE = 'code_addition'
     DELETED_CODE = 'code_deletion'
     MODIFIED_CODE = 'code_modified'
+    PREVIOUS_NAME = 'previous_name'
 
     # Method
     METHOD_ID = 'method_id'
@@ -256,10 +257,27 @@ module Stats_db
         return DatabaseUtility.fetch_results(pick)
     end
 
-    def Stats_db.insertFile(con, commit_id, path, name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
+    def Stats_db.insertFile(con, commit_id, path, name, prev_name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
-        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{PATH}, #{NAME}, #{TOTAL_COMMENT}, #{TOTAL_CODE}, #{ADDED_COMMENTS}, #{DELETED_COMMENTS}, #{MODIFIED_COMMENTS}, #{ADDED_CODE}, #{DELETED_CODE}, #{MODIFIED_CODE}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        pick.execute(commit_id, path, name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
+        pick = con.prepare("INSERT INTO
+                #{FILE}
+                (
+                    #{COMMIT_REFERENCE},
+                    #{PATH},
+                    #{NAME},
+                    #{PREVIOUS_NAME},
+                    #{TOTAL_COMMENT},
+                    #{TOTAL_CODE},
+                    #{ADDED_COMMENTS},
+                    #{DELETED_COMMENTS},
+                    #{MODIFIED_COMMENTS},
+                    #{ADDED_CODE},
+                    #{DELETED_CODE},
+                    #{MODIFIED_CODE}
+                )
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(commit_id, path, name, prev_name, total_comment, total_code, comments_added, comments_deleted, comment_modified, code_added, code_deleted, code_modified)
 
         return DatabaseUtility.toInteger(pick.insert_id)
     end

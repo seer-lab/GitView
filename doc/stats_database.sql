@@ -51,6 +51,7 @@ CREATE TABLE file
     commit_reference BIGINT UNSIGNED,
     path TEXT,
     name TEXT,
+    previous_name TEXT,
     total_comments INT,
     total_code INT,
     comment_addition INT,
@@ -116,6 +117,7 @@ CREATE TABLE tags
 );
 
 /*
+DROP TABLE method_info;
 DROP TABLE method_statement;
 DROP TABLE method;
 DROP TABLE file;

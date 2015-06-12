@@ -370,6 +370,8 @@ module Github_database
                 com.#{DATE},
                 c.#{BODY},
                 f.#{PATCH},
+                f.#{PREVIOUS_FILENAME},
+                f.#{STATUS},
                 com.#{NAME},
                 aut.#{NAME} 
             FROM 

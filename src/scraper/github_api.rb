@@ -471,7 +471,7 @@ def setFiles(con, github, commitUrl, commit_id)
                         body += line
                     }
                     if non_utf
-                        body.encode!('UTF-8', :invalid => :replace, :undef => :replace)
+                        body.encode!(Encoding.find('ASCII'), :invalid => :replace, :undef => :replace)
                     end
 
                     if body.match(/^<!DOCTYPE html>/)
