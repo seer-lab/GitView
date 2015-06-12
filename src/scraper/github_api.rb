@@ -1,7 +1,7 @@
-gem 'json', '~> 1.7.7'
-gem 'github_api', '=0.9.7'
+#gem 'json'#, '~> 1.8.2'
+#gem 'github_api', '=0.9.7'
 require 'github_api'
-require 'nokogiri'
+#require 'nokogiri'
 require 'open-uri'
 require 'socket'    # Required to catch socket error
 require_relative '../database/database_interface'
@@ -20,6 +20,9 @@ repo_owner, repo_name, username, password = "", "", "", ""
 if ARGV.size == 4
     repo_owner, repo_name = ARGV[0], ARGV[1]
     username, password = ARGV[2], ARGV[3]
+else 
+    puts "Not enough args"
+    Kernel.exit(1)
 end
 
 #TODO redirect error output to log file.
@@ -412,6 +415,9 @@ def setFiles(con, github, commitUrl, commit_id)
 
     commitFiles.each { |file|
 
+        # Get the change status
+        status = file['status']
+
         # Get Additions
         additions = file["additions"]
 
@@ -423,6 +429,9 @@ def setFiles(con, github, commitUrl, commit_id)
 
         # Get patch info
         patch = file["patch"]
+
+        # Get the previous filename
+        previous_filename = file['previous_filename']
 
         if patch != nil
             patch.gsub(NEWLINE_FIXER,"\n")
@@ -436,7 +445,7 @@ def setFiles(con, github, commitUrl, commit_id)
             #puts url
     rescue Exception => e
         count +=1
-        puts e
+        puts "Err in set files: #{e}"
         if count < 3
                 retry
         end
@@ -445,6 +454,7 @@ def setFiles(con, github, commitUrl, commit_id)
     count = 0
 
         #body = nil
+        non_utf = false
 
         #Added try catch since some file urls do not work. (such as file to large)
         if filename.match(/.*?\.java/)
@@ -460,6 +470,9 @@ def setFiles(con, github, commitUrl, commit_id)
                     urlIO.each { |line|
                         body += line
                     }
+                    if non_utf
+                        body.encode!('UTF-8', :invalid => :replace, :undef => :replace)
+                    end
 
                     if body.match(/^<!DOCTYPE html>/)
                         puts "bad url"
@@ -518,15 +531,18 @@ def setFiles(con, github, commitUrl, commit_id)
                 body = "#{e}\n#{url}"
                 retry
             rescue Exception => e
-                puts e
+                puts "Err in body = #{e}"
                 #puts github.ratelimit_remaining
                 body = "#{e}\n#{url}"
-                retry
+                if !non_utf
+                    non_utf = true
+                    retry
+                end
             end
         else
             body = url
         end
-        Github_database.insertFileId(con, Sourcefile.new(commit_id, filename, additions, deletions, patch, body))
+        Github_database.insertFileId(con, Sourcefile.new(commit_id, status, filename, previous_filename, additions, deletions, patch, body))
     }
 end
 

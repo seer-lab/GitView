@@ -35,7 +35,7 @@ mkdir -p $LOGDIR
 touch $FULLPATH
 
 # Run the script in a virtual screen to allow for access to the server still
-ruby1.9.3 github_api.rb $REPO_OWNER $REPO_NAME $USERNAME $password 2>&1 | tee $FULLPATH
+ruby2.0 github_api.rb $REPO_OWNER $REPO_NAME $USERNAME "${password}" 2>&1 | tee $FULLPATH
 #ruby1.9.1 /home/joseph/source_code/GitHubMining/src/test.rb $REPO_OWNER $REPO_NAME 2>&1 $FULLPATH
 
 # Clear the value stored in password

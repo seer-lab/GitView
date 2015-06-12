@@ -79,6 +79,8 @@ module Github_database
     ADDITION = 'addition'
     DELETION = 'deletion'
     PATCH = 'patch'
+    STATUS = 'status'
+    PREVIOUS_FILENAME = 'previous_name'
 
     # Tags
     TAG = 'tags'
@@ -306,26 +308,26 @@ module Github_database
         return DatabaseUtility.fetch_results(pick)
     end
 
-    # Insert the file into the database
-    # +con+:: the database connection used.
-    # +file+:: the +File+ to be added to the database.
-    def Github_database.insertFile(con, file)
-
-        commit_id = getCommitId(con, file.commit)
-
-        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
-        pick.execute(commit_id, file.name, file.addition, file.deletion, file.patch, file.file)
-
-        return DatabaseUtility.toInteger(pick.insert_id)
-    end
-
     # Insert the file into the database with the commit id already provided
     # +con+:: the database connection used.
     # +file+:: the +File+ to be added to the database.
     def Github_database.insertFileId(con, file)
 
-        pick = con.prepare("INSERT INTO #{FILE} (#{COMMIT_REFERENCE}, #{NAME}, #{ADDITION}, #{DELETION}, #{PATCH}, #{FILE}) VALUES (?, ?, ?, ?, ?, ?)")
-        pick.execute(file.commit, file.name, file.addition, file.deletion, file.patch, file.file)
+        pick = con.prepare("INSERT INTO 
+                #{FILE}
+                (
+                    #{COMMIT_REFERENCE},
+                    #{STATUS},
+                    #{NAME},
+                    #{PREVIOUS_FILENAME},
+                    #{ADDITION},
+                    #{DELETION},
+                    #{PATCH},
+                    #{FILE}
+                )
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?)")
+        pick.execute(file.commit, file.status, file.name, file.previous_filename, file.addition, file.deletion, file.patch, file.file)
 
         return DatabaseUtility.toInteger(pick.insert_id)
     end
@@ -523,10 +525,12 @@ class Commit
 end
 
 class Sourcefile
-    attr_accessor :commit, :name, :addition, :deletion, :patch, :file
+    attr_accessor :commit, :name, :addition, :deletion, :patch, :file, :status, :previous_filename
 
-    def initialize(commit, name, addition, deletion, patch, file)
+    def initialize(commit, status, name, previous_filename, addition, deletion, patch, file)
         @commit = commit
+        @status = status
+        @previous_filename = previous_filename
         @name = name
         @addition = addition
         @deletion = deletion

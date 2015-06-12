@@ -39,6 +39,22 @@ Please see the [project setup notes](doc/project_setup) for a more detailed expl
 
 		gem install mysql
 
+#### Attempting to migrate from 1.9.3 to 2.0
+
+At least for scraping since it keeps giving segfaults.
+
+1. Install ruby dev for ruby2.0
+
+    sudo apt-get install ruby2.0-dev
+
+2. Install the gems
+
+    gem2.0 install mysql
+    gem2.0 install json
+    gem2.0 install github_api
+
+
+
 ### Setup the Database
 
 In order to store the data you must use mysql
