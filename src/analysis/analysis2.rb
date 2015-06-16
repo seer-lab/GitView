@@ -147,27 +147,62 @@ end
 
 class MethodNode
 
-    attr_accessor :commit_id, :sha, :method_id, :path, :name, :signature, :commit_date
+    attr_accessor :commit_id, :sha, :method_id, :path, :name,
+        :signature, :commit_date, :prev_name, :change_type
 
-    def initialize(commit_id, sha, method_id, path, name, signature, commit_date)
+    def initialize(commit_id, sha, method_id, path, name, signature, commit_date, change_type, prev_name)
         @commit_id = commit_id
         @sha = sha
         @method_id = method_id
         @path = path
         @name = name
         @signature = signature
+        @commit_date = commit_date.to_s
+        @change_type = change_type
+        @prev_name = Array.new
+        if prev_name
+            @prev_name << prev_name
+        end
     end
 
     def identifier
         return method_id
     end
 
-    def ==(other)
-        return class_check(other) && @commit_id == other.commit_id && @method_id == other.method_id
-    end
+    #def ==(other)
+    #    return class_check(other) && @commit_id == other.commit_id && @method_id == other.method_id
+    #end
 
     def change_version(other)
         return class_check(other) && self != other && path == other.path && name == other.name && signature == other.signature
+    end
+
+    def has_prev_name?
+        return @prev_name && @prev_name.empty?
+    end
+
+    def prev_name?(other)
+        if other == nil || self == other || !other.has_prev_name?
+            return false
+        end
+
+        if signature == other.signature
+
+        end
+
+        #a = gets
+  
+        @prev_name.each do |prev_name|
+            if other.prev_name.first == prev_name 
+                return true
+            end
+        end
+
+        if "#{@path}#{@name}" == other.prev_name.first 
+            return true
+        end
+
+        return false
     end
 
     def eql?(other)
@@ -188,6 +223,14 @@ class MethodNode
 
     def class_check(other)
         return self.class == other.class
+    end
+
+    def >(other)
+        return !@prev_name.empty? && !other.prev_name.empty? && @prev_name.first >= other.prev_name.first && @signature >= other.signature && @commit_date > other.commit_date
+    end
+
+    def <(other)
+        return !@prev_name.empty? && !other.prev_name.empty? && @prev_name.first <= other.prev_name.first && @signature <= other.signature && @commit_date < other.commit_date
     end
 
     private :class_check
@@ -222,30 +265,35 @@ def pretty_print(graph, spacing_list)
             end
             prev_offset = 0
             cur_offset = 0
+            deleted = false
+            filler = " "
             row = ""
-            edges.each do |date|
+            edges.each_with_index do |node, i|
                 # Since the dates are ordered we just have to go through and use the offset - prev_offset
-                offset = spacing_list[date.to_s]
+                offset = spacing_list[node.commit_date.to_s]
                 cur_offset = offset - prev_offset - 1
                 if row.size > spacing_list.size 
-                    yield "date = #{date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
+                    yield "node.commit_date = #{node.commit_date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
                     yield edges.to_s
                 end
 
-
                 cur_offset.times do |x|
-                    row += add_element
+                    row += add_element(filler)
                 end
 
                 row += add_element("*")
                 
                 prev_offset = offset
+                if node.change_type == 3
+                    deleted = true
+                end
+                filler = nil
             end
-            if spacing_list.size > row.size
-                #puts "Amount = #{spacing_list.to_a[-1][-1]}, #{row.size}"#, #{edges.size}, #{cur_offset}"
-                #puts "adding #{spacing_list.to_a[-1][-1] - row.size}"
-                row += "-" * (spacing_list.to_a[-1][-1] - row.size)
-                #puts "total_length #{row.size}"
+
+            if !deleted            
+                if spacing_list.size > row.size
+                    row += "-" * (spacing_list.to_a[-1][-1] - row.size)
+                end
             end
             node_string += "#{row}\n"
             yield node_string
@@ -308,23 +356,67 @@ method_info.each_with_index do |method, index|
     #    "Method = #{method['method_info_id']}, #{method['signature']}"])
 #puts "method date = #{method['commit_date']}"
 
-    node = MethodNode.new(method['commit_id'], method['sha_hash'], method['method_info_id'], method['path'], method['name'], method['signature'], method['commit_date'])
+    node = MethodNode.new(method['commit_id'], method['sha_hash'], method['method_info_id'],
+        method['path'], method['name'], method['signature'], method['commit_date'],
+        method['change_type'], method['previous_name'])
 
     #if !relations.has_key?(node)
     #    relations.(node)
     #end
 
+    #if prev_node
+    #    puts "other.name = #{prev_node.prev_name}, path = #{prev_node.path}, other_name = #{prev_node.name}"
+    #else
+    #    puts "other = nil"
+    #end
+    #puts "cur_prev_name = #{node.prev_name}, path = #{node.path}, cur_name = #{node.name}"
+
+    #a = gets
+
     if prev_node && node.change_version(prev_node)
         # Still the same method
-        if relations[prev_node][-1].to_s != method['commit_date'].to_s
-            relations[prev_node] << method['commit_date']
+        if relations[prev_node][-1] != node
+            relations[prev_node] << node
         end
     else
         # New method
         relations[node] = Array.new 
-        relations[node] << method['commit_date']
+        relations[node] << node
         prev_node = node
     end    
+end
+
+def merge_sort(m)
+  return m if m.length <= 1
+ 
+  middle = m.length / 2
+  left = merge_sort(m[0...middle])
+  right = merge_sort(m[middle..-1])
+  merge(left, right)
+end
+ 
+def merge(left, right)
+  result = []
+  until left.empty? || right.empty?
+    result << (left.first<right.first ? left.shift : right.shift)
+  end
+  result + left + right
+end
+
+sorted_list = relations.keys
+sorted = merge_sort(sorted_list)
+
+prev_node = nil
+sorted.each do |node|
+
+    if prev_node
+        if node.prev_name?(prev_node)
+            relations[prev_node] << node.commit_date
+            prev_node.prev_name << "#{node.path}#{node.name}"
+        end
+    end
+    prev_node = node
+
 end
 
 #puts "relations = #{relations}"
@@ -340,3 +432,17 @@ File.open("grid_output_#{type.to_s}.txt", 'w') do |f|
 end
 #{}%x(dot -Tpng test.dot -o test.png)
 #relations.write_to_graphic_file('png')
+
+=begin
+if key.has_prev_name?
+     # Previous name is avaialble
+     relations.keys do |inKey|
+         if key != inKey && !key.change_version(inKey)
+             # Not the same
+             if key.prev_name?(inKey)
+                 
+             end
+         end
+     end
+end    
+=end

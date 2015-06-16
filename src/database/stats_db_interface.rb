@@ -531,6 +531,7 @@ module Stats_db
                             mi.method_info_id,
                             f.path,
                             f.name,
+                            f.previous_name,
                             mi.change_type,
                             mi.signature
                         FROM
