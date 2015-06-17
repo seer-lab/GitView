@@ -178,7 +178,7 @@ class MethodNode
     end
 
     def has_prev_name?
-        return @prev_name && @prev_name.empty?
+        return @prev_name && !@prev_name.empty?
     end
 
     def prev_name?(other)
@@ -263,19 +263,28 @@ def pretty_print(graph, spacing_list)
                 node_string += node.method_id.to_s
                 node_string += " " * (10 - node.method_id.to_s.size)
             end
+            node_string += "|"
+
+            #puts "Node:"
+
             prev_offset = 0
             cur_offset = 0
             deleted = false
             filler = " "
             row = ""
-            edges.each_with_index do |node, i|
+            edges.each_with_index do |edge, i|
                 # Since the dates are ordered we just have to go through and use the offset - prev_offset
-                offset = spacing_list[node.commit_date.to_s]
+                offset = spacing_list[edge.commit_date]
                 cur_offset = offset - prev_offset - 1
                 if row.size > spacing_list.size 
-                    yield "node.commit_date = #{node.commit_date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
+                    yield "edge.commit_date = #{edge.commit_date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
                     yield edges.to_s
                 end
+
+                #if edge.has_prev_name?
+                #    puts "\tnode #{edge.to_s}, date = #{edge.commit_date}, change = #{edge.change_type}, prev_name = #{edge.prev_name}"
+                #    a = gets
+                #end
 
                 cur_offset.times do |x|
                     row += add_element(filler)
@@ -284,7 +293,7 @@ def pretty_print(graph, spacing_list)
                 row += add_element("*")
                 
                 prev_offset = offset
-                if node.change_type == 3
+                if edge.change_type == '2'
                     deleted = true
                 end
                 filler = nil
@@ -311,15 +320,19 @@ $low_threshold, $size_threshold = 0.8, 20
 
 repo = 'acra'
 owner = 'ACRA'
-type = :commit
+type = :day
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
-#method_info = Stats_db.getMethodRangeInfo(stats_con, owner, repo, type)
-method_info = Stats_db.getMethodChangeInfo(stats_con, owner, repo)
+if type == :commit
+    method_info = Stats_db.getMethodChangeInfo(stats_con, owner, repo)
+    date_info = Stats_db.getCommitDates(stats_con, owner, repo)
+else
+    method_info = Stats_db.getMethodRangeInfo(stats_con, owner, repo, type)
+    date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, type)
+end
 
-#date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, type)
-date_info = Stats_db.getCommitDates(stats_con, owner, repo)
+
 spacing_list = Hash.new
 offset = 1
 
@@ -355,10 +368,18 @@ method_info.each_with_index do |method, index|
     #progress_indicator.percentComplete(["Number of changes the method receives #{times_changed}",
     #    "Method = #{method['method_info_id']}, #{method['signature']}"])
 #puts "method date = #{method['commit_date']}"
+    
+    change_type = method['change_type']
+
+    if type != :commit
+        #puts "prev change_type = #{change_type}"
+        change_type = change_type.split(/,/)[-1]
+        #puts "change_type = #{change_type}"
+    end
 
     node = MethodNode.new(method['commit_id'], method['sha_hash'], method['method_info_id'],
-        method['path'], method['name'], method['signature'], method['commit_date'],
-        method['change_type'], method['previous_name'])
+        method['path'], method['name'], method['signature'], method['commit_date'].to_s,
+        change_type, method['previous_name'])
 
     #if !relations.has_key?(node)
     #    relations.(node)
@@ -386,6 +407,7 @@ method_info.each_with_index do |method, index|
     end    
 end
 
+=begin
 def merge_sort(m)
   return m if m.length <= 1
  
@@ -418,6 +440,7 @@ sorted.each do |node|
     prev_node = node
 
 end
+=end
 
 #puts "relations = #{relations}"
 #puts "dates = #{spacing_list}"

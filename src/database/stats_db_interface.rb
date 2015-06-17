@@ -599,7 +599,7 @@ module Stats_db
                             mi.method_info_id,
                             f.path,
                             f.name,
-                            mi.change_type,
+                            GROUP_CONCAT(mi.change_type) as 'change_type',
                             mi.signature
                         FROM
                             repositories AS r INNER JOIN
@@ -615,7 +615,7 @@ module Stats_db
                             #{range},
                             f.path,
                             f.name,
-                            mi.change_type
+                            mi.signature
                         ORDER BY
                             f.path,
                             f.name,
