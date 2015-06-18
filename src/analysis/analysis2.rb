@@ -293,7 +293,8 @@ def pretty_print(graph, spacing_list)
                 row += add_element("*")
                 
                 prev_offset = offset
-                if edge.change_type == '2'
+
+                if edge.change_type.to_i == 2
                     deleted = true
                 end
                 filler = nil
@@ -312,6 +313,31 @@ def pretty_print(graph, spacing_list)
     #return node_string
 end
 
+def sort_output(offset, type)
+    sorted = File.open("grid_output_#{type.to_s}_sorted.txt", 'w')
+
+    lines = Array.new
+    i = 0
+    File.open("grid_output_#{type.to_s}.txt", 'r') do |f|
+        f.each_line do |line|
+            if i > 1
+                lines << line
+            end
+            i += 1
+        end
+    end
+
+    # Sort by the range that states the commit (rather than the method identifier) and then reverse it so that we are looking at oldest to newest commit.
+    result = lines.sort_by {|line| line[offset..-1]}.reverse
+
+    result.each do |line|
+
+        sorted << line
+    end
+
+    sorted.close
+end
+
 #b = MethodNode.new(1323, 'dfasdf24fvaefama', 42, 'CrashReport/sample/org/acra/sampleapp/', 'CrashTest.java', '@Override public String getFormId() {')
 
 $high_threshold = 0.5
@@ -320,7 +346,7 @@ $low_threshold, $size_threshold = 0.8, 20
 
 repo = 'acra'
 owner = 'ACRA'
-type = :day
+type = :month
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
 
@@ -453,6 +479,9 @@ File.open("grid_output_#{type.to_s}.txt", 'w') do |f|
         f << result
     end
 end
+
+sort_output(11, type)
+
 #{}%x(dot -Tpng test.dot -o test.png)
 #relations.write_to_graphic_file('png')
 
