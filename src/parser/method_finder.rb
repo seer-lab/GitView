@@ -31,7 +31,8 @@ class MethodFinder
     # Comment start indicates the starting position of the comments preceeding the method.
     # *note that white space may preceed the comment.
     # *note that the lack of a comment preceeding a method is denoted by a -1
-    attr_accessor :actual_start, :comment_start, :deleted_statement, :methodHistory, :method_sig_end
+    attr_accessor :actual_start, :comment_start, :deleted_statement, :methodHistory, :method_sig_end,
+        :new_name_start, :new_name_end
 
     DELETED_DEFAULT = -1
     COMMENT_DEFAULT = -1
@@ -68,6 +69,11 @@ class MethodFinder
         fullStatement = ""
         depthCounter = 1
 
+        possible_rename = false
+        
+        @new_name_start = nil
+        @new_name_end = nil
+
         while !found && index < @lines.length
 
             quoteLess = @mq.removeQuotes(@lines[index][0])
@@ -94,8 +100,12 @@ class MethodFinder
             if @deleted_statement != DELETED_DEFAULT && quoteLess[0] == '+'
                 # Modified statement
                 # Look for another method signature with + preceeding it
+                if !possible_rename
+                    @new_name_start = index
+                end
 
                 # TODO create a way for it to check if the method has an end (within it's delete block or if there is additions following before a end curly brace
+                possible_rename = true
             elsif @deleted_statement != DELETED_DEFAULT && quoteLess[0] == ' '
                 # Statement is only deleted continue where it was previously left at
                 index = @deleted_statement
@@ -168,6 +178,11 @@ class MethodFinder
                                 # A deleted method signature has been found 
                                 @deleted_statement = index
                             end
+                        elsif possible_rename
+                            found = true
+                            @new_name_end = index
+                            index = @deleted_statement
+                            break
                         else
                             found = true
                             break
@@ -301,13 +316,27 @@ class MethodFinder
         start = index
         test = 1
 
+        prev_depth = 0
+
         begin
             index = start
             while index < @lines.length
 
+                prev_depth = depthCounter
+
                 result = check_line(index, depthCounter, test)
                 index = result['index']
                 depthCounter = result['depthCounter']
+
+                # Decrease the depthcounter to account for method renaming.
+                if index == @new_name_end 
+                    puts "renamed = #{@lines[index]}"
+                    puts "#{depthCounter} > #{prev_depth} = #{depthCounter > prev_depth}"
+                    if depthCounter > prev_depth
+                        depthCounter -=1
+                    end
+                end
+
                 if result['stop']
                     return index
                 end

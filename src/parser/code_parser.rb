@@ -295,6 +295,14 @@ class CodeParser
                         puts "Start = #{method_finder.method_sig_end}"
                         puts "Start_line:"  
                         puts lines[lineCount..method_finder.method_sig_end]
+                        puts "renamed:"
+                        if method_finder.new_name_end
+                            puts "some rename #{method_finder.new_name_start}, #{method_finder.new_name_end}"
+                            puts lines[method_finder.new_name_start..method_finder.new_name_end]
+                        else
+                            puts "no rename"
+                        end
+
                         puts "Lines without comment:"
                         puts method_sig
 
