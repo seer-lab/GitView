@@ -148,9 +148,9 @@ end
 class MethodNode
 
     attr_accessor :commit_id, :sha, :method_id, :path, :name,
-        :signature, :commit_date, :prev_name, :change_type
+        :signature, :commit_date, :prev_name, :change_type, :next_method_id
 
-    def initialize(commit_id, sha, method_id, path, name, signature, commit_date, change_type, prev_name)
+    def initialize(commit_id, sha, method_id, path, name, signature, commit_date, change_type, prev_name, next_method_id=nil)
         @commit_id = commit_id
         @sha = sha
         @method_id = method_id
@@ -163,6 +163,7 @@ class MethodNode
         if prev_name
             @prev_name << prev_name
         end
+        @next_method_id = next_method_id
     end
 
     def identifier
@@ -174,7 +175,11 @@ class MethodNode
     #end
 
     def change_version(other)
-        return class_check(other) && self != other && path == other.path && name == other.name && signature == other.signature
+        return class_check(other) && self != other && @path == other.path && @name == other.name && @signature == other.signature
+    end
+
+    def same?(other)
+        return change_version(other) && @commit_id == other.commit_id && @method_id == other.method_id
     end
 
     def has_prev_name?
@@ -272,13 +277,19 @@ def pretty_print(graph, spacing_list)
             deleted = false
             filler = " "
             row = ""
-            edges.each_with_index do |edge, i|
+            #puts "edge = #{edges}"
+            #if !edges['prev'].empty?
+            #    puts "edge children = #{edges['prev']}"
+            #    a = gets
+            #end
+            edges['dates'].each_with_index do |edge, i|
                 # Since the dates are ordered we just have to go through and use the offset - prev_offset
                 offset = spacing_list[edge.commit_date]
                 cur_offset = offset - prev_offset - 1
-                if row.size > spacing_list.size 
-                    yield "edge.commit_date = #{edge.commit_date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
-                    yield edges.to_s
+                if row.size > spacing_list.size
+                    puts "#{edge}"
+                    #yield "edge.commit_date = #{edge.commit_date.to_s}, offset #{offset}, prev_offset #{prev_offset}, cur_offset #{cur_offset}, rowsize = #{row.size} "
+                    #yield edges.to_s
                 end
 
                 #if edge.has_prev_name?
@@ -290,8 +301,14 @@ def pretty_print(graph, spacing_list)
                     row += add_element(filler)
                 end
 
-                row += add_element("*")
+                if edge.change_type.to_i != 0
+                    row += add_element("*")
+                else
+                    row += add_element("+")
+                end
+                    
                 
+
                 prev_offset = offset
 
                 if edge.change_type.to_i == 2
@@ -338,6 +355,46 @@ def sort_output(offset, type)
     sorted.close
 end
 
+def clean_change_type(change_type, type)
+    if type != :commit
+        return change_type.split(/,/)[-1]        
+    end
+    return change_type
+end
+
+def find_node(node_hash, method_id)
+    node_hash.keys.each_with_index do |element, index|
+        puts "ele = #{element.method_id}, meth #{method_id}"
+        if element.method_id == method_id
+            puts "found"
+            return index
+        end
+    end
+    return nil
+end
+
+def check_next(node, node_hash)
+
+    index = find_node(node_hash, node.next_method_id)
+    if index
+        
+        node_hash[node]['next_node'] << node_hash.keys[index]
+
+        node_hash = check_next(node_hash.keys[index], node_hash)
+
+        # Add the children from the next node.
+        if !node_hash[node_hash.keys[index]]['next_node'].empty?
+            node_hash[node]['next_node'] += node_hash[node_hash.keys[index]]['next_node']
+        end
+
+        # Delete the next node since it is not needed any more
+        node_hash.delete(node_hash.keys[index])
+    end
+
+    # No next node return the node_hash unchanged
+    return node_hash
+end
+
 #b = MethodNode.new(1323, 'dfasdf24fvaefama', 42, 'CrashReport/sample/org/acra/sampleapp/', 'CrashTest.java', '@Override public String getFormId() {')
 
 $high_threshold = 0.5
@@ -346,13 +403,18 @@ $low_threshold, $size_threshold = 0.8, 20
 
 repo = 'acra'
 owner = 'ACRA'
-type = :month
+type = :commit
 
 stats_con = Stats_db.createConnectionThreshold("#{$size_threshold.to_s}_#{Stats_db.mergeThreshold($low_threshold)}_#{Stats_db.mergeThreshold($high_threshold)}", $ONE_TO_MANY)
+
+method_info = nil
+date_info = nil
+prev_method_info = nil
 
 if type == :commit
     method_info = Stats_db.getMethodChangeInfo(stats_con, owner, repo)
     date_info = Stats_db.getCommitDates(stats_con, owner, repo)
+    prev_method_info = Stats_db.getMethodChangeInfoRename(stats_con, owner, repo)
 else
     method_info = Stats_db.getMethodRangeInfo(stats_con, owner, repo, type)
     date_info = Stats_db.getCommitDatesRange(stats_con, owner, repo, type)
@@ -389,19 +451,51 @@ relations = Hash.new
 
 prev_node = nil
 
+prev_index = 0
+
+rename_node = Array.new
+rename_node_list = Hash.new
+
+prev_method_info.each do |prev_method|
+    rename_node << MethodNode.new(prev_method['commit_id'], prev_method['sha_hash'],
+        prev_method['method_info_id'], prev_method['path'], prev_method['name'],
+        prev_method['signature'], prev_method['commit_date'].to_s,
+        clean_change_type(prev_method['change_type'], type), prev_method['previous_name'],
+        prev_method['next_method_info_id'])
+    rename_node_list[rename_node[-1]] = Hash.new
+    rename_node_list[rename_node[-1]]['next_node'] = Array.new
+    rename_node_list[rename_node[-1]]['parent'] = nil
+    rename_node_list[rename_node[-1]]['index'] = prev_index
+    prev_index+=1
+end
+
+# Handle double or more renaming
+rename_node_list.keys.each_with_index do |re_node, index|
+
+    rename_node_list = check_next(re_node, rename_node_list)
+    #a = gets
+end
+
+rename_node_list.keys.each_with_index do |re_node, index|
+    puts "rename_nodes[#{index}] = #{rename_node_list[re_node]}"
+end
+
+a = gets
+
+prev_index = 0
+parent_link = false
+dump = false
+debug = false
+
+rename_connections = Array.new
+
 method_info.each_with_index do |method, index|
 
     #progress_indicator.percentComplete(["Number of changes the method receives #{times_changed}",
     #    "Method = #{method['method_info_id']}, #{method['signature']}"])
 #puts "method date = #{method['commit_date']}"
     
-    change_type = method['change_type']
-
-    if type != :commit
-        #puts "prev change_type = #{change_type}"
-        change_type = change_type.split(/,/)[-1]
-        #puts "change_type = #{change_type}"
-    end
+    change_type = clean_change_type(method['change_type'], type)
 
     node = MethodNode.new(method['commit_id'], method['sha_hash'], method['method_info_id'],
         method['path'], method['name'], method['signature'], method['commit_date'].to_s,
@@ -420,18 +514,122 @@ method_info.each_with_index do |method, index|
 
     #a = gets
 
+    #puts node.path
+    #puts node.signature
+
     if prev_node && node.change_version(prev_node)
-        # Still the same method
-        if relations[prev_node][-1] != node
-            relations[prev_node] << node
+
+        if node.commit_id != relations[prev_node]['dates'][-1].commit_id       
+            # Still the same method
+            if relations[prev_node]['dates'][-1] != node
+                relations[prev_node]['dates'] << node
+            end
+        else
+            # Node or prev node is/are anon method within the class and cannot properly be tracked dump this one
+            dump = true
         end
     else
         # New method
-        relations[node] = Array.new 
-        relations[node] << node
+        relations[node] = Hash.new
+        relations[node]['dates'] = Array.new
+        relations[node]['next'] = Array.new
+        relations[node]['dates'] << node
         prev_node = node
-    end    
+    end
+    
+
+    if !dump
+        # Link original parent to the final renamed node
+        rename_connections.each_with_index do |connection, index|
+
+            # Not all of these connections are found (since some will contain no commits)
+
+            if connection['next_method_id'] == node.method_id
+                #a = gets
+                relations[connection['parent']]['next'] << node
+                rename_connections.delete_at(index)
+                parent_link = true
+                break
+            end
+        end
+
+        if !parent_link
+            # Link parent to children that have been renamed
+            if prev_index < rename_node_list.keys.size
+                #puts "prev = #{rename_node_list.keys[prev_index]}"
+                #puts "node = #{node}"        
+               
+                if node.same?(rename_node_list.keys[prev_index])
+
+                    #puts "equal"
+                    #puts "rename_node[#{rename_node_list.keys[prev_index]}] = #{rename_node_list[rename_node_list.keys[prev_index]]}"
+                    
+
+                    # Merge the list of next_nodes
+                    if !rename_node_list[rename_node_list.keys[prev_index]]['next_node'].empty?
+                        puts "Merging nodes"
+                        # TODO fix this, currently the list requires that the nodes are in the list are ordered by date.
+                        relations[prev_node]['next'] += rename_node_list[rename_node_list.keys[prev_index]]['next_node']
+                        rename_connections << {'parent' => prev_node, 'next_method_id' => relations[prev_node]['next'][-1].next_method_id}
+                        #relations[prev_node]['next_method_id'] = relations[prev_node]['next'][-1].next_method_id
+                    else
+                        #relations[prev_node]['next_method_id'] = rename_node_list.keys[prev_index].next_method_id
+                        rename_connections << {'parent' => prev_node, 'next_method_id' => rename_node_list.keys[prev_index].next_method_id}
+                    end
+
+                    prev_index += 1            
+                end
+            end
+        else
+            puts "Parent Link found"
+            parent_link = false
+        end
+    else
+        dump = false
+    end
 end
+
+puts "rename_size = #{rename_connections.size}"
+
+method_info.each_with_index do |method, index|
+
+    #progress_indicator.percentComplete(["Number of changes the method receives #{times_changed}",
+    #    "Method = #{method['method_info_id']}, #{method['signature']}"])
+#puts "method date = #{method['commit_date']}"
+    
+    change_type = clean_change_type(method['change_type'], type)
+
+    node = MethodNode.new(method['commit_id'], method['sha_hash'], method['method_info_id'],
+        method['path'], method['name'], method['signature'], method['commit_date'].to_s,
+        change_type, method['previous_name'])
+
+    rename_connections.each_with_index do |connection, index|
+
+        # Not all of these connections are found (since some will contain no commits)
+        #puts "connections[#{index}]['parent']  = #{connection['parent']}"
+        #puts "connections[#{index}]['next_method_id']  = #{connection['next_method_id']}, node.method_id = #{node.method_id}"
+        #a = gets
+
+        if connection['next_method_id'] == node.method_id
+            #a = gets
+            relations[connection['parent']]['next'] << node
+            rename_connections.delete_at(index)
+            parent_link = true
+            break
+        end
+    end
+end
+
+
+puts "rename_size = #{rename_connections.size}"
+#=end
+
+
+rename_nodes = Array.new
+rename_nodes << Hash.new
+
+#MethodNode.new(
+#rename_nodes[0]['method_info_id']
 
 =begin
 def merge_sort(m)
@@ -473,6 +671,7 @@ end
 
 #puts pretty_print(relations, spacing_list)
 
+# TODO fix the issue with merged commits showing up incorrectly.
 File.open("grid_output_#{type.to_s}.txt", 'w') do |f|
 #    f << relations.to_dot()
     pretty_print(relations, spacing_list) do |result|
