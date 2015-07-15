@@ -542,15 +542,15 @@ module Stats_db
                             method_info as mi ON m.method_id = mi.method_id
                         WHERE
                             r.repo_name LIKE ? AND
-                            r.repo_owner LIKE ? AND
-                            mi.change_type > 0 
+                            r.repo_owner LIKE ?
                         ORDER BY
                             f.path,
                             f.name,
                             mi.signature,
                             c.commit_date #{limit_text}"
                         )
-
+#AND
+                            #mi.change_type > 0 
         pick.execute(repo_name, repo_owner)
 
         return DatabaseUtility.fetch_associated(pick)
@@ -654,6 +654,60 @@ module Stats_db
                         )
 
         pick.execute(repo_name, repo_owner)
+
+        return DatabaseUtility.fetch_associated(pick)
+    end
+
+    def Stats_db.getMethodChangeInfoRename(con, repo_owner, repo_name)
+
+        pick = con.prepare("
+            SELECT
+                c.commit_id,
+                c.sha_hash,
+                c.commit_date,
+                mi.method_info_id,
+                f.path,
+                f.name,
+                mi.signature,
+                mi.change_type,
+                f.previous_name,    
+                new_methods.method_info_id as 'next_method_info_id'
+            FROM
+                repositories AS r INNER JOIN
+                commits AS c ON r.repo_id = c.repo_reference INNER JOIN
+                file AS f ON c.commit_id = f.commit_reference INNER JOIN
+                method as m ON f.file_id = m.file_reference INNER JOIN
+                method_info as mi ON m.method_id = mi.method_id INNER JOIN
+                (
+                SELECT
+                    mi2.method_info_id,
+                    f2.previous_name,
+                    mi2.signature
+                FROM
+                    repositories AS r2 INNER JOIN
+                    commits AS c2 ON r2.repo_id = c2.repo_reference INNER JOIN
+                    file AS f2 ON c2.commit_id = f2.commit_reference INNER JOIN
+                    method as m2 ON f2.file_id = m2.file_reference INNER JOIN
+                    method_info as mi2 ON m2.method_id = mi2.method_id
+                WHERE
+                    r2.repo_name LIKE ? AND
+                    r2.repo_owner LIKE ? AND
+                    f2.previous_name IS NOT NULL
+                ) AS new_methods ON CONCAT(f.path, f.name) = new_methods.previous_name AND
+                    mi.signature = new_methods.signature
+            WHERE
+                r.repo_name LIKE ? AND
+                r.repo_owner LIKE ?
+            GROUP BY
+                CONCAT(f.path, f.name),
+                mi.signature
+            ORDER BY
+                f.path,
+                f.name,
+                mi.signature,
+                c.commit_date")
+
+        pick.execute(repo_name, repo_owner, repo_name, repo_owner)
 
         return DatabaseUtility.fetch_associated(pick)
     end
