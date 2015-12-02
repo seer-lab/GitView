@@ -1,0 +1,25 @@
+POSSIBLE_SIZES=(100 1000)
+QUARTERS_DATA=(1 2 3 4)
+QUARTERS=(1 2 3)
+
+OWNER=ACRA
+REPO=acra
+
+GET_DATA=$1
+
+if [[ $GET_DATA -eq 1 ]]; then
+
+    for quart in ${QUARTERS_DATA[@]}; do
+        for size in ${POSSIBLE_SIZES[@]}; do
+            echo "Collecting data for q${quart} ${size}"
+            ruby get_data.rb ${OWNER} ${REPO} ${size} ${quart}
+        done
+    done
+fi
+
+for quart in ${QUARTERS[@]}; do
+    for size in ${POSSIBLE_SIZES[@]}; do
+        echo "Running q${quart} ${size}"
+        ruby svm_test.rb ${OWNER} ${REPO}  ${size} ${quart} 2>&1 | tee evaluation/test_${size}_q${quart}
+    done
+done
