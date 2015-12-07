@@ -33,7 +33,7 @@ mappers = Hash.new
 categories = Array.new
 
 #PREV_TYPES_MAX = 5
-File.open("data/test_sample_#{repo_owner}_#{repo_name}_#{limit}_#{start_quarter}_#{end_quarter}", "r") do |f|    
+File.open("data/test_sample_#{repo_owner}_#{repo_name}_#{limit}_#{start_quarter}_#{end_quarter}_desc", "r") do |f|
     json_data = f.gets
     raw_data = JSON.parse(json_data)
 
@@ -62,7 +62,7 @@ parameter.c = 10
 #puts "data = #{data}"
 
 # Print the data out to a file to allow for use with easy.py
-File.open("data/train_data_#{repo_owner}_#{repo_name}_#{limit}_q#{start_quarter}_q#{end_quarter}", "w") do |f|
+File.open("data/train_data_#{repo_owner}_#{repo_name}_#{limit}_q#{start_quarter}_q#{end_quarter}_desc", "w") do |f|
     data.each_with_index do |row, index|
         f.print "#{categories[index]}"
         row.each_with_index do |col, i|
@@ -92,7 +92,7 @@ puts "Setting up test"
 examples = Array.new
 classification = Array.new
 
-File.open("data/test_sample_#{repo_owner}_#{repo_name}_#{limit}_#{start_quarter+end_quarter}_#{end_quarter+end_quarter}", "r") do |f|    
+File.open("data/test_sample_#{repo_owner}_#{repo_name}_#{limit}_#{start_quarter+end_quarter}_#{end_quarter+end_quarter}_desc", "r") do |f|
     json_data = f.gets
     raw_data = JSON.parse(json_data)
 

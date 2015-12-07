@@ -69,7 +69,7 @@ CREATE TABLE method
     method_id BIGINT UNSIGNED AUTO_INCREMENT,
     file_reference BIGINT UNSIGNED,
     new_methods INT,
-    deleted_methods INT,
+    deleted_methods INT, 
     modified_methods INT,
     PRIMARY KEY(method_id),
     CONSTRAINT fkey_method_1 FOREIGN KEY (file_reference) REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE
