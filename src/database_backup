@@ -11,7 +11,7 @@ date_stamp=$(date +"%m%d%Y_%H%M")
 
 for line in ${DATABASES[@]}
 do
-
+    echo "Backing up "${line}
     mysqldump -ujoseph -p${password} ${line} > ${line}${date_stamp}
 done
 

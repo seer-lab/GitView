@@ -61,7 +61,7 @@ module Stats_db
     TOTAL_MODIFIED_CODE = 'total_code_modified'
     
     # User
-    USER = 'user'
+    USER = 'users'
     USER_ID = 'user_id'
     #COMMIT_REFERENCE = 'commit_reference'
     #NAME = 'name'
@@ -92,6 +92,7 @@ module Stats_db
     METHOD_INFO_ID = 'method_info_id'
     CHANGE_TYPE = 'change_type'
     SIGNATURE = 'signature'
+    LENGTH = 'length'
 
     # Method Statements
     STATEMENT_ID = 'statement_id'
@@ -291,7 +292,7 @@ module Stats_db
     end
 
     def Stats_db.getUserId(con, name)
-        pick = con.prepare("SELECT #{USER_ID} FROM user WHERE #{NAME} LIKE ?")
+        pick = con.prepare("SELECT #{USER_ID} FROM #{USER} WHERE #{NAME} LIKE ?")
         pick.execute(name)
 
         result = pick.fetch
@@ -341,15 +342,16 @@ module Stats_db
                             (
                                 #{METHOD_ID}, 
                                 #{CHANGE_TYPE},
-                                #{SIGNATURE}
+                                #{SIGNATURE},
+                                #{LENGTH}
                             )
                             VALUES
                             (
-                                ?, ?, ?
+                                ?, ?, ?, ?
                             )")
 
         puts "method_id = #{method_id}, rest = #{method_info}"
-        pick.execute(method_id, method_info['change_type'], method_info['signature'])
+        pick.execute(method_id, method_info['change_type'], method_info['signature'], method_info['length'])
 
         return DatabaseUtility.toInteger(pick.insert_id)
     end

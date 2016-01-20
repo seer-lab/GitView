@@ -282,7 +282,8 @@ class CodeParser
 
                     # Join all the lines and remove extra spaces as well as left and right side spaces.
                     method_info = {'change_type' => method_finder.methodHistory,
-                        'signature' => method_sig.join(' ').gsub(/\s+/, ' ').strip}
+                        'signature' => method_sig.join(' ').gsub(/\s+/, ' ').strip,
+                        'length'    => length}
                     method_info_list << method_info
 
                     if @test

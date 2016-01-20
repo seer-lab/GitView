@@ -149,7 +149,7 @@ class Merger
                 puts patch != nil
                 puts !lines[0][0].match(/^\d\d\d.*?/)
                 puts lines[0][0].scan(/^\d\d\d(.+)/)
-                a = $stdin.gets
+                #a = $stdin.gets
             end
         end
         
