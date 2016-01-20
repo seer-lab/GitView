@@ -15,7 +15,7 @@ CREATE TABLE repositories
     PRIMARY KEY(repo_id)
 );
 
-CREATE TABLE user
+CREATE TABLE users
 (
     user_id BIGINT UNSIGNED AUTO_INCREMENT,
     name VARCHAR(64),
@@ -41,8 +41,8 @@ CREATE TABLE commits
     total_code_modified INT,
     PRIMARY KEY(commit_id),
     CONSTRAINT fkey_commits_1 FOREIGN KEY (repo_reference) REFERENCES repositories (repo_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fkey_commits_2 FOREIGN KEY (committer_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fkey_commits_3 FOREIGN KEY (author_id) REFERENCES user (user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fkey_commits_2 FOREIGN KEY (committer_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fkey_commits_3 FOREIGN KEY (author_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE file
@@ -80,6 +80,7 @@ CREATE TABLE method_info
     method_info_id BIGINT UNSIGNED AUTO_INCREMENT,
     method_id BIGINT UNSIGNED,
     change_type INTEGER,
+    length INTEGER,
     signature TEXT,
     PRIMARY KEY(method_info_id),
     CONSTRAINT fkey_minfo_1 FOREIGN KEY (method_id) REFERENCES method (method_id) ON DELETE CASCADE ON UPDATE CASCADE
