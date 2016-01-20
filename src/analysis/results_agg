@@ -1,0 +1,87 @@
+#!/bin/bash
+
+OUTPUT_FILE=test_results
+TARGET_FOLDER=evaluation/avg_test/
+
+if [ "$#" -eq 1 ]
+then
+    TARGET_FOLDER=$1
+fi
+
+if [ "$#" -eq 2 ]
+then
+    TARGET_FOLDER=$1
+    OUTPUT_FILE=$2
+fi
+
+HEADER_PRINT=0
+HEADER=
+SUB_HEADER=
+SEPARATE=
+
+# Remove the last results.
+> "${OUTPUT_FILE}"
+
+for dir in "${TARGET_FOLDER}"*
+do
+    # is the file a directory?
+    if [ -d "${dir}" ]
+    then
+
+        # Get folder name
+        type_name=$(basename "${dir}")
+
+        ROW="${type_name}"
+
+        # Navigate to it and then for each file parse
+        for f in "${dir}"/*
+        do
+
+            echo Parsing ${f}
+
+            if [[ "${HEADER_PRINT}" -eq 0 ]]
+            then
+                # Get the test name
+                test_name=$(basename "${f}")
+
+                # Put the header
+                HEADER="${HEADER}, ${test_name}, "
+                SUB_HEADER="${SUB_HEADER}, result, separable"
+            fi
+            
+            grep -q 'WARNING: reaching max number of iterations' "${f}"
+
+            if [[ $? -eq 0 ]]
+            then
+                # Mark the current test as inseparable
+                SEPARATE=N
+            else
+                # Mark the current test as separable
+                SEPARATE=Y
+            fi
+
+            # Get the test result.
+            TEST_RESULT=$(grep 'Success Rate:' ${f} | grep -E -o '(0\.[0-9]+)|(1\.0+)')
+
+            # Store the results in a csv.
+            ROW="${ROW}, ${TEST_RESULT}, ${SEPARATE}"
+
+            #echo "Row = ${ROW}"
+        done
+
+        
+        if [[ "${HEADER_PRINT}" -eq 0 ]]
+        then
+            # Print header.
+            echo "${HEADER}" >> "${OUTPUT_FILE}"
+
+            # Print sub-header.
+            echo "${SUB_HEADER}" >> "${OUTPUT_FILE}"
+        fi
+
+        # Print row
+        echo "${ROW}" >> "${OUTPUT_FILE}"
+
+        HEADER_PRINT=1
+    fi
+done

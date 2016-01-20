@@ -1,0 +1,54 @@
+POSSIBLE_SIZES=(100 500)
+QUARTERS_DATA=(1 2 3 4)
+QUARTERS=(1 2 3)
+
+TEST_NUMBER=(1 2 3 4 5)
+
+OWNER=ACRA
+REPO=acra
+#$(date +"%m%d%Y_%H%M")_
+
+GET_DATA=$1
+#_cas
+CUR_TYPE=test_signature-change-freq
+
+for run in ${TEST_NUMBER[@]}; do
+
+    folder=evaluation/avg_test/"${REPO}"/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
+
+    mkdir -p "${folder}"
+
+    if [[ $GET_DATA -eq 1 ]]; then
+
+        for quart in ${QUARTERS_DATA[@]}; do
+            for size in ${POSSIBLE_SIZES[@]}; do
+                echo "Collecting data for q${quart} ${size}"
+                ruby get_data.rb ${OWNER} ${REPO} ${size} ${quart}
+            done
+        done
+    fi
+
+
+    size=100
+
+    # TODO adjust this to allow for input of train quarter and test quarter
+    for quart in ${QUARTERS[@]}; do
+
+        #for end_q in ${QUARTERS_DATA[@]}; do
+
+        #    if [[ "${end_q}" -gt "${quart}" ]]; then
+
+        
+        #for size in ${POSSIBLE_SIZES[@]}; do
+            echo "Running q${quart} ${size}"
+            ruby svm_test.rb ${OWNER} ${REPO} ${size} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+
+            #${end_q} dou
+        #done
+
+            #fi
+
+        #done
+    done
+
+done
