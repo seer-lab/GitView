@@ -2,6 +2,9 @@ require 'json'
 require_relative '../database/pg-interface'
 require_relative 'bidirectional_map'
 
+ALPHABET_SIZE = 26
+LETTER_OFFSET= 97
+
 class String
     def is_i?
        /\A[-+]?\d+\z/ === self
@@ -36,6 +39,18 @@ def split_change(change_type)
         list[3] = 1
     end
     return list
+end
+
+def count_letters(text)
+    letters = text.gsub(/[^[:alpha:]]/, '').downcase
+
+    counts = Array.new
+
+    ALPHABET_SIZE.times do |index|
+        counts << letters.count((index+LETTER_OFFSET).chr)
+    end
+
+    return counts
 end
 
 def get_data_files(rows, mappers=nil, categories=nil)
@@ -96,13 +111,20 @@ def get_data_files(rows, mappers=nil, categories=nil)
 
                 # Map the string if needed.
                 if !val.is_i? && key != 'change_frequency'
-                    # Only create the a mapper if it is needed
-                    if mapper_count > mappers.size - 1 && !mappers.has_key?(key)
-                        mappers[key] = BidirectionalMap.new
-                    end
+                    #if key == 'signature'
+                        # Bucket the methods names into counts.
+                    #    data[-1] += count_letters(val)
+                    #    skip = true
+                   # else
 
-                    val = mappers[key][val]
-                    mapper_count += 1
+                        # Only create the a mapper if it is needed
+                        if mapper_count > mappers.size - 1 && !mappers.has_key?(key)
+                            mappers[key] = BidirectionalMap.new
+                        end
+
+                        val = mappers[key][val]
+                        mapper_count += 1
+                    #end
                 else
                     
 
@@ -139,25 +161,29 @@ repo_owner = 'ACRA'
 repo_name = 'acra'
 limit = 100
 
-end_quarter = 1
-start_quarter = end_quarter - 1
-
-if ARGV.size == 4 || ARGV.size == 5
+if ARGV.size == 4 || ARGV.size == 5 || ARGV.size == 6
     repo_owner = ARGV[0]
     repo_name = ARGV[1]
     limit = ARGV[2].to_i
-    end_quarter = ARGV[3].to_i
-    start_quarter = end_quarter - 1
+    
+    commit_width = ARGV[3].to_i
+    test_commit_width = commit_width
+    test_offset = nil
 
     if ARGV.size == 5
-        start_quarter = end_quarter
-        end_quarter = ARGV[4].to_i
+        test_offset = ARGV[4].to_i
     end
 
-    # 1 <= quarter <=4
-    if end_quarter < 1 || end_quarter > 4
-        Kernel.exit 1
+    if ARGV.size == 6
+        test_commit_width = ARGV[4].to_i
+        test_offset = ARGV[5].to_i
     end
+
+
+    # 1 <= quarter <=4
+    #if end_quarter < 1 || end_quarter > 4
+    #    Kernel.exit 1
+    #end
 
 else
     Kernel.exit 1 
@@ -167,20 +193,43 @@ PREV_TYPES_MAX = 5
 
 db = DBinterface.new('project_stats')
 
-mappers = Hash.new
+#mappers = Hash.new
 
-categories = Array.new
+#categories = Array.new
 
-date_range = db.get_date_range(repo_owner, repo_name)
+date_range = db.get_date_range(repo_owner, repo_name, commit_width, test_commit_width, test_offset)
+
+#puts "Date offset = #{date_range}"
 
 #puts "Start = #{start_quarter}, #{date_range[0]["quarter_#{start_quarter}"]}"
 #puts "End = #{date_range[0]["quarter_#{end_quarter}"]}"
 
-raw_data = db.get_svm_data(repo_owner, repo_name, date_range[0]["quarter_#{start_quarter}"], date_range[0]["quarter_#{end_quarter}"], limit)
+date_range.each_with_index do |range, index|
 
-file_info = get_data_files(raw_data, mappers, categories)
+    if test_offset == nil
+        test_offset = index
+    end
 
-# Put the data into a file.
-File.open("data/test_sample_#{repo_owner}_#{repo_name}_#{limit}_#{start_quarter}_#{end_quarter}", "w") do |f|
-    f.print file_info.to_json
+    mappers = Hash.new
+
+    categories = Array.new
+
+    raw_data = db.get_svm_data(repo_owner, repo_name, range['start'], range['buffer'], limit)
+
+    file_info = get_data_files(raw_data, mappers, categories)
+
+    # Put the data into a file.
+    File.open("data/train_data_sample_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{test_commit_width}_#{test_offset}", "w") do |f|
+        f.print file_info.to_json
+    end
+
+    raw_data = db.get_svm_data(repo_owner, repo_name, range['current'], range['end'], limit)
+
+    file_info = get_data_files(raw_data, mappers, categories)
+
+    # Put the data into a file.
+    File.open("data/test_data_sample_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{test_commit_width}_#{test_offset}", "w") do |f|
+        f.print file_info.to_json
+    end
 end
+

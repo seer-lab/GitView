@@ -8,6 +8,8 @@ class DBinterface
     # Default port
     PORT = '5433' #'5432'
 
+    #PREDICT_DIFFERENCE = 'INTERVAL '
+
     def initialize(name)
         @conn = PG.connect(dbname: name, user: USERNAME, password: PASSWORD, hostaddr: "127.0.0.1", port: PORT)
     end
@@ -101,50 +103,35 @@ class DBinterface
         return id
     end
 
-    def get_date_range(repo_owner, repo_name)
-
-        att_names = ['quarter_0', 'quarter_1', 'quarter_2', 'quarter_3', 'quarter_4']
-
-        query = "select
-                    v.min_date as quarter_0,
-                    v.min_date+v.quarter as quarter_1,
-                    v.min_date+(v.quarter*2) as quarter_2,
-                    v.min_date+(v.quarter*3) as quarter_3,
-                    v.max_date as quarter_4
-                from (
-                    select
-                        min(c.commit_date) as min_date,
-                        max(c.commit_date) as max_date,
-                        (max(c.commit_date) - min(c.commit_date))/4 as quarter
-                    from
-                        repositories as r INNER JOIN
-                        commits as c ON r.repo_id = c.repo_reference
-                    where
-                        r.repo_name = $1 AND
-                        r.repo_owner = $2
-                    ) as v"
-
-        i = 0
-        values = Array.new
-
-        params = create_params([repo_name, repo_owner])
-
-        # Could add prepare here.
-        @conn.exec_params(query, params) do |results|
-            results.each_row do |row|
-                values[i] = Hash.new
-                row.each_with_index do |element, j|
-                    # Retrieve the values and store them into an array hash
-                   values[i][att_names[j]] = element
-                end
-                i += 1
-            end
+    def get_date_range(repo_owner, repo_name, train_size=100, test_size=nil, part=nil)
+        if part != nil && part < 0
+            part = nil
         end
 
-        return values
+        if train_size == nil
+            return
+        end
+
+        if test_size == nil
+            test_size = train_size
+        end
+
+        #att_names = ['quarter_0', 'quarter_1', 'quarter_2', 'quarter_3', 'quarter_4']
+
+        data = get_date_range_commit(repo_owner, repo_name, train_size, test_size)
+
+        # Pick the values to return
+        if part != nil
+            if part > data.size
+                return [data[-1]]
+            end            
+            return [data[part]]
+        end
+
+        return data
     end
 
-    def get_date_range_commit(repo_owner, repo_name, quarters)
+    def get_date_range_commit(repo_owner, repo_name, train_size, test_size)
 
         att_names = ['start', 'buffer', 'current', 'end']
 
@@ -152,10 +139,10 @@ class DBinterface
             with time_ranges as 
             (
                 select
-                    lag(c.commit_date, 100 + buffer_size(c.commit_date, c.repo_reference)::integer) OVER (ORDER BY c.commit_date) AS start,
+                    lag(c.commit_date, $3 + buffer_size(c.commit_date, c.repo_reference)::integer) OVER (ORDER BY c.commit_date) AS start,
                     c.commit_date - INTERVAL '1 month' as buffer,
                     c.commit_date as current,
-                    lead(c.commit_date, 100) OVER (ORDER BY c.commit_date) AS end
+                    lead(c.commit_date, $4) OVER (ORDER BY c.commit_date) AS end
                 from
                     repositories as r INNER JOIN
                     commits as c ON r.repo_id = c.repo_reference
@@ -169,14 +156,13 @@ class DBinterface
                 time_ranges as t
             where
                 t.end IS NOT NULL AND
-                t.start IS NOT NULL
-            limit 1"
+                t.start IS NOT NULL"
 
 
         i = 0
         values = Array.new
 
-        params = create_params([repo_name, repo_owner])
+        params = create_params([repo_name, repo_owner, train_size, test_size])
 
         # Could add prepare here.
         @conn.exec_params(query, params) do |results|
@@ -240,7 +226,7 @@ class DBinterface
         where
             v.has_next = $5 AND
             v.commit_date > $3 AND
-            v.commit_date < ($4::timestamp with time zone) - INTERVAL '1 month' AND
+            v.commit_date < $4 AND
             random() < 0.4
         limit $6"
         #order by

@@ -1,5 +1,5 @@
 POSSIBLE_SIZES=(100 500)
-QUARTERS_DATA=(1 2 3 4)
+QUARTERS_DATA=(1 2 3 4000)
 QUARTERS=(1 2 3)
 
 TEST_NUMBER=(1 2 3 4 5)
@@ -8,9 +8,12 @@ OWNER=ACRA
 REPO=acra
 #$(date +"%m%d%Y_%H%M")_
 
+WIDTH=100
+
 GET_DATA=$1
 #_cas
-CUR_TYPE=test_signature-change-freq
+CUR_TYPE=test_signature-change-freq_3
+size=300
 
 for run in ${TEST_NUMBER[@]}; do
 
@@ -21,15 +24,15 @@ for run in ${TEST_NUMBER[@]}; do
     if [[ $GET_DATA -eq 1 ]]; then
 
         for quart in ${QUARTERS_DATA[@]}; do
-            for size in ${POSSIBLE_SIZES[@]}; do
+            #for size in ${POSSIBLE_SIZES[@]}; do
                 echo "Collecting data for q${quart} ${size}"
-                ruby get_data.rb ${OWNER} ${REPO} ${size} ${quart}
-            done
+                ruby get_data.rb ${OWNER} ${REPO} ${size} ${WIDTH} ${quart}
+            #done
         done
     fi
 
 
-    size=100
+    #size=100
 
     # TODO adjust this to allow for input of train quarter and test quarter
     for quart in ${QUARTERS[@]}; do
@@ -41,7 +44,7 @@ for run in ${TEST_NUMBER[@]}; do
         
         #for size in ${POSSIBLE_SIZES[@]}; do
             echo "Running q${quart} ${size}"
-            ruby svm_test.rb ${OWNER} ${REPO} ${size} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+            ruby svm_test.rb ${OWNER} ${REPO} ${size} ${WIDTH} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
 
             #${end_q} dou
         #done
