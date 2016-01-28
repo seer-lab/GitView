@@ -8,7 +8,7 @@ class DBinterface
     # Default port
     PORT = '5433' #'5432'
 
-    #PREDICT_DIFFERENCE = 'INTERVAL '
+    PREDICT_DIFFERENCE = '5' #buffer_size(c.commit_date, c.repo_reference)::integer
 
     def initialize(name)
         @conn = PG.connect(dbname: name, user: USERNAME, password: PASSWORD, hostaddr: "127.0.0.1", port: PORT)
@@ -139,7 +139,7 @@ class DBinterface
             with time_ranges as 
             (
                 select
-                    lag(c.commit_date, $3 + buffer_size(c.commit_date, c.repo_reference)::integer) OVER (ORDER BY c.commit_date) AS start,
+                    lag(c.commit_date, $3 + #{PREDICT_DIFFERENCE}) OVER (ORDER BY c.commit_date) AS start,
                     c.commit_date - INTERVAL '1 month' as buffer,
                     c.commit_date as current,
                     lead(c.commit_date, $4) OVER (ORDER BY c.commit_date) AS end
@@ -186,7 +186,7 @@ class DBinterface
         #'previous_change_type',
         #'signature'
         #'length',
-        att_names = [ 'method_info_id', 'signature', 'change', 'change_frequency', 'has_next']
+        att_names = [ 'method_info_id', 'change', 'change_frequency', 'previous_change_type', 'has_next']
 
         #v.name,
         #v.committer,
@@ -195,9 +195,10 @@ class DBinterface
         #v.length,
         query = "select 
             v.method_info_id,
-            v.signature,
             v.change_type,
             v.change_frequency,
+            v.length,
+            v.previous_change_type,
             v.has_next
         from
             (select
@@ -228,6 +229,7 @@ class DBinterface
             v.commit_date > $3 AND
             v.commit_date < $4 AND
             random() < 0.4
+        
         limit $6"
         #order by
         #    random()

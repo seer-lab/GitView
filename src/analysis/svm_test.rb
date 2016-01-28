@@ -1,8 +1,10 @@
-require 'libsvm'
+
 require 'colorize'
 require 'json'
 require_relative '../database/pg-interface'
 require_relative 'bidirectional_map'
+
+require_relative 'predictors'
 
 repo_owner = 'ACRA'
 repo_name = 'acra'
@@ -54,14 +56,8 @@ end
 
 # Remove the first row since it is just the header
 
-# This library is namespaced.
-problem = Libsvm::Problem.new
-parameter = Libsvm::SvmParameter.new
-
-parameter.cache_size = 1 # in megabytes
-
-parameter.eps = 0.001
-parameter.c = 10
+#predictor = FANN_Predictor.new(data.first.size)
+predictor = SVN_Predictor.new
 
 #puts "data = #{data}"
 
@@ -76,22 +72,12 @@ File.open("data/train_data_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#
     end
 end
 
-puts "mapping"
-examples = data.map {|ary| Libsvm::Node.features(ary) }
 
 puts "Training"
-problem.set_examples(categories, examples)
+predictor.train(data, categories)
 
-model = Libsvm::Model.train(problem, parameter)
-
-#try = [1, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
 
 puts "Setting up test"
-#2984
-# TODO get a few examples from the data set (not already in use in the training set) to try.
-# TODO make sure the only 8 values are passed to the model
-#try =#["107", "acra/src/main/java/org/acra/util/", "Base64.java", "public static byte[] decode(String str, int flags) {", "1", "pyricau", "pyricau", "2"]
-#try = ["79", "CrashReport/src/org/acra/", "ErrorReporter.java", "public static ErrorReporter getInstance() {", "0", "KevinGaudin", "KevinGaudin", "7"]
 
 examples = Array.new
 classification = Array.new
@@ -106,9 +92,6 @@ File.open("data/test_data_sample_#{repo_owner}_#{repo_name}_#{limit}_#{commit_wi
     classification = raw_data['categories']
 end
 
-#file_data = get_data_files("data/example_data_#{training_size}_q#{range+1}", mappers, Array.new)
-#examples = file_data[:data]
-#classification = file_data[:categories]
 
 #puts "examples = #{examples}"
 
@@ -123,20 +106,38 @@ File.open("data/test_data_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{
     end
 end
 
+true_positive = 0
+true_negative = 0
+false_positive = 0
+false_negative = 0
+
 correct = 0
 examples.each_with_index do |try, index|
-    pred = model.predict(Libsvm::Node.features(try))
+    pred = predictor.test(try)[0]
     
-    if pred == classification[index]
+    if pred.round == classification[index]
         print "Success".green
         correct += 1
+
+        if pred.round == 1
+            true_positive += 1
+        else
+            true_negative += 1
+        end
     else
         print "Failed".red
+
+        if pred.round == 1
+            false_positive += 1
+        else
+            false_negative += 1
+        end
     end
     puts " - Predicted #{pred}, Actual #{classification[index]} - Example #{try}"
 end
 
 puts "Success Rate: #{correct}/#{examples.size} = #{correct.to_f/examples.size}"
+puts "Precision = #{true_positive / (true_positive + false_positive).to_f}, recall = #{true_positive / (true_positive + false_negative).to_f}"
 
 #(-1..1).each do |f|
 #    (-1..1).each do |s|
