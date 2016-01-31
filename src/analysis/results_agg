@@ -1,7 +1,8 @@
 #!/bin/bash
 
-OUTPUT_FILE=test_results
+OUTPUT_DIR=tests/
 TARGET_FOLDER=evaluation/avg_test/
+
 
 if [ "$#" -eq 1 ]
 then
@@ -11,13 +12,30 @@ fi
 if [ "$#" -eq 2 ]
 then
     TARGET_FOLDER=$1
-    OUTPUT_FILE=$2
+    OUTPUT_DIR=$2
 fi
 
+if [ "$#" -eq 3 ]
+then
+    TARGET_FOLDER=$1
+    OUTPUT_DIR=$2
+fi
+
+
+EXTENSION=.xlsx
 HEADER_PRINT=0
 HEADER=
 SUB_HEADER=
 SEPARATE=
+col_count=0
+row_count=0
+
+OUTPUT_FILE=$(basename "${TARGET_FOLDER}")
+
+# Remove any periods in the file, quick fix for mishandled filenames
+OUTPUT_FILE="${OUTPUT_FILE//.}"
+
+OUTPUT_FILE="${OUTPUT_DIR}${OUTPUT_FILE}${EXTENSION}"
 
 # Remove the last results.
 > "${OUTPUT_FILE}"
@@ -32,6 +50,8 @@ do
         type_name=$(basename "${dir}")
 
         ROW="${type_name}"
+
+        col_count=0
 
         # Navigate to it and then for each file parse
         for f in "${dir}"/*
@@ -66,6 +86,8 @@ do
             # Store the results in a csv.
             ROW="${ROW}, ${TEST_RESULT}, ${SEPARATE}"
 
+            ((col_count++))
+
             #echo "Row = ${ROW}"
         done
 
@@ -82,6 +104,24 @@ do
         # Print row
         echo "${ROW}" >> "${OUTPUT_FILE}"
 
+        ((row_count++))
+
         HEADER_PRINT=1
     fi
 done
+
+# Setup average of the results
+echo "" >> "${OUTPUT_FILE}"
+
+offset=1
+FINAL_ROW=
+
+for ((i=0; i < col_count; i++))
+do
+    row_letters=`tr 0123456789 ABCDEFGHIJ <<< "$(($i+$offset))"`
+    FINAL_ROW="${FINAL_ROW},=SUM(${row_letters}3:${row_letters}${row_count})/COUNT(${row_letters}3:${row_letters}${row_count}), "
+
+    ((offset++))
+done
+
+echo "${FINAL_ROW}" >> "${OUTPUT_FILE}"

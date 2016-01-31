@@ -69,7 +69,9 @@ def get_data_files(rows, mappers=nil, categories=nil)
         categories = Array.new
     end
 
-    header = rows.first.keys   
+    header = rows.first.keys
+
+    puts "rowsize = #{rows.size}"
 
     data = Array.new
     rows.each do |row|
@@ -164,9 +166,9 @@ limit = 100
 if ARGV.size == 4 || ARGV.size == 5 || ARGV.size == 6
     repo_owner = ARGV[0]
     repo_name = ARGV[1]
-    limit = ARGV[2].to_i
+    limit = ARGV[2].to_f
     
-    commit_width = ARGV[3].to_i
+    commit_width = ARGV[3]
     test_commit_width = commit_width
     test_offset = nil
 
@@ -205,6 +207,10 @@ date_range = db.get_date_range(repo_owner, repo_name, commit_width, test_commit_
 #puts "End = #{date_range[0]["quarter_#{end_quarter}"]}"
 
 date_range.each_with_index do |range, index|
+
+    if range == nil
+        kernel.exit 1
+    end
 
     if test_offset == nil
         test_offset = index

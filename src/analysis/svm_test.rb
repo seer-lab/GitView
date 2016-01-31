@@ -13,7 +13,7 @@ limit = 100
 if ARGV.size == 4 || ARGV.size == 5 || ARGV.size == 6
     repo_owner = ARGV[0]
     repo_name = ARGV[1]
-    limit = ARGV[2].to_i
+    limit = ARGV[2].to_f
 
     commit_width = ARGV[3].to_i
     test_commit_width = commit_width
@@ -38,6 +38,7 @@ mappers = Hash.new
 
 categories = Array.new
 
+puts "FILE = data/train_data_sample_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{test_commit_width}_#{test_offset}"
 #PREV_TYPES_MAX = 5
 File.open("data/train_data_sample_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{test_commit_width}_#{test_offset}", "r") do |f|
     json_data = f.gets
@@ -57,9 +58,9 @@ end
 # Remove the first row since it is just the header
 
 #predictor = FANN_Predictor.new(data.first.size)
-predictor = SVN_Predictor.new
+predictor = SVM_Predictor.new
 
-#puts "data = #{data}"
+puts "data = #{data.size}"
 
 # Print the data out to a file to allow for use with easy.py
 File.open("data/train_data_#{repo_owner}_#{repo_name}_#{limit}_#{commit_width}_#{test_commit_width}_#{test_offset}", "w") do |f|
@@ -113,7 +114,7 @@ false_negative = 0
 
 correct = 0
 examples.each_with_index do |try, index|
-    pred = predictor.test(try)[0]
+    pred = predictor.test(try)
     
     if pred.round == classification[index]
         print "Success".green

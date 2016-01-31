@@ -53,7 +53,7 @@ class FANN_Predictor
 
 	def test(input)
 
-		return @fann.run(input)
+		return @fann.run(input)[0]
 	end
 
 end

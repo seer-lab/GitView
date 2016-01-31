@@ -186,7 +186,7 @@ class DBinterface
         #'previous_change_type',
         #'signature'
         #'length',
-        att_names = [ 'method_info_id', 'change', 'change_frequency', 'previous_change_type', 'has_next']
+        att_names = [ 'method_info_id', 'signature', 'change', 'change_frequency', 'has_next']
 
         #v.name,
         #v.committer,
@@ -195,10 +195,9 @@ class DBinterface
         #v.length,
         query = "select 
             v.method_info_id,
+            v.signature,
             v.change_type,
             v.change_frequency,
-            v.length,
-            v.previous_change_type,
             v.has_next
         from
             (select
@@ -228,32 +227,46 @@ class DBinterface
             v.has_next = $5 AND
             v.commit_date > $3 AND
             v.commit_date < $4 AND
-            random() < 0.4
-        
-        limit $6"
+            random() < 0.4"
+        #limit $6
         #order by
         #    random()
 
-        values = Array.new
+        values = [Array.new, Array.new]
 
         i = 0
         2.times do |category|
             
-            params = create_params([repo_name, repo_owner, start_date, end_date, category, limit/2])
+            params = create_params([repo_name, repo_owner, start_date, end_date, category])#, limit/2])
             # Could add prepare here.
             @conn.exec_params(query, params) do |results|
                 results.each_row do |row|
-                    values[i] = Hash.new
+                    values[category] << Hash.new
                     row.each_with_index do |element, j|
                         # Retrieve the values and store them into an array hash
-                       values[i][att_names[j]] = element
+                       values[category][-1][att_names[j]] = element
                     end
                     i += 1
                 end
             end
         end
 
-        return values
+
+        puts "first_o_size = #{values[0].size}, #{limit}"
+        puts "second_o_size = #{values[1].size}"
+        first_size = (values[0].size * (limit)).to_i
+
+        second_size = (values[1].size * (limit)).to_i
+
+        puts "first = #{first_size}, second = #{second_size}"
+
+        result = values[0][0..first_size-1] + values[1][0..second_size-1]
+        
+        puts "Result: size = #{result.size}"
+        #puts result[65..result.size-1]
+
+        
+        return result
     end
 
 private
