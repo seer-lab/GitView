@@ -39,6 +39,7 @@ $ONE_TO_MANY = true
 # Get the HIGH_THRESHOLD for determining if a line is a possible modification
 def getTreshold (lineLength)
     if lineLength < $SIZE_TRESHOLD
+        # The line length is used as part of normalization of LD
         return (lineLength*$LOW_THRESHOLD).round()
     else
         return (lineLength*$HIGH_THRESHOLD).round()
