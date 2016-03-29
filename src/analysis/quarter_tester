@@ -1,20 +1,20 @@
-POSSIBLE_SIZES=(0.1 0.2 0.3 0.4 0.5)
-QUARTERS_DATA=(1 2 3 4000)
-QUARTERS=(1 2 3)
+POSSIBLE_SIZES=(1.0) # 0.2 0.3 0.4 0.5
+QUARTERS_DATA=(2) #1 2 3 2340
+#QUARTERS=(1 2 3)
 
-TEST_NUMBER=(1 2 3 4 5)
+TEST_NUMBER=(60)
 
-OWNER=ACRA
-REPO=acra
+OWNER=deeplearning4j
+REPO=deeplearning4j
 #$(date +"%m%d%Y_%H%M")_
 
-WIDTH=(100 200 300 400 500)
+WIDTH=(195)
 
 GET_DATA=$1
-#_cas
+#_c as
 
 # Change to % of data
-#size=0.2
+#size=0.1
 
 for run in ${TEST_NUMBER[@]}; do
     
@@ -23,8 +23,10 @@ for run in ${TEST_NUMBER[@]}; do
         for width in ${WIDTH[@]}; do
             for size in ${POSSIBLE_SIZES[@]}; do
 
-                CUR_TYPE=test_signature-change-freq_${size}
-                folder=evaluation/avg_test/"${REPO}"/commits/width_"${width}"/dyn_size/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
+                #win_freq-
+                CUR_TYPE=test_committer-name-signature-freq-prev-has_prev-prev_${size}
+                folder=evaluation/avg_test/"${REPO}"/commits/tree/a_class/width_"${width}"/dyn_size/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
+                #nn/under_sample
 
                 if [ $? -eq 1 ]; then
                     break
@@ -39,7 +41,9 @@ for run in ${TEST_NUMBER[@]}; do
                 fi
 
                 echo "Running q${quart} ${size}"
-                ruby svm_test.rb ${OWNER} ${REPO} ${size} ${width} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+                #ruby svm_test.rb ${OWNER} ${REPO} ${size} ${width} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+
+                python random_forest.py "data/train_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "data/test_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" | tee "${folder}"/test_${size}_q${quart}_${end_q}
 
             done
         done

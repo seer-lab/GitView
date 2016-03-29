@@ -1,0 +1,45 @@
+POSSIBLE_SIZES=(1.0) # 0.2 0.3 0.4 0.5
+QUARTERS_DATA=(2) #1 2 3 2340
+
+TEST_NUMBER=(1)
+
+OWNER=all
+REPO=all
+
+WIDTH=(70)
+
+GET_DATA=$1
+
+for run in ${TEST_NUMBER[@]}; do
+    
+    for quart in ${QUARTERS_DATA[@]}; do
+
+        for width in ${WIDTH[@]}; do
+            for size in ${POSSIBLE_SIZES[@]}; do
+
+                #win_freq-
+                CUR_TYPE=test_name-signature-freq-short_freq-has_next-prev_${size}
+                folder=evaluation/avg_test/"${REPO}"/commits/tree/class/width_"${width}"/dyn_size/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
+                #nn/under_sample
+
+                if [ $? -eq 1 ]; then
+                    break
+                fi
+
+
+                mkdir -p "${folder}"
+
+                if [[ $GET_DATA -eq 1 ]]; then
+                    echo "Collecting data for q${quart} ${size}"
+                    ruby get_data.rb ${width} ${quart}
+                fi
+
+                echo "Running q${quart} ${size}"
+                #ruby svm_test.rb "${OWNER}" "${REPO}" ${size} ${width} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+
+                python random_forest.py "data/train_data_sample_group_1.0_${width}_${width}_${quart}" "data/test_data_sample_group_1.0_${width}_${width}_${quart}" | tee "${folder}"/test_${size}_q${quart}_${end_q}
+            done
+        done
+
+    done
+done

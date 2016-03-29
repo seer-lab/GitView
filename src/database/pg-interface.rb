@@ -133,14 +133,15 @@ class DBinterface
 
     def get_date_range_commit(repo_owner, repo_name, train_size, test_size)
 
-        att_names = ['start', 'buffer', 'current', 'end']
+        att_names = ['min', 'start', 'buffer', 'current', 'end']
 
         query = "
             with time_ranges as 
             (
                 select
+                    min(c.commit_date) OVER (ORDER BY c.commit_date) AS min,
                     lag(c.commit_date, $3 + #{PREDICT_DIFFERENCE}) OVER (ORDER BY c.commit_date) AS start,
-                    c.commit_date - INTERVAL '1 month' as buffer,
+                    lag(c.commit_date, #{PREDICT_DIFFERENCE}) OVER (ORDER BY c.commit_date) AS buffer,
                     c.commit_date as current,
                     lead(c.commit_date, $4) OVER (ORDER BY c.commit_date) AS end
                 from
@@ -179,14 +180,301 @@ class DBinterface
         return values
     end
 
-    def get_svm_data(repo_owner, repo_name, start_date, end_date, limit)
+    # TODO  width, min_date
+    def get_svm_data(repo_owner, repo_name, start_date, end_date, limit, width, min_date, train=false)
 
         #'name',
         #'committer', 
         #'previous_change_type',
         #'signature'
+        #'change_type',
         #'length',
-        att_names = [ 'method_info_id', 'signature', 'change', 'change_frequency', 'has_next']
+        #'short_change_freq',
+        #'has_prev',
+        #'previous_change_type',
+        att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'length', 'previous_change_type', 'has_prev','has_next']
+
+        #v.name,
+        #v.committer,
+        #v.signature,
+        #v.change_type,
+        #v.short_change_freq,
+        #v.length,
+        #v.has_prev,
+        #v.previous_change_type,
+        query = "select 
+            v.method_info_id,
+            v.committer,
+            v.signature,
+            v.name,
+            v.change_frequency,
+            v.length,
+            v.previous_change_type,
+            v.has_prev,
+            v.has_next
+        from
+            (select
+                c.commit_id,
+                f.name,
+                mi.method_info_id,
+                mi.signature,
+                mi.length,
+                CASE WHEN mi.change_type > 0 THEN 1 ELSE 0 END As change_type,
+                c.commit_date,
+                com.name as committer,
+                exists_in_commits(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, $5, $6) / LEAST(pcc.previous_commit_count::float, $5) as change_frequency,
+                exists_in_commits(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, 10, $6) / LEAST(pcc.previous_commit_count::float, 10) as short_change_freq,
+                previous_change_type(c.repo_reference, c.commit_date, f.path, f.name, mi.signature),
+                has_prev_commit(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, #{PREDICT_DIFFERENCE}) as has_prev,
+                has_next_commit(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, #{PREDICT_DIFFERENCE}) as has_next
+            from
+                repositories as r INNER JOIN 
+                commits as c ON r.repo_id = c.repo_reference INNER JOIN
+                users as com ON c.committer_id = com.user_id INNER JOIN
+                file as f ON c.commit_id = f.commit_reference INNER JOIN
+                method as m ON f.file_id = m.file_reference INNER JOIN
+                method_info as mi ON m.method_id = mi.method_id INNER JOIN
+                current_commit_count as pcc ON pcc.commit_id = c.commit_id
+            where 
+                r.repo_name = $1 AND
+                r.repo_owner = $2) as v
+        where
+            v.commit_date > $3 AND
+            v.commit_date < $4 
+        "
+
+            #AND
+                #f.path LIKE 'storm-core/src/jvm/org/apache/storm/%'
+        #limit $6
+        #order by
+        #    random()
+
+        values = [Array.new, Array.new]
+
+        #i = 0
+        #2.times do |category|
+        category = nil
+
+        if train
+            start_date = min_date
+        end
+            
+        params = create_params([repo_name, repo_owner, start_date, end_date, width, min_date])#, limit/2])
+        # Could add prepare here.
+        @conn.exec_params(query, params) do |results|
+            results.each_row do |row|
+
+                category = row[-1].to_i
+
+                values[category] << Hash.new
+                row.each_with_index do |element, j|
+                    # Retrieve the values and store them into an array hash
+                   values[category][-1][att_names[j]] = element
+                end
+                #i += 1
+            end
+        end
+        #end
+
+        first_size = (values[0].size * (limit)).to_i
+
+        second_size = (values[1].size * (limit)).to_i
+
+        puts "first = #{first_size}, second = #{second_size}"
+
+        if first_size > second_size
+
+            # Second dataset is larger than the first
+            difference = second_size - first_size
+            if difference > first_size
+                values[1] +=  values[1]
+                first_size += first_size
+
+                # Datasets are still uneven, undersample
+                second_size = first_size
+            
+            else
+                values[1] +=  values[1][0..difference]
+                first_size += difference
+            end
+
+        else
+            difference = first_size - second_size
+            if difference > second_size
+                values[1] +=  values[1]
+                second_size += second_size
+
+                # Datasets are still uneven, undersample
+                first_size = second_size
+            else
+                values[1] +=  values[1][0..difference]
+                second_size += difference
+                #difference -= second_size
+            end
+        end
+
+        puts "first = #{first_size}, second = #{second_size}"
+
+        result = values[0][0..first_size-1] + values[1][0..second_size-1]
+        
+        puts "Result: size = #{result.size}"
+        #puts result[65..result.size-1]
+
+        
+        return result
+    end
+
+    def get_class_data(repo_owner, repo_name, start_date, end_date, limit, width, min_date, train=false)
+
+        #'name',
+        #'committer', 
+        #'previous_change_type',
+        #'signature'
+        #'change_type',
+        #'length',
+        #'short_change_freq',
+        #'has_prev',
+        #'previous_change_type',
+        att_names = ['committer','name', 'signature', 'change_frequency', 'short_change_freq', 'previous_change_type', 'has_prev', 'has_next']
+
+        #v.name,
+        #v.committer,
+        #v.signature,
+        #v.change_type,
+        #v.short_change_freq,
+        #v.length,
+        #v.has_prev,
+        #v.previous_change_type,
+        query = "select
+            v.committer,
+            v.path,
+            v.name,
+            v.change_frequency,
+            v.short_change_freq,
+            v.previous_class_change_type,
+            v.has_prev,
+            v.has_next
+        from
+            (select
+                c.commit_id,
+                f.path,
+                f.name,
+                c.commit_date,
+                com.name as committer,
+                exists_in_commits_class(c.repo_reference, c.commit_date, f.path, f.name, $5) / LEAST(pcc.previous_commit_count::float, $5) as change_frequency,
+                exists_in_commits_class(c.repo_reference, c.commit_date, f.path, f.name, 10) / LEAST(pcc.previous_commit_count::float, 10) as short_change_freq,
+                previous_class_change_type(c.repo_reference, c.commit_date, f.path, f.name),
+                has_prev_commit_class(c.repo_reference, c.commit_date, f.path, f.name, #{PREDICT_DIFFERENCE}) as has_prev,
+                has_next_commit_class(c.repo_reference, c.commit_date, f.path, f.name, #{PREDICT_DIFFERENCE}) as has_next
+            from
+                repositories as r INNER JOIN 
+                commits as c ON r.repo_id = c.repo_reference INNER JOIN
+                users as com ON c.committer_id = com.user_id INNER JOIN
+                file as f ON c.commit_id = f.commit_reference INNER JOIN
+                method as m ON f.file_id = m.file_reference INNER JOIN
+                method_info as mi ON m.method_id = mi.method_id INNER JOIN
+                current_commit_count as pcc ON pcc.commit_id = c.commit_id
+            where 
+                r.repo_name = $1 AND
+                r.repo_owner = $2) as v
+        where
+            v.commit_date > $3 AND
+            v.commit_date < $4 
+        "
+
+            #AND
+                #f.path LIKE 'storm-core/src/jvm/org/apache/storm/%'
+        #limit $6
+        #order by
+        #    random()
+
+        values = [Array.new, Array.new]
+
+        #i = 0
+        #2.times do |category|
+        category = nil
+
+        if train
+            start_date = min_date
+        end
+            
+        params = create_params([repo_name, repo_owner, start_date, end_date, width])#min_date, limit/2])
+        puts params
+        # Could add prepare here.
+        @conn.exec_params(query, params) do |results|
+            results.each_row do |row|
+
+                category = row[-1].to_i
+
+                values[category] << Hash.new
+                row.each_with_index do |element, j|
+                    # Retrieve the values and store them into an array hash
+                   values[category][-1][att_names[j]] = element
+                end
+                #i += 1
+            end
+        end
+        #end
+
+
+        puts "first_o_size = #{values[0].size}, #{limit}"
+        puts "second_o_size = #{values[1].size}"
+        first_size = (values[0].size * (limit)).to_i
+
+        second_size = (values[1].size * (limit)).to_i
+
+        puts "first = #{first_size}, second = #{second_size}"
+
+        if first_size > second_size
+
+            # Over sample
+            difference = first_size - second_size
+            if difference > second_size
+                values[1] +=  values[1]
+                second_size += second_size
+
+                # Datasets are still uneven, undersample
+                first_size = second_size
+            else
+                values[1] +=  values[1][0..difference]
+                second_size += difference
+                #difference -= second_size
+            end
+        else
+
+            # Second dataset is larger than the first
+            difference = second_size - first_size
+            if difference > first_size
+                values[1] +=  values[1]
+                first_size += first_size
+
+                # Datasets are still uneven, undersample
+                second_size = first_size
+            
+            else
+                values[1] +=  values[1][0..difference]
+                first_size += difference
+            end
+        end
+        puts "first = #{first_size}, second = #{second_size}"
+
+        result = values[0][0..first_size-1] + values[1][0..second_size-1]
+        
+        puts "Result: size = #{result.size}"
+        #puts result[65..result.size-1]
+
+        
+        return result
+    end
+
+    def get_method_data(repo_owner, repo_name, method, end_date, limit)
+    #def get_svm_data(repo_owner, repo_name, start_date, end_date, limit)
+        #'name',
+        #'committer', 
+        #'previous_change_type',
+        #'signature',
+        #
+        att_names = [ 'method_info_id', 'signature', 'change', 'change_frequency', 'length', 'has_prev', 'has_next']
 
         #v.name,
         #v.committer,
@@ -198,6 +486,8 @@ class DBinterface
             v.signature,
             v.change_type,
             v.change_frequency,
+            v.length,
+            v.has_prev,
             v.has_next
         from
             (select
@@ -211,7 +501,8 @@ class DBinterface
                 com.name as committer,
                 exists_in_commits(c.repo_reference, c.commit_date, f.path, f.name, mi.signature) / pcc.previous_commit_count::float as change_frequency,
                 previous_change_type(c.repo_reference, c.commit_date, f.path, f.name, mi.signature),
-                has_next_commit(c.repo_reference, c.commit_date, f.path, f.name, mi.signature) as has_next
+                has_prev_commit(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, #{PREDICT_DIFFERENCE}) as has_prev,
+                has_next_commit(c.repo_reference, c.commit_date, f.path, f.name, mi.signature, #{PREDICT_DIFFERENCE}) as has_next
             from
                 repositories as r INNER JOIN 
                 commits as c ON r.repo_id = c.repo_reference INNER JOIN
@@ -222,34 +513,41 @@ class DBinterface
                 current_commit_count as pcc ON pcc.commit_id = c.commit_id
             where 
                 r.repo_name = $1 AND
-                r.repo_owner = $2) as v
+                r.repo_owner = $2 AND
+                mi.signature = 'String[] getCrashReportFilesList() {') as v
         where
-            v.has_next = $5 AND
-            v.commit_date > $3 AND
-            v.commit_date < $4 AND
-            random() < 0.4"
+            v.commit_date < '2011-06-07 21:56:12-04'
+        order by
+            random()"
+
+            #AND
+                #f.path LIKE 'storm-core/src/jvm/org/apache/storm/%'
         #limit $6
         #order by
         #    random()
 
         values = [Array.new, Array.new]
 
-        i = 0
-        2.times do |category|
+        #i = 0
+        #2.times do |category|
+        category = nil
             
-            params = create_params([repo_name, repo_owner, start_date, end_date, category])#, limit/2])
-            # Could add prepare here.
-            @conn.exec_params(query, params) do |results|
-                results.each_row do |row|
-                    values[category] << Hash.new
-                    row.each_with_index do |element, j|
-                        # Retrieve the values and store them into an array hash
-                       values[category][-1][att_names[j]] = element
-                    end
-                    i += 1
+        params = create_params([repo_name, repo_owner])#, start_date, end_date, method])#, limit/2])
+        # Could add prepare here.
+        @conn.exec_params(query, params) do |results|
+            results.each_row do |row|
+
+                category = row[-1].to_i
+
+                values[category] << Hash.new
+                row.each_with_index do |element, j|
+                    # Retrieve the values and store them into an array hash
+                   values[category][-1][att_names[j]] = element
                 end
+                #i += 1
             end
         end
+        #end
 
 
         puts "first_o_size = #{values[0].size}, #{limit}"
@@ -326,3 +624,34 @@ private
     end
 
 end
+
+=begin
+            # Second dataset is larger than the first
+            difference = second_size - first_size
+            if difference > first_size
+                values[1] +=  values[1]
+                first_size += first_size
+
+                # Datasets are still uneven, undersample
+                second_size = first_size
+            
+            else
+                values[1] +=  values[1][0..difference]
+                first_size += difference
+            end
+=end
+=begin
+# Over sample
+            difference = first_size - second_size
+            if difference > second_size
+                values[1] +=  values[1]
+                second_size += second_size
+
+                # Datasets are still uneven, undersample
+                first_size = second_size
+            else
+                values[1] +=  values[1][0..difference]
+                second_size += difference
+                #difference -= second_size
+            end
+=end
