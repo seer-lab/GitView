@@ -16,13 +16,12 @@ public class BinarySearch {
 
         if(start > end) return null;
         
-        // One element left lets check that element
         if(start == end) {
             if(patterns.get(start).get(attribute).compareTo(target) == 0) {
-                // The last value is the one we are looking for
+                // Value Found
                 return start;
             }
-            return null; // The value is not here.
+            return null; // The value is not in the list
         }
         
         int middle = (start + end) / 2;
