@@ -6,6 +6,7 @@ public class BinarySearch {
     public static <E, T extends Comparable<T> > Integer binarySearch
         (ArrayList<HashMap<E, T > > patterns, T target, E attribute) {
         
+        // Calls the method
         return binarySearch(patterns, target, attribute, 0, patterns.size()-1);
     }
      
