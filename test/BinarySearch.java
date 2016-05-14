@@ -24,12 +24,12 @@ public class BinarySearch {
             return null; // The value is not 
         }
         
-        int middle = (start + end) / 2;
-        int result = patterns.get(middle).get(attribute).compareTo(target);
+        int mid = (start + end) / 2;
+        int result = patterns.get(mid).get(attribute).compareTo(target);
         if (result > 0)
-            return binarySearch(patterns, target, attribute, middle+1, end);
+            return binarySearch(patterns, target, attribute, mid+1, end);
         else if(result < 0)
-            return binarySearch(patterns, target, attribute, start, middle-1);
-        return middle;
+            return binarySearch(patterns, target, attribute, start, mid-1);
+        return mid;
     }
 }
