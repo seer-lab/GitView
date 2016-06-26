@@ -1,20 +1,19 @@
 POSSIBLE_SIZES=(1.0) # 0.2 0.3 0.4 0.5
-QUARTERS_DATA=(2) #1 2 3 2340
+QUARTERS_DATA=(5) #1 2 3 2340
 #QUARTERS=(1 2 3)
 
-TEST_NUMBER=(60)
+TEST_NUMBER=(2)
 
-OWNER=deeplearning4j
-REPO=deeplearning4j
+OWNER=greenrobot
+REPO=greenDAO
 #$(date +"%m%d%Y_%H%M")_
 
-WIDTH=(195)
+WIDTH=(60 70 80 90 100 110 120 130)
 
 GET_DATA=$1
-#_c as
 
-# Change to % of data
-#size=0.1
+experiment_number=1
+method=rf
 
 for run in ${TEST_NUMBER[@]}; do
     
@@ -23,28 +22,59 @@ for run in ${TEST_NUMBER[@]}; do
         for width in ${WIDTH[@]}; do
             for size in ${POSSIBLE_SIZES[@]}; do
 
-                #win_freq-
-                CUR_TYPE=test_committer-name-signature-freq-prev-has_prev-prev_${size}
-                folder=evaluation/avg_test/"${REPO}"/commits/tree/a_class/width_"${width}"/dyn_size/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
-                #nn/under_sample
+                CUR_TYPE=test-"${experiment_number}"_${size}
+                folder=evaluation/test-"${experiment_number}"/"${REPO}"/"${method}"/width_"${width}"/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
 
                 if [ $? -eq 1 ]; then
                     break
                 fi
 
+                OUTPUT_FILE="${folder}"/test_${size}_q${quart}_${end_q}
+
+                if [ -e "${OUTPUT_FILE}" ]; then
+                    echo "An output file already exists, do you want to proceed and overwrite?"
+                    read answer
+
+                    if [ $answer != 'yes' ]; then
+                        # Skip
+                        echo "Skipping"
+                        continue
+                    fi
+                fi
+
+                measure_outputs=meaures/test_"${experiment_number}"/"${method}"/"${REPO}"
+
+                time_records="${measure_outputs}"/times
+
+                mkdir -p "${measure_outputs}"
+
+                mkdir -p "${time_records}"
+
+                performance_output="${measure_outputs}"/data.csv
+                
+
+                # TODO Fix this for experiments 2 and 3
+                echo -n "${width}, " >> "${performance_output}"
 
                 mkdir -p "${folder}"
 
                 if [[ $GET_DATA -eq 1 ]]; then
                     echo "Collecting data for q${quart} ${size}"
-                    ruby get_data.rb ${OWNER} ${REPO} ${size} ${width} ${quart}
+                    /usr/bin/time -o "${time_records}"/"${width}"_data_collection -p ruby get_data.rb ${OWNER} ${REPO} ${size} ${width} ${quart} | tee "${OUTPUT_FILE}"
+                else
+                    echo | tee "${OUTPUT_FILE}"
                 fi
 
-                echo "Running q${quart} ${size}"
-                #ruby svm_test.rb ${OWNER} ${REPO} ${size} ${width} ${quart} 2>&1 | tee "${folder}"/test_${size}_q${quart}_${end_q}
+                if [ $method = 'svm' ]; then
+                    echo "Running q${quart} ${size}"
+                    /usr/bin/time -o "${time_records}"/"${width}"_prediction -p ruby svm_test.rb ${OWNER} ${REPO} ${size} ${width} "${performance_output}" ${quart} 2>&1 | tee -a "${OUTPUT_FILE}"
+                elif [ $method = 'rf' ]; then
 
-                python random_forest.py "data/train_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "data/test_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" | tee "${folder}"/test_${size}_q${quart}_${end_q}
+                    importance_output="${measure_outputs}"/importance.csv
+                    echo -n "${width}, " >> "${importance_output}"-p
 
+                    /usr/bin/time -o "${time_records}"/"${width}"_prediction -p python random_forest.py "data/train_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "data/test_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "${performance_output}" "${importance_output}" | tee -a "${OUTPUT_FILE}"
+                fi
             done
         done
 

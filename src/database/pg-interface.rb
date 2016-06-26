@@ -192,7 +192,27 @@ class DBinterface
         #'short_change_freq',
         #'has_prev',
         #'previous_change_type',
-        att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'length', 'previous_change_type', 'has_prev','has_next']
+        #'length',
+
+        # Set 1
+        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'short_change_freq', 'length', 'has_prev', 'has_next']
+
+        # Set 2 -- Used for the experiment 1
+        att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'length', 'has_prev', 'has_next']
+
+        # Set 3
+        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
+
+        # Set 4
+        #att_names = [ 'method_info_id', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
+
+        # Set 5
+        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'has_prev', 'has_next']
+
+
+        list = att_names.map do |name|
+            "v.#{name}"
+        end.join(', ')
 
         #v.name,
         #v.committer,
@@ -203,15 +223,7 @@ class DBinterface
         #v.has_prev,
         #v.previous_change_type,
         query = "select 
-            v.method_info_id,
-            v.committer,
-            v.signature,
-            v.name,
-            v.change_frequency,
-            v.length,
-            v.previous_change_type,
-            v.has_prev,
-            v.has_next
+            #{list}
         from
             (select
                 c.commit_id,
@@ -282,39 +294,53 @@ class DBinterface
 
         puts "first = #{first_size}, second = #{second_size}"
 
-        if first_size > second_size
+        use_os = false
 
-            # Second dataset is larger than the first
-            difference = second_size - first_size
-            if difference > first_size
-                values[1] +=  values[1]
-                first_size += first_size
+        if use_os
 
-                # Datasets are still uneven, undersample
-                second_size = first_size
-            
+            if first_size > second_size
+
+                # Second dataset is larger than the first
+                difference = second_size - first_size
+                if difference > first_size
+                    values[1] +=  values[1]
+                    first_size += first_size
+
+                    # Datasets are still uneven, undersample
+                    second_size = first_size
+                
+                else
+                    values[1] +=  values[1][0..difference]
+                    first_size += difference
+                end
             else
-                values[1] +=  values[1][0..difference]
-                first_size += difference
+                difference = first_size - second_size
+                if difference > second_size
+                    values[1] +=  values[1]
+                    second_size += second_size
+
+                   # Datasets are still uneven, undersample
+                    first_size = second_size
+                else
+                    values[1] +=  values[1][0..difference]
+                    second_size += difference
+                    #difference -= second_size
+                end
             end
 
         else
-            difference = first_size - second_size
-            if difference > second_size
-                values[1] +=  values[1]
-                second_size += second_size
-
-                # Datasets are still uneven, undersample
+            if first_size > second_size
                 first_size = second_size
             else
-                values[1] +=  values[1][0..difference]
-                second_size += difference
-                #difference -= second_size
+                second_size = first_size
             end
         end
+        
 
         puts "first = #{first_size}, second = #{second_size}"
 
+        # Use ruby's built in random sampling for arrays
+        #result = values[0].sample(first_size) + values[1].sample(second_size)
         result = values[0][0..first_size-1] + values[1][0..second_size-1]
         
         puts "Result: size = #{result.size}"

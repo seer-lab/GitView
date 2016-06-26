@@ -4,7 +4,7 @@ require 'ruby-fann'
 
 class SVM_Predictor
 
-	def initialize(cache_size=1, eps=0.001, c=10)
+	def initialize(c=10, gamma=8, cache_size=1, eps=0.001)
 		@problem = Libsvm::Problem.new
 		@parameter = Libsvm::SvmParameter.new
 
@@ -12,6 +12,7 @@ class SVM_Predictor
 
 		@parameter.eps = eps
 		@parameter.c = c
+		@parameter.gamma = gamma
 	end
 
 	def train(input, output)

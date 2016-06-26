@@ -359,7 +359,9 @@ module Stats_db
     def Stats_db.insertMethodStatement(con, file_id, statement_counter)
         pick = con.prepare("INSERT INTO #{METHOD_STATEMENT} (#{FILE_REFERENCE}, #{NEW_CODE}, #{NEW_COMMENT}, #{REMOVED_CODE}, #{REMOVED_COMMENT}, #{MODIFIED_CODE_ADDED}, #{MODIFIED_COMMENT_ADDED}, #{MODIFIED_CODE_DELETED}, #{MODIFIED_COMMENT_DELETED}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        pick.execute(file_id, statement_counter.new_method['code'], statement_counter.new_method['comment'], statement_counter.deleted_method['code'], statement_counter.deleted_method['comment'], statement_counter.modified_method['code_added'], statement_counter.modified_method['comment_added'], statement_counter.modified_method['code_deleted'], statement_counter.modified_method['comment_deleted'])
+        amounts = statement_counter.get_total
+
+        pick.execute(file_id, amounts[:new_method]['code'], amounts[:new_method]['comment'], amounts[:deleted_method]['code'], amounts[:deleted_method]['comment'], amounts[:modified_method]['code_added'], amounts[:modified_method]['comment_added'], amounts[:modified_method]['code_deleted'], amounts[:modified_method]['comment_deleted'])
 
         return DatabaseUtility.toInteger(pick.insert_id)
     end

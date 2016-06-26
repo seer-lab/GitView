@@ -11,6 +11,9 @@ training_file = sys.argv[1]
 
 testing_file = sys.argv[2]
 
+output_performance = sys.argv[3]
+output_importance = sys.argv[4]
+
 f = open(training_file, 'r')
 training_raw = f.read()
 
@@ -60,17 +63,38 @@ for i in range(len(prediction_results)):
 print training_file
 print testing_file
 
+importance_values = clf.feature_importances_
+
+
 #print "Mean Score:", scores
-print "Importance:", clf.feature_importances_
+print "Importance:", importance_values
+
+#import numpy as np
+
+importance_file = open(output_importance, 'a')
+
+importance_file.write(str(importance_values).replace('\n', '') + '\n')
+
+importance_file.close()
+
 
 print("true_positive", true_positive)
 print("false_positive", false_positive)
 print("true_negative", true_negative)
 print("false_negative", false_negative)
 
+precision = (true_positive) / float(true_positive + false_positive)
+recall = (true_positive) / float(true_positive + false_negative)
+accuracy = (true_positive + true_negative) / float(true_positive + true_negative + false_positive + false_negative)
 
-print("Accuracy:", (true_positive + true_negative), "/", (true_positive + true_negative + false_positive + false_negative), "=", (true_positive + true_negative) / float(true_positive + true_negative + false_positive + false_negative))
+print "Precision:", true_positive, "/", (true_positive + false_positive), "=", precision
 
-print("Precision:", true_positive, "/", (true_positive + false_positive), "=", (true_positive) / float(true_positive + false_positive))
+print "Recall:", true_positive, "/", (true_positive + false_negative), "=", recall
 
-print("Recall:", true_positive, "/", (true_positive + false_negative), "=", (true_positive) / float(true_positive + false_negative))
+print "Accuracy:", (true_positive + true_negative), "/", (true_positive + true_negative + false_positive + false_negative), "=", accuracy
+
+performance_file = open(output_performance, 'a')
+
+performance_file.write(str(precision) + ', ' + str(recall) + ', ' + str(accuracy) + '\n')
+
+performance_file.close()

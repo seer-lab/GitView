@@ -91,4 +91,30 @@ class MethodStatementCounter
     def to_s
         return "s+ = #{@new_method}, s- = #{@deleted_method}, s~ = #{@modified_method}"
     end
+
+    def get_total
+        new_method = {'code' => 0, 'comment' => 0}
+        deleted_method = {'code' => 0, 'comment' => 0}
+        modified_method = {'code_added' => 0, 'comment_added' => 0, 'code_deleted' => 0, 'comment_deleted' => 0}
+
+        @new_method.each do |entry|
+            entry.each do |key, value|
+                new_method[key] = value
+            end
+        end
+
+        @deleted_method.each do |entry|
+            entry.each do |key, value|
+                deleted_method[key] = value
+            end
+        end
+
+        @modified_method.each do |entry|
+            entry.each do |key, value|
+                modified_method[key] = value
+            end
+        end
+
+        return {:new_method => new_method, :deleted_method => deleted_method, :modified_method => modified_method}
+    end
 end

@@ -254,7 +254,7 @@ repos.each do |repo|
 
             categories = Array.new
         end 
-        raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['start'], range['buffer'], limit, commit_width, range['min'], true)
+        raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['start'], range['buffer'], limit, commit_width, range['min'], false)
 
         file_info = get_data_files(raw_data, mappers, categories)
 
