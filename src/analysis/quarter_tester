@@ -4,16 +4,16 @@ QUARTERS_DATA=(5) #1 2 3 2340
 
 TEST_NUMBER=(2)
 
-OWNER=greenrobot
-REPO=greenDAO
+OWNER=google
+REPO=blockly-android
 #$(date +"%m%d%Y_%H%M")_
 
-WIDTH=(60 70 80 90 100 110 120 130)
+WIDTH=(90)
 
 GET_DATA=$1
 
-experiment_number=1
-method=rf
+experiment_number=3
+method=svm
 
 for run in ${TEST_NUMBER[@]}; do
     
@@ -52,9 +52,10 @@ for run in ${TEST_NUMBER[@]}; do
 
                 performance_output="${measure_outputs}"/data.csv
                 
+                head_name=1
 
                 # TODO Fix this for experiments 2 and 3
-                echo -n "${width}, " >> "${performance_output}"
+                echo -n "${head_name}, " >> "${performance_output}"
 
                 mkdir -p "${folder}"
 
@@ -71,7 +72,7 @@ for run in ${TEST_NUMBER[@]}; do
                 elif [ $method = 'rf' ]; then
 
                     importance_output="${measure_outputs}"/importance.csv
-                    echo -n "${width}, " >> "${importance_output}"-p
+                    echo -n "${head_name}, " >> "${importance_output}"-p
 
                     /usr/bin/time -o "${time_records}"/"${width}"_prediction -p python random_forest.py "data/train_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "data/test_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "${performance_output}" "${importance_output}" | tee -a "${OUTPUT_FILE}"
                 fi
