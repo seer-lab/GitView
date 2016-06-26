@@ -1,11 +1,11 @@
-POSSIBLE_SIZES=(1.0) # 0.2 0.3 0.4 0.5
+#POSSIBLE_SIZES=(1.0) # 0.2 0.3 0.4 0.5
 QUARTERS_DATA=(5) #1 2 3 2340
 #QUARTERS=(1 2 3)
 
 TEST_NUMBER=(2)
 
-OWNER=google
-REPO=blockly-android
+OWNER=skylot
+REPO=jadx
 #$(date +"%m%d%Y_%H%M")_
 
 WIDTH=(90)
@@ -15,15 +15,20 @@ GET_DATA=$1
 experiment_number=3
 method=svm
 
+feature_set=(1 2 3 4 5)
+use_os = 1
+
+size=1.0
+
 for run in ${TEST_NUMBER[@]}; do
     
     for quart in ${QUARTERS_DATA[@]}; do
 
         for width in ${WIDTH[@]}; do
-            for size in ${POSSIBLE_SIZES[@]}; do
+            for set in ${feature_set[@]}; do
 
                 CUR_TYPE=test-"${experiment_number}"_${size}
-                folder=evaluation/test-"${experiment_number}"/"${REPO}"/"${method}"/width_"${width}"/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
+                folder=evaluation/test-"${experiment_number}"/"${REPO}"/"${method}"/width_"${width}"/"${set}"/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
 
                 if [ $? -eq 1 ]; then
                     break
@@ -44,7 +49,7 @@ for run in ${TEST_NUMBER[@]}; do
 
                 measure_outputs=meaures/test_"${experiment_number}"/"${method}"/"${REPO}"
 
-                time_records="${measure_outputs}"/times
+                time_records="${measure_outputs}"/times/"${set}"
 
                 mkdir -p "${measure_outputs}"
 
@@ -52,7 +57,7 @@ for run in ${TEST_NUMBER[@]}; do
 
                 performance_output="${measure_outputs}"/data.csv
                 
-                head_name=1
+                head_name="${set}"
 
                 # TODO Fix this for experiments 2 and 3
                 echo -n "${head_name}, " >> "${performance_output}"
@@ -61,7 +66,7 @@ for run in ${TEST_NUMBER[@]}; do
 
                 if [[ $GET_DATA -eq 1 ]]; then
                     echo "Collecting data for q${quart} ${size}"
-                    /usr/bin/time -o "${time_records}"/"${width}"_data_collection -p ruby get_data.rb ${OWNER} ${REPO} ${size} ${width} ${quart} | tee "${OUTPUT_FILE}"
+                    /usr/bin/time -o "${time_records}"/"${width}"_data_collection -p ruby get_data.rb ${OWNER} ${REPO} ${size} "${set}" "${use_os}" ${width} ${quart} | tee "${OUTPUT_FILE}"
                 else
                     echo | tee "${OUTPUT_FILE}"
                 fi
@@ -72,7 +77,7 @@ for run in ${TEST_NUMBER[@]}; do
                 elif [ $method = 'rf' ]; then
 
                     importance_output="${measure_outputs}"/importance.csv
-                    echo -n "${head_name}, " >> "${importance_output}"-p
+                    echo -n "${head_name}, " >> "${importance_output}"
 
                     /usr/bin/time -o "${time_records}"/"${width}"_prediction -p python random_forest.py "data/train_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "data/test_data_sample_${OWNER}_${REPO}_${size}_${width}_${width}_${quart}" "${performance_output}" "${importance_output}" | tee -a "${OUTPUT_FILE}"
                 fi

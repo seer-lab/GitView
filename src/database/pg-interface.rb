@@ -181,7 +181,7 @@ class DBinterface
     end
 
     # TODO  width, min_date
-    def get_svm_data(repo_owner, repo_name, start_date, end_date, limit, width, min_date, train=false)
+    def get_svm_data(repo_owner, repo_name, start_date, end_date, limit, width, min_date, feature_set=2, use_os=false, train=false)
 
         #'name',
         #'committer', 
@@ -194,21 +194,25 @@ class DBinterface
         #'previous_change_type',
         #'length',
 
-        # Set 1
-        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'short_change_freq', 'length', 'has_prev', 'has_next']
+        if feature_set == 1
+            # Set 1
+            att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'short_change_freq', 'length', 'has_prev', 'has_next']
+        elsif feature_set == 2
+            # Set 2 -- Used for the experiment 1
+            att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'length', 'has_prev', 'has_next']
 
-        # Set 2 -- Used for the experiment 1
-        att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'length', 'has_prev', 'has_next']
+        elsif feature_set == 3
+            # Set 3
+            att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
 
-        # Set 3
-        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
+        elsif feature_set == 4
+            # Set 4
+            att_names = [ 'method_info_id', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
 
-        # Set 4
-        #att_names = [ 'method_info_id', 'signature', 'name', 'change_frequency', 'previous_change_type', 'has_prev', 'has_next']
-
-        # Set 5
-        #att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'has_prev', 'has_next']
-
+        elsif feature_set == 5
+            # Set 5
+            att_names = [ 'method_info_id', 'committer', 'signature', 'name', 'change_frequency', 'has_prev', 'has_next']
+        end
 
         list = att_names.map do |name|
             "v.#{name}"
@@ -294,7 +298,7 @@ class DBinterface
 
         puts "first = #{first_size}, second = #{second_size}"
 
-        use_os = false
+        #use_os = false
 
         if use_os
 

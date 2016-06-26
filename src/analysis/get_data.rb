@@ -177,14 +177,24 @@ if ARGV.size == 4 || ARGV.size == 5 || ARGV.size == 6
     commit_width = ARGV[3]
     test_commit_width = commit_width
     test_offset = nil
+    feature_set = 1
+    use_os = false
 
-    if ARGV.size == 5
-        test_offset = ARGV[4].to_i
+    if ARGV.size >= 5
+        feature_set = ARGV[4]
     end
 
-    if ARGV.size == 6
-        test_commit_width = ARGV[4].to_i
-        test_offset = ARGV[5].to_i
+    if ARGV.size >= 6
+        use_os = ARGV[5].to_i == 1
+    end
+
+    if ARGV.size == 7
+        test_offset = ARGV[6].to_i
+    end
+
+    if ARGV.size == 8
+        test_commit_width = ARGV[6].to_i
+        test_offset = ARGV[7].to_i
     end
 
 
@@ -254,7 +264,7 @@ repos.each do |repo|
 
             categories = Array.new
         end 
-        raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['start'], range['buffer'], limit, commit_width, range['min'], false)
+        raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['start'], range['buffer'], limit, commit_width, range['min'], feature_set, use_os, false)
 
         file_info = get_data_files(raw_data, mappers, categories)
 
@@ -279,7 +289,7 @@ repos.each do |repo|
         categories.clear
 
         if repos.size == 1 || (repo[:repo_name] == 'acra' || repo[:repo_name] == "dagger")
-            raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['current'], range['end'], limit, commit_width, range['min'])
+            raw_data = db.get_svm_data(repo[:repo_owner], repo[:repo_name], range['current'], range['end'], limit, commit_width, range['min'], feature_set, use_os)
 
             file_info = get_data_files(raw_data, mappers, categories)
 
