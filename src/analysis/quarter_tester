@@ -4,8 +4,8 @@ QUARTERS_DATA=(5) #1 2 3 2340
 
 TEST_NUMBER=(2)
 
-OWNER=skylot
-REPO=jadx
+OWNER=koush
+REPO=ion
 #$(date +"%m%d%Y_%H%M")_
 
 WIDTH=(90)
@@ -15,8 +15,8 @@ GET_DATA=$1
 experiment_number=3
 method=svm
 
-feature_set=(1 2 3 4 5)
-use_os = 1
+feature_set=(2 3 4 5)
+use_os=0
 
 size=1.0
 
@@ -27,7 +27,7 @@ for run in ${TEST_NUMBER[@]}; do
         for width in ${WIDTH[@]}; do
             for set in ${feature_set[@]}; do
 
-                CUR_TYPE=test-"${experiment_number}"_${size}
+                CUR_TYPE=test-"${experiment_number}"_${size}_${set}
                 folder=evaluation/test-"${experiment_number}"/"${REPO}"/"${method}"/width_"${width}"/"${set}"/"${CUR_TYPE}"/"${CUR_TYPE}"_r"${run}"
 
                 if [ $? -eq 1 ]; then
@@ -66,7 +66,7 @@ for run in ${TEST_NUMBER[@]}; do
 
                 if [[ $GET_DATA -eq 1 ]]; then
                     echo "Collecting data for q${quart} ${size}"
-                    /usr/bin/time -o "${time_records}"/"${width}"_data_collection -p ruby get_data.rb ${OWNER} ${REPO} ${size} "${set}" "${use_os}" ${width} ${quart} | tee "${OUTPUT_FILE}"
+                    /usr/bin/time -o "${time_records}"/"${width}"_data_collection -p ruby get_data.rb ${OWNER} ${REPO} ${size} ${width} "${set}" "${use_os}" ${quart} | tee "${OUTPUT_FILE}"
                 else
                     echo | tee "${OUTPUT_FILE}"
                 fi

@@ -169,19 +169,20 @@ repo_name = nil
 limit = 1.0
 repos = nil
 group = nil
+feature_set = 1
+use_os = false
 
-if ARGV.size == 4 || ARGV.size == 5 || ARGV.size == 6
+if ARGV.size >= 4 || ARGV.size <= 8
     repos = [{:repo_owner => ARGV[0], :repo_name => ARGV[1]}]
     limit = ARGV[2].to_f
     
     commit_width = ARGV[3]
     test_commit_width = commit_width
     test_offset = nil
-    feature_set = 1
-    use_os = false
+    
 
     if ARGV.size >= 5
-        feature_set = ARGV[4]
+        feature_set = ARGV[4].to_i
     end
 
     if ARGV.size >= 6

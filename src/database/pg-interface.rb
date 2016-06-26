@@ -193,6 +193,7 @@ class DBinterface
         #'has_prev',
         #'previous_change_type',
         #'length',
+        att_names=[]
 
         if feature_set == 1
             # Set 1
