@@ -89,23 +89,24 @@ $('#package').click(function(event) {
 function refreshPackage(repo, user, path)
 {
 
-    var packageList = "";
+    var packageList = '<select id="package" name="package" class="input-xlarge">';
 
     //console.log(path);
     if(path == '')
     {
-        packageList = "<option selected=\"selected\">All Packages</option>";
+        packageList += "<option selected=\"selected\">All Packages</option>";
     }
     else
     {
-        packageList = "<option>All Packages</option>";
+        packageList += "<option>All Packages</option>";
     }
 
     $.ajax({
         type: 'GET',
         url: rootURL + '/packages/' + repo + "/" + encodeURIComponent(user),
-        dataType: "json", 
+        dataType: "json",
         success: function(data) {
+            console.log(data);
             length = data.length;
 
             for (var i = 0; i < length; i++)
@@ -120,25 +121,26 @@ function refreshPackage(repo, user, path)
                 }
             }
 
+            packageList += "</select>";
             //console.log(list);
-            $('#package').html(packageList);
+            $('#package').replaceWith(packageList);
         }
-    });   
+    });
 }
 
 function refreshCommitter(repo, pack, committer)
 {
-    var committerList = "";
+    var committerList = '<select id="committer" name="committer" class="input-xlarge">';
 
     //console.log(committer);
 
     if(committer == '')
     {
-        committerList = "<option selected=\"selected\">All Users</option>";
+        committerList += "<option selected=\"selected\">All Users</option>";
     }
     else
     {
-        committerList = "<option>All Users</option>";
+        committerList += "<option>All Users</option>";
     }
 
     pack = pack.replace(/\//g, '!');
@@ -148,7 +150,7 @@ function refreshCommitter(repo, pack, committer)
     $.ajax({
         type: 'GET',
         url: rootURL + '/committers/' + repo + "/" + encodeURIComponent(pack),
-        dataType: "json", 
+        dataType: "json",
         success: function(data) {
             length = data.length;
 
@@ -166,8 +168,9 @@ function refreshCommitter(repo, pack, committer)
                 }
             }
 
+            committerList += "</select>";
             //console.log(list);
-            $('#committer').html(committerList);
+            $('#committer').replaceWith(committerList);
         }
     });
 
