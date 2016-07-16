@@ -1,0 +1,100 @@
+#!/bin/bash
+
+OUTPUT_DIR=../../../../heron-thesis/src/images
+
+# should be the folder that contains the tests folders
+# TARGET_FOLDER/test_1/svm/dagger/data.csv
+#                                 times/
+#                          acra
+#                          ...
+#                      rf/dagger/data.csv
+#                                times/
+#                                importance.csv
+#                         acra
+#                         ...
+#               test_2
+#               ...
+TARGET_FOLDER=meaures/
+
+command_location=../../../../heron-thesis/plots
+
+
+CURRENT_DUR=`pwd`
+
+echo "${CURRENT_DUR}"
+
+
+if [ "$#" -eq 1 ]
+then
+    TARGET_FOLDER=$1
+    #OUTPUT_DIR=$2
+else
+    echo "Invalid Arguements got" $#", expecting 1"
+    exit 1
+fi
+
+for dir in "${TARGET_FOLDER}"*
+do
+    # is the file a directory?
+    if [[ -f ${dir} ]]
+    then
+        continue
+    fi
+
+    # Get folder name
+    test_name=$(basename "${dir}")
+
+
+    # Iterate every method 
+    for method in "${dir}"/*
+    do
+
+        # is the file a directory?
+        if [[ -f ${method} ]]
+        then
+            continue
+        fi
+
+        method_name=$(basename "${method}")
+
+        # Iterate every project 
+        for project in "${method}"/*
+        do
+            # is the file a directory?
+            if [[ -f ${project} ]]
+            then
+                continue
+            fi
+
+            project_name=$(basename "${project}")
+
+            echo "${project}"
+
+            cat "${project}/data.csv"
+
+            command_name=''
+
+            if [[ ${test_name} = 'test_1' ]]
+            then
+                # Run plotter
+                command_name="${command_location}/plotter"
+
+            elif [[ ${test_name} = 'test_3' ]]
+            then
+                # Run plotter_feature
+                command_name="${command_location}/plotter_feature"
+            fi
+
+            cd "${TARGET_FOLDER}"
+            gnuplot -e "repo='${project_name}'" -e "test='${test_name}'" -e "output='${project_name}_sample_range'" -e "data='data.csv'" -e "method='${method_name}'" "${command_name}"
+
+            cp ${project_name}_sample_range.png "${OUTPUT_DIR}/${method_name}/${test_name}/"
+            
+            cd "${CURRENT_DUR}"
+
+            mv "${TARGET_FOLDER}${project_name}_sample_range.png" "${project}/"
+
+        done
+    done
+done
+
