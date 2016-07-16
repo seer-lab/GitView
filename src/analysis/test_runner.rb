@@ -34,6 +34,9 @@ method = 'svm'
 
 experiment_number='4'
 
+# Set value if projects need tobe skipped to skip to the project defined in the variable.
+skip_to=nil
+
 # read in dump of performances
 # before the test write the performance to the measures/test_4/<method>/<project>/
     # based on whether it is best or worse record it
@@ -43,7 +46,7 @@ OUTPUT_RESULT="meaures/test_#{experiment_number}/#{method}"
 #/"${method}"/"${REPO}"'
 
 
-FILE_INPUT="GitView/src/analysis/weight_sum/#{result}_#{method}"
+FILE_INPUT="weight_sum/#{result}_#{method}"
 
 data = []
 
@@ -53,20 +56,30 @@ end
 
 data.each do |project|
 
-    FileUtils.mkdir_p("#{OUTPUT_RESULT}/#{project[0]}")
-
-    # Output original result to file
-    File.open("#{OUTPUT_RESULT}/#{project[0]}/data.csv", 'w+') do |f|
-
-        f.puts "#{result}, #{project[-3..-1].join(', ')}"
-        puts "output: #{result}, #{project[-3..-1].join(', ')}"
+    if skip_to != nil
+        # Skip projects until the desired project is found
+        if project[0] == skip_to
+            skip_to = nil
+        end
     end
 
-    # Output oversampling result
-    owner = PROJECT_LOOKUP[project[0]]
-    # Run over sampling version
-    %x(bash GitView/src/analysis/model_tester 1 #{owner} #{project[0]} #{project[2]} #{project[3]} #{project[1].downcase} 1 #{result}-O)
-    break
+    if skip_to == nil
+        FileUtils.mkdir_p("#{OUTPUT_RESULT}/#{project[0]}")
+
+        # Output original result to file
+        File.open("#{OUTPUT_RESULT}/#{project[0]}/data.csv", 'a') do |f|
+
+            f.puts "#{result}, #{project[-3..-1].join(', ')}"
+            puts "output: #{result}, #{project[-3..-1].join(', ')}"
+        end
+
+        # Output oversampling result
+        owner = PROJECT_LOOKUP[project[0]]
+        puts "Working on #{project[0]}"
+        # Run over sampling version
+        %x(bash model_tester 1 #{owner} #{project[0]} #{project[2]} #{project[3]} #{project[1].downcase} 1 #{result}-O)
+    end
+    #break
 end
 
 =begin

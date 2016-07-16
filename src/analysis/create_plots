@@ -33,6 +33,15 @@ else
     exit 1
 fi
 
+proceed=0
+
+TARGET_TEST='test_4'
+
+if [[ -z $TARGET_TEST ]]
+then
+    proceed=1
+fi
+
 for dir in "${TARGET_FOLDER}"*
 do
     # is the file a directory?
@@ -45,6 +54,15 @@ do
     test_name=$(basename "${dir}")
 
 
+    if [[ ${test_name} = ${TARGET_TEST} ]]
+    then
+        proceed=1
+    else
+        proceed=0
+    fi
+
+    if [[ $proceed -eq 1 ]]
+    then
     # Iterate every method 
     for method in "${dir}"/*
     do
@@ -83,6 +101,10 @@ do
             then
                 # Run plotter_feature
                 command_name="${command_location}/plotter_feature"
+            elif [[ ${test_name} = 'test_4' ]]
+            then
+                # Run plotter_feature
+                command_name="${command_location}/plotter_oversampling"                
             fi
 
             cd "${TARGET_FOLDER}"
@@ -96,5 +118,6 @@ do
 
         done
     done
+    fi
 done
 
