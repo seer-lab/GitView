@@ -30,9 +30,9 @@ PROJECT_LOOKUP = {'acra' =>  'ACRA',
 
 result = 'best'
 
-method = 'rf'
+method = 'svm'
 
-experiment_number='10'
+experiment_number='4'
 
 # read in dump of performances
 # before the test write the performance to the measures/test_4/<method>/<project>/
@@ -43,7 +43,7 @@ OUTPUT_RESULT="meaures/test_#{experiment_number}/#{method}"
 #/"${method}"/"${REPO}"'
 
 
-FILE_INPUT="/home/joseph/source_code/GitView/src/analysis/weight_sum/#{result}_#{method}"
+FILE_INPUT="GitView/src/analysis/weight_sum/#{result}_#{method}"
 
 data = []
 
@@ -59,12 +59,13 @@ data.each do |project|
     File.open("#{OUTPUT_RESULT}/#{project[0]}/data.csv", 'w+') do |f|
 
         f.puts "#{result}, #{project[-3..-1].join(', ')}"
+        puts "output: #{result}, #{project[-3..-1].join(', ')}"
     end
 
     # Output oversampling result
     owner = PROJECT_LOOKUP[project[0]]
     # Run over sampling version
-    %x(bash /home/joseph/source_code/GitView/src/analysis/model_tester 1 #{owner} #{project[0]} #{project[2]} #{project[3]} #{project[1].downcase} 1 #{result}-O)
+    %x(bash GitView/src/analysis/model_tester 1 #{owner} #{project[0]} #{project[2]} #{project[3]} #{project[1].downcase} 1 #{result}-O)
     break
 end
 
